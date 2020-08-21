@@ -6,7 +6,7 @@
 #conda install -c conda-forge gputil
 
 
-import sys
+
 
 ###################################################################################################
 
@@ -24,7 +24,8 @@ import sys
 #     'gputil',
 #     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
 # )
-
+import sys
+import platform
 import argparse
 import logging
 import subprocess
@@ -45,6 +46,8 @@ All = False
 
 nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
 
+myPlatform = platform.system()
+GPU = if(GPUtil.getGPUs())
 # ALL = True
 # TRIM = False
 # CLEAN= False
@@ -82,8 +85,8 @@ optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str
 
 
 
-optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
-optionalArgs.add_argument('--mac', action='store_true', help='Run on a mac')
+# optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
+# optionalArgs.add_argument('--mac', action='store_true', help='Run on a mac')
 
 # In [3]: import platform
 #    ...: platform.system()
@@ -179,10 +182,17 @@ if (All or inputArgs.demultiplex):
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
 
-  guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
-  with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-      for line in p.stdout:
-          logger.info(line.rstrip()) 
+  if (GPU):
+    guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
+    with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            logger.info(line.rstrip()) 
+  else:
+    guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
+    with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            logger.info(line.rstrip()) 
+
 
   listFullDir = next(os.walk(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex'))[1]
   for i in listFullDir:
