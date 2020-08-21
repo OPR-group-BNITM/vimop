@@ -6,12 +6,7 @@ import sys
 
 curated_columns=[]
 with open(snakemake.input[0]) as f:
-    lines=f.readlines()
-    for line in lines:
-        if not line.startswith("#"):
-            curated_columns.append(line.split('\t')[0:2])
-    
-
+    curat
 
 rl = pd.DataFrame(curated_columns, columns=['Length','Count'])
 
@@ -21,7 +16,7 @@ rl = pd.DataFrame(curated_columns, columns=['Length','Count'])
 fig, ax = plt.subplots(figsize=(20,10))
 
 fig.set_size_inches(20,10)
-ax.plot(rl, color='xkcd:denim blue',linewidth=3)
+ax.plot(rl, 'xkcd:denim blue',linewidth=3)
 ax.set_facecolor('white')
 # ax.axhline(y=20, linewidth=3, color='black',alpha=0.5, linestyle='dashed', label='20x')
 
