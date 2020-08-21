@@ -15,13 +15,14 @@ with open(snakemake.input[0]) as f:
 
 rl = pd.DataFrame(curated_columns, columns=['Length','Count'])
 
+rl = rl.astype('int64')
 # rl = pd.read_csv(snakemake.input[0], sep='\t', names=['Length','Count','Pct_reads','cum_reads', 'cum_pct_reads','bases','pct_bases','cum_bases','cum_pct_bases'])
 
 # plt.rc('sans-serif':['Arial'], 'size':20})
 fig, ax = plt.subplots(figsize=(20,10))
 
 fig.set_size_inches(20,10)
-ax.plot(rl, 'xkcd:denim blue',linewidth=3)
+ax.plot(x=rl['Length'], y=rl['Count'], 'xkcd: denim blue',linewidth=3)
 ax.set_facecolor('white')
 # ax.axhline(y=20, linewidth=3, color='black',alpha=0.5, linestyle='dashed', label='20x')
 
