@@ -1,0 +1,305 @@
+#! /usr/bin/python3
+
+
+import argparse
+import logging
+import subprocess
+import os, re,sys
+from pathlib import Path
+import datetime
+import glob
+import time
+# import shlex
+# from StringIO import StringIO
+import threading
+
+scriptPath = os.path.dirname(os.path.abspath(__file__))
+print(scriptPath)
+home = str(Path.home())
+All = False
+
+nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
+
+# ALL = True
+# TRIM = False
+# CLEAN= False
+# MAP = False
+# ASSEMBLE = False
+# CONSENSUS = False
+def output_reader(proc):
+    for line in iter(proc.stdout.readline, b''):
+        print('got line: {0}'.format(line.decode('utf-8')), end='')
+
+parser = argparse.ArgumentParser(prog='nanoflow', 
+  description='By default nanoflow performs a full analysis: demultiplex, clean human and rodent, assemble, map to the target pathogen, consensus', 
+  formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=30,width=200))
+requiredArgs = parser.add_argument_group('Required arguments')
+requiredArgs.add_argument('-r', '--runid', action='store', dest='runid', type=str, required=True, metavar='RUNID')
+optionalArgs = parser.add_argument_group('Optional arguments')
+optionalArgs.add_argument('-i', '--input', action='store', dest='fastqDir', type=str, metavar='DIR', help='Input directory with basecalled fastq files | default: '+home+'/Desktop/NGS-data/', default=home+'/Desktop/NGS-data/')
+optionalArgs.add_argument('-o', '--output', action='store', dest='outputFolder', type=str, metavar='DIR', help='Output directory | default: '+home+'/Desktop/NGS-data/', default=home+'/Desktop/NGS-data/')
+optionalArgs.add_argument('-t', '--threads', action='store', dest='threads', type=int, metavar='INT', help='Number of threads | default: 4', default=4)
+optionalArgs.add_argument('-s', '--sample', action='store', dest='selectedSamples', type=str, metavar='barcodeXX', help='Space separated selected barcodes', nargs='*')
+optionalArgs.add_argument('-p', '--target', action='store', dest='targetPathogen', nargs='*', type=str, metavar='STR', help='Space separated selected target pathogen. Supported: LASV, ALL | default: LASV', default='LASV')
+optionalArgs.add_argument('-m', '--ref', action='store', dest='manualRef', nargs='*', type=str, metavar='STR', help='Manual mapping to custom reference')
+optionalArgs.add_argument('-db', action='store', dest='db', nargs='*', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/nanoflow/db', default=home+'/Desktop/NGS-scripts/DB')
+
+optionalArgs.add_argument('-1', '--demultiplex', action='store_true', help='Demultiplex')
+optionalArgs.add_argument('-2', '--trim', action='store_true', help='Trim')
+optionalArgs.add_argument('-3', '--clean', action ='store_true', help='Remove contaminant reads, default: reagents,human RNA, human DNA use --clean_option to change options  default reagents,human')
+optionalArgs.add_argument('--clean_option', dest='cleanOptions', nargs='*',type=str, default=['reagents', 'human'], help='Specify order and which contaminant reads to remove among: reagents,human,mouse,mastomys | default: reagent, human')
+
+optionalArgs.add_argument('-4', '--map', action='store_true', help='Map against target pathogen library')
+optionalArgs.add_argument('-5', '--assemble', action='store_true', help='De Novo assembly of a 100000 reads subset')
+optionalArgs.add_argument('-6', '--consensus', action='store_true', help='Generation of the consensus')
+optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs='*', type=str, metavar='STR', help='Assembler: canu, flye or wtdbg2', default='canu')
+optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
+
+analysisArgs = parser.add_argument_group('Analysis arguments')
+analysisArgs.add_argument('--classify', action='store_true', help='Classification with centrifuge')
+# analysisArgs.add_argument('--coverage', action='store_true', help='Coverage image')
+# analysisArgs.add_argument('--readlength', action='store_true', help='Read length images')
+
+
+
+inputArgs = parser.parse_args()
+
+if (inputArgs.label):
+  RUNID = inputArgs.runid + '-'+inputArgs.label
+else:
+  RUNID = inputArgs.runid
+
+
+ANALYSIS_FOLDER = inputArgs.outputFolder + RUNID + '_ANALYSIS'
+os.makedirs(ANALYSIS_FOLDER,exist_ok=True)
+
+
+# print(cleanOpts)
+
+cleanOpts = re.sub('human','human_rna,human_dna',((',').join(inputArgs.cleanOptions)))
+cleanOpts = re.sub('reagents','reagent',cleanOpts)
+with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
+  f.write('runid: ' + RUNID + '\n')
+  f.write('table: ' + ANALYSIS_FOLDER + '/table.csv\n')
+  f.write('data: ' + inputArgs.fastqDir + '\n')
+  f.write('demultiplex_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex\n')
+  f.write('trim_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-02-trim\n')
+  f.write('clean_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-03-clean\n')
+  if (inputArgs.cleanOptions):
+    f.write('clean_option: ' + cleanOpts + '\n')
+  f.write('map_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-04-map\n')
+  f.write('assemble_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble\n')
+  f.write('consensus_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-06-consensus\n')
+  f.write('results: ' + ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS\n')
+  f.write('benchmark: ' + ANALYSIS_FOLDER + '/' + RUNID + '_BENCHMARK\n')
+  f.write('db: ' + inputArgs.db + '\n')
+  f.write('target: ' + inputArgs.targetPathogen + '\n')
+  f.write('assembler: ' + inputArgs.assembler + '\n')
+  if (inputArgs.manualRef):
+    f.write('manual_ref: ' + inputArgs.manualRef)
+
+
+logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')
+logger = logging.getLogger()
+
+os.makedirs(ANALYSIS_FOLDER + '/'+RUNID+'_RESULTS/logfiles', exist_ok=True)
+analysis_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/analysis-'+nowTime+'.log'
+fileHandler = logging.FileHandler(analysis_log_file)
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
+
+consoleHandler = logging.StreamHandler(sys.stdout)
+consoleHandler.setFormatter(logFormatter)
+logger.addHandler(consoleHandler)
+logger.setLevel(logging.DEBUG)
+
+
+
+logger.info("Starting nanoflow")
+logger.info('Analysis log: '+analysis_log_file)
+logger.info("Arguments given:")
+logger.info(inputArgs)
+logger.info("Parameter file:")
+with open(ANALYSIS_FOLDER+'/config.yaml', 'r') as f:
+  lines = f.readlines() 
+  for line in lines:
+    logger.info(''.join(line.split()))
+
+
+
+if (not inputArgs.demultiplex and not inputArgs.trim and not inputArgs.clean 
+  and not inputArgs.map and not inputArgs.assemble 
+  and not inputArgs.consensus and not inputArgs.classify):
+  logger.info("Running complete pipeline")
+  All = True
+
+if (All or inputArgs.demultiplex):
+
+  logger.info('Demultiplex')
+  demultiplex_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/demultiplex-'+nowTime+'.log'
+  logger.info('Demupltiplex log file: ' + demultiplex_log_file)
+  fileHandler = logging.FileHandler(demultiplex_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+
+  guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
+  with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
+
+  listFullDir = next(os.walk(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex'))[1]
+  for i in listFullDir:
+    mv_command = 'mv '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i+'/*fastq.gz '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+i+'-demultiplexed.fastq.gz && rm -r '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i
+    subprocess.run(mv_command, shell = True)
+
+  fileHandler = logging.FileHandler(analysis_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+
+  logger.info('Demultiplexing finished')
+
+###################################################################################################################################################################
+logger.info('Samples to run:')
+
+if (inputArgs.selectedSamples):
+  samplesToRun = inputArgs.selectedSamples
+else:
+  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*')]
+  samplesToRun = [i.split('-')[1] for i in listFullDir]
+
+with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
+  for item in sorted(samplesToRun):
+    f.write('%s\n' % item)
+    logger.info(item)
+
+# print('++++++++++++++')
+###################################################################################################################################################################
+
+if (All or inputArgs.trim):
+
+  trim_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/trim-'+nowTime+'.log'
+  logger.info('Trim')
+  logger.info('Trim log file: '+trim_log_file)
+  fileHandler = logging.FileHandler(trim_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  trim_command = 'snakemake --snakefile '+scriptPath+'/02.trim.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(trim_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
+
+
+  fileHandler = logging.FileHandler(analysis_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  logger.info('Trim finished')
+###################################################################################################################################################################
+
+if (All or inputArgs.clean):
+
+  clean_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/clean-'+nowTime+'.log'
+  logger.info('Clean for contaminants: ' + cleanOpts)
+  logger.info('Clean log file: '+clean_log_file)
+  fileHandler = logging.FileHandler(clean_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  clean_script_command = 'python '+scriptPath+'/03.clean.py ' + ANALYSIS_FOLDER + ' \
+  '+ cleanOpts + ' '+ RUNID + ' ' +ANALYSIS_FOLDER + '/' + RUNID + '-02-trim \
+  ' +' ' +  ANALYSIS_FOLDER + '/' + RUNID + '-03-clean '+ scriptPath + ' ' + str(inputArgs.threads)
+
+  with subprocess.Popen(clean_script_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip())
+
+  fileHandler = logging.FileHandler(analysis_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  logger.info('Clean finished')
+
+  ###################################################################################################################################################################
+if (All or inputArgs.map):
+
+  map_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/map-'+nowTime+'.log'
+  logger.info('Mapping to: ' + inputArgs.targetPathogen)
+  logger.info('Map log file: '+map_log_file)
+  fileHandler = logging.FileHandler(map_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(map_scriptA_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+        logger.info(line.rstrip())
+
+  if (inputArgs.assembler == 'canu'):
+    canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads)
+    with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+        logger.info(line.rstrip())
+
+
+  map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+        logger.info(line.rstrip())
+
+if (All or inputArgs.map):
+
+
+
+
+
+
+exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # logger.info('Trimming: Environment setup')
+  # subprocess.Popen('snakemake --snakefile '+scriptPath+'/01.trim.snakefile \
+  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  # --cores 1 --create-envs-only --quiet', shell = True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+# samplesToRun = inputArgs.selectedSamples
+# if (not inputArgs.selectedSamples):
+#   listAllFiles = os.listdir(inputArgs.fastqDir)
+#   listR1 = [s for s in listAllFiles if 'R1' in s]
+#   samplesToRun = [i.split('_R1')[0] for i in listR1] 
+
+# with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
+#   for item in samplesToRun:
+#     f.write('%s\n' % item)
+
+
+  # subprocess.run('snakemake --snakefile '+scriptPath+'/01.trim.snakefile \
+  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  # --cores '+ inputArgs.threads, shell = True)
+
+
+
+
+
+# exit()
+
+
