@@ -12,6 +12,7 @@ RESULTS = config['results']
 BENCHMARK = config['benchmark']
 RUNID = config['runid']
 
+scriptPath = os.path.dirname(os.path.abspath(__file__))
 
 
 rule all:
@@ -109,8 +110,6 @@ rule trimmed_read_length_png:
     output:
         RESULTS+'/{sample}/01_trim/{RUNID}-{sample}-trimmed-read-length.png'
     script:
-        'ana/read-length-individual-image.py'
-
-
+        scriptPath+'/ana/read-length-individual-image.py'
 
 
