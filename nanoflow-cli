@@ -47,7 +47,7 @@ All = False
 nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
 
 myPlatform = platform.system()
-GPU = if (len(GPUtil.getGPUs() != 0)
+GPU = True if (len(GPUtil.getGPUs() != 0) else False
 # ALL = True
 # TRIM = False
 # CLEAN= False
