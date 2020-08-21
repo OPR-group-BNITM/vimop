@@ -109,7 +109,7 @@ rule trimmed_read_length_png:
     output:
         RESULTS+'/{sample}/01_trim/{RUNID}-{sample}-trimmed-read-length.png'
     script:
-        '../ana/read-length-individual-image.py'
+        'ana/read-length-individual-image.py'
 
 
 
