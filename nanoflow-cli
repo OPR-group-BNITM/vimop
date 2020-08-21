@@ -253,7 +253,7 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-if (All or inputArgs.map):
+# if (All or inputArgs.map):
 
 
 
