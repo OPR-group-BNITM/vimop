@@ -74,7 +74,7 @@ else:
   RUNID = inputArgs.runid
 
 
-ANALYSIS_FOLDER = inputArgs.outputFolder + RUNID + '_ANALYSIS'
+ANALYSIS_FOLDER = inputArgs.outputFolder + '/' + RUNID + '_ANALYSIS'
 os.makedirs(ANALYSIS_FOLDER,exist_ok=True)
 
 
