@@ -142,7 +142,7 @@ if (All or inputArgs.demultiplex):
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
 
-  guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
+  guppy_command = 'guppy_barcoder -i ' + inputArgs.fastqDir + '-x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
   with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip()) 
