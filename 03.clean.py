@@ -35,7 +35,7 @@ for sample in SAMPLES:
     # print(CLEAN_PATH + '/' + RUNID+'-'+sample+'-pre_'+first_step+'.fastq')
     # os.mkdir(CLEAN_PATH + '/'+sample, mode = 0o777)
     os.makedirs(CLEAN_PATH + '/'+sample, exist_ok=True)
-    copyfile(TRIM_PATH+'/'+RUNID+'-'+sample+'_seqtk_trimfq.fastq', CLEAN_PATH + '/'+sample+'/' + RUNID+'-'+sample+'-pre_'+first_step+'.fastq')
+    copyfile(TRIM_PATH+'/'+RUNID+'-'+sample+'-seqtk-trimfq.fastq', CLEAN_PATH + '/'+sample+'/' + RUNID+'-'+sample+'-pre_'+first_step+'.fastq')
 
 
 for step in SPEC2:
