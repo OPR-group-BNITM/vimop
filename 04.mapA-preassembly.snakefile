@@ -42,6 +42,16 @@ rule map:
     shell:
         'minimap2  -x map-ont --split-prefix myprefix -a {input[0]} {input[1]} -t {threads} -o {output[0]}'
 
+rule sambam:
+    input:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+    output:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
+    conda:
+        'envs/general.yaml'
+    threads: 4 #workflow.cores
+    shell:
+        'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
 
 
 rule filter:
