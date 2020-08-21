@@ -5,26 +5,25 @@
 
 #conda install -c conda-forge gputil
 
-import conda.cli.python_api as Conda
+
 import sys
 
 ###################################################################################################
-# The below is roughly equivalent to:
-#   conda install -y 'args-go-here' 'no-whitespace-splitting-occurs' 'square-brackets-optional'
 
-(stdout_str, stderr_str, return_code_int) = Conda.run_command(
-    Conda.Commands.INSTALL,
-    '-c', 'bioconda',
-    'snakemake=5.22.1',
-    use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
-)
+# import conda.cli.python_api as Conda
+# (stdout_str, stderr_str, return_code_int) = Conda.run_command(
+#     Conda.Commands.INSTALL,
+#     '-c', 'bioconda',
+#     'snakemake=5.22.1',
+#     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
+# )
 
-(stdout_str, stderr_str, return_code_int) = Conda.run_command(
-    Conda.Commands.INSTALL,
-    '-c', 'conda-forge',
-    'gputil',
-    use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
-)
+# (stdout_str, stderr_str, return_code_int) = Conda.run_command(
+#     Conda.Commands.INSTALL,
+#     '-c', 'conda-forge',
+#     'gputil',
+#     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
+# )
 
 import argparse
 import logging
