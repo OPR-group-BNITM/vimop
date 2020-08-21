@@ -22,7 +22,7 @@ rl = rl.astype('int64')
 fig, ax = plt.subplots(figsize=(20,10))
 
 fig.set_size_inches(20,10)
-ax.plot(x=rl['Length'], y=rl['Count'], 'xkcd: denim blue',linewidth=3)
+ax.plot(x=rl['Length'], y=rl['Count'], color='xkcd: denim blue',linewidth=3)
 ax.set_facecolor('white')
 # ax.axhline(y=20, linewidth=3, color='black',alpha=0.5, linestyle='dashed', label='20x')
 
