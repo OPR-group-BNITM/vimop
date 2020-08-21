@@ -40,7 +40,7 @@ rule map:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        'minimap2  -a {input[0]} {input[1]} -t {threads} -o {output[0]}'
+        'minimap2  -x map-ont --split-prefix myprefix -a {input[0]} {input[1]} -t {threads} -o {output[0]}'
 
 
 

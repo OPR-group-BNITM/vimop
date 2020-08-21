@@ -119,6 +119,7 @@ os.makedirs(ANALYSIS_FOLDER,exist_ok=True)
 
 cleanOpts = re.sub('human','human_rna,human_dna',((',').join(inputArgs.cleanOptions)))
 cleanOpts = re.sub('reagents','reagent',cleanOpts)
+
 with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('runid: ' + RUNID + '\n')
   f.write('table: ' + ANALYSIS_FOLDER + '/table.csv\n')

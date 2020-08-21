@@ -20,7 +20,7 @@ MASTER_DB = {'reagent':DB_DIR+'/reagent-db.fasta.gz','human_rna':DB_DIR+'/GCF_00
       'human_dna':DB_DIR+'/GCF_000001405.39_GRCh38.p13_genomic.fna.gz','mouse':DB_DIR+'/GCA_000001635.8_GRCm38.p6_genomic.fna.gz',
      'mastomys':DB_DIR+'/GCF_008632895.1_UCSF_Mcou_1_genomic.fna.gz'}
 
-MAP_READS_CMD = 'minimap2 \
+MAP_READS_CMD = 'minimap2 -x map-ont \
 -a \
 {params.actual_db} \
 {input[0]} \
