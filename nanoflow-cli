@@ -134,7 +134,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('results: ' + ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS\n')
   f.write('benchmark: ' + ANALYSIS_FOLDER + '/' + RUNID + '_BENCHMARK\n')
   f.write('db: ' + inputArgs.db + '\n')
-  f.write('target: ' + inputArgs.targetPathogen + '\n')
+  f.write('target: ' + (',').join(inputArgs.targetPathogen) + '\n')
   f.write('script_path: ' + scriptPath + '\n')
   f.write('assembler: ' + inputArgs.assembler + '\n')
   if (inputArgs.manualRef):
