@@ -277,7 +277,7 @@ if (All or inputArgs.clean):
 if (All or inputArgs.map):
 
   map_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/map-'+nowTime+'.log'
-  logger.info('Mapping to: ' + inputArgs.targetPathogen)
+  logger.info('Mapping to: ' + (',').join(inputArgs.targetPathogen))
   logger.info('Map log file: '+map_log_file)
   fileHandler = logging.FileHandler(map_log_file)
   fileHandler.setFormatter(logFormatter)
