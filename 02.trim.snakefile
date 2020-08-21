@@ -12,7 +12,7 @@ RESULTS = config['results']
 BENCHMARK = config['benchmark']
 RUNID = config['runid']
 
-scriptPath = os.path.dirname(os.path.abspath(__file__))
+scriptPath = config['script_path']
 
 
 rule all:
