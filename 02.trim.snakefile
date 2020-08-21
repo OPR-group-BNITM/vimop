@@ -96,7 +96,7 @@ rule calc_read_length_trimmed:
     output:
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.txt'
     shell:
-        'readlength.sh in={input[0]} qin=33 tossbrokenreads=t bin=1 out={output[0]}'
+        'readlength.sh in={input[0]} qin=33 bin=1 out={output[0]}'
 
 
 rule trimmed_read_length_png:

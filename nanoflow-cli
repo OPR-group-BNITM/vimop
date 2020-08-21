@@ -1,6 +1,10 @@
 #! /usr/bin/python3
 
 
+### Requirements: snakemake, gputils
+
+#conda install -c conda-forge gputil
+
 import argparse
 import logging
 import subprocess
@@ -9,6 +13,7 @@ from pathlib import Path
 import datetime
 import glob
 import time
+import GPUtil
 # import shlex
 # from StringIO import StringIO
 import threading
