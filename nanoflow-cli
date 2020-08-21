@@ -24,12 +24,16 @@
 #     'gputil',
 #     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
 # )
+
+
+import os
+os.environ['ANSIBLE_FORCE_COLOR'] = "TRUE"
 import sys
 import platform
 import argparse
 import logging
 import subprocess
-import os, re
+import re
 from pathlib import Path
 import datetime
 import glob
