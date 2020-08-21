@@ -31,7 +31,7 @@ rule all:
 rule map:
     input:
         DB_DIR+'/{target}.fasta',
-        TRIM_PATH+'/'+RUNID+'-{sample}-seqtk_trimfq.fastq'
+        TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
         temp(MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam')
     benchmark:
