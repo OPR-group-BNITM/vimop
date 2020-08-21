@@ -17,10 +17,10 @@ RUNID = config['runid']
 rule all:
     input:
         expand([RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-initial-stats.txt', 
-            RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-demultiplexed-fastqc.html', 
+            RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-demultiplexed_fastqc.html', 
             TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq',
             RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
-            RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-fastqc.html',
+            RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq_fastqc.html',
             RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.txt',
             RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.png'],
             sample=SAMPLES)
@@ -41,7 +41,7 @@ rule fastqc_stats_post_demultiplex:
     input:
         DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq.gz'
     output:
-        RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-demultiplexed-fastqc.html'
+        RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-demultiplexed_fastqc.html'
     conda:
         'envs/general.yaml'
     params:
@@ -77,7 +77,7 @@ rule fastqc_stats_post_seqtk_trimfq:
     input:
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
-        RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-fastqc.html'
+        RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq_fastqc.html'
     params:
         outdir=RESULTS+'/{sample}/01_trim/'
     conda:
