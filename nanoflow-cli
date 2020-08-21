@@ -5,10 +5,31 @@
 
 #conda install -c conda-forge gputil
 
+import conda.cli.python_api as Conda
+import sys
+
+###################################################################################################
+# The below is roughly equivalent to:
+#   conda install -y 'args-go-here' 'no-whitespace-splitting-occurs' 'square-brackets-optional'
+
+(stdout_str, stderr_str, return_code_int) = Conda.run_command(
+    Conda.Commands.INSTALL,
+    '-c', 'bioconda',
+    'snakemake=5.22.1'
+    use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
+)
+
+(stdout_str, stderr_str, return_code_int) = Conda.run_command(
+    Conda.Commands.INSTALL,
+    '-c', 'conda-forge',
+    'gputil'
+    use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
+)
+
 import argparse
 import logging
 import subprocess
-import os, re,sys
+import os, re
 from pathlib import Path
 import datetime
 import glob
@@ -59,6 +80,9 @@ optionalArgs.add_argument('-5', '--assemble', action='store_true', help='De Novo
 optionalArgs.add_argument('-6', '--consensus', action='store_true', help='Generation of the consensus')
 optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs='*', type=str, metavar='STR', help='Assembler: canu, flye or wtdbg2', default='canu')
 optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
+
+
+
 optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
 optionalArgs.add_argument('--mac', action='store_true', help='Run on a mac')
 
