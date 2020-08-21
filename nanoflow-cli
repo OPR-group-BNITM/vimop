@@ -54,9 +54,13 @@ optionalArgs.add_argument('-5', '--assemble', action='store_true', help='De Novo
 optionalArgs.add_argument('-6', '--consensus', action='store_true', help='Generation of the consensus')
 optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs='*', type=str, metavar='STR', help='Assembler: canu, flye or wtdbg2', default='canu')
 optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
+optionalArgs.add_argument('--cpu', action='store_true', dest='cpu', type=str, metavar='STR', help='Run demultiplexing on CPU, default: GPU')
+optionalArgs.add_argument('--mac', action='store_true', dest='mac', type=str, metavar='STR', help='Run on a mac')
 
-analysisArgs = parser.add_argument_group('Analysis arguments')
-analysisArgs.add_argument('--classify', action='store_true', help='Classification with centrifuge')
+
+
+# analysisArgs = parser.add_argument_group('Analysis arguments')
+# analysisArgs.add_argument('--classify', action='store_true', help='Classification with centrifuge')
 # analysisArgs.add_argument('--coverage', action='store_true', help='Coverage image')
 # analysisArgs.add_argument('--readlength', action='store_true', help='Read length images')
 
@@ -113,7 +117,7 @@ consoleHandler.setFormatter(logFormatter)
 logger.addHandler(consoleHandler)
 logger.setLevel(logging.DEBUG)
 
-
+###################################################################################################################################################################
 
 logger.info("Starting nanoflow")
 logger.info('Analysis log: '+analysis_log_file)
@@ -125,13 +129,15 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'r') as f:
   for line in lines:
     logger.info(''.join(line.split()))
 
-
+###################################################################################################################################################################
 
 if (not inputArgs.demultiplex and not inputArgs.trim and not inputArgs.clean 
   and not inputArgs.map and not inputArgs.assemble 
   and not inputArgs.consensus and not inputArgs.classify):
   logger.info("Running complete pipeline")
   All = True
+
+###################################################################################################################################################################
 
 if (All or inputArgs.demultiplex):
 
@@ -159,20 +165,21 @@ if (All or inputArgs.demultiplex):
   logger.info('Demultiplexing finished')
 
 ###################################################################################################################################################################
+
 logger.info('Samples to run:')
 
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
 else:
   listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*')]
-  samplesToRun = [i.split('-')[1] for i in listFullDir]
+  samplesToRun = [i.split('-')[-2] for i in listFullDir]
 
 with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
   for item in sorted(samplesToRun):
     f.write('%s\n' % item)
     logger.info(item)
 
-# print('++++++++++++++')
+
 ###################################################################################################################################################################
 
 if (All or inputArgs.trim):
@@ -196,6 +203,7 @@ if (All or inputArgs.trim):
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
   logger.info('Trim finished')
+
 ###################################################################################################################################################################
 
 if (All or inputArgs.clean):
@@ -220,6 +228,7 @@ if (All or inputArgs.clean):
   logger.info('Clean finished')
 
   ###################################################################################################################################################################
+
 if (All or inputArgs.map):
 
   map_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/map-'+nowTime+'.log'
@@ -253,7 +262,10 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-# if (All or inputArgs.map):
+
+###################################################################################################################################################################
+
+# if (All or inputArgs.assemble):
 
 
 
