@@ -6,7 +6,12 @@ import sys
 
 curated_columns=[]
 with open(snakemake.input[0]) as f:
-    curat
+    lines=f.readlines()
+    for line in lines:
+        if not line.startswith("#"):
+            curated_columns.append(line.split('\t')[0:2])
+    
+
 
 rl = pd.DataFrame(curated_columns, columns=['Length','Count'])
 
