@@ -86,7 +86,7 @@ rule normalize_depth:
     conda:
         'envs/general.yaml'
     shell:
-        'bbnorm.sh in={input[0]} out={output[0]}.fq target=40 mindepth=2'
+        'bbnorm.sh qin=33 in={input[0]} out={output[0]}.fq target=40 mindepth=2'
 
 
 rule stats_normalize:
@@ -108,7 +108,7 @@ rule subsample:
     conda:
         'envs/general.yaml'
     shell:
-        'reformat.sh ow=t samplereadstarget=75000 in={input[0]} out={output[0]}'
+        'reformat.sh qin=33 ow=t samplereadstarget=75000 in={input[0]} out={output[0]}'
 
 
 rule stats_subsample:
