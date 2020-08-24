@@ -54,3 +54,7 @@ for step in SPEC2:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-cleaned.fastq')
 
 
+
+    shutil.rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
+
+
