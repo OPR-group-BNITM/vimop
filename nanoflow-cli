@@ -169,7 +169,9 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'r') as f:
     logger.info(''.join(line.split()))
 logger.info("General environment file:")
 with open(scriptPath + '/envs/general.yaml', 'r') as f:
-    logger.info(f.read())
+  lines = f.readlines() 
+  for line in lines:
+    logger.info(line)
 
 
 ###################################################################################################################################################################
@@ -302,8 +304,12 @@ if (All or inputArgs.map):
 
   if (inputArgs.assembler == 'canu'):
     logger.info("Canu environment file:")
+
     with open(scriptPath + '/envs/canu.yaml', 'r') as f:
-      logger.info(f.read())
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(line)
+
 
     logger.info('Assembly with canu')
     canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \

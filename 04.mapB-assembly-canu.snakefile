@@ -49,7 +49,6 @@ rule canu:
         -nanopore-raw {input[0]}\
         -fast -d {params.outdir}/ \
         -p {params.prefix} \
-        -t {threads} \
         genomeSize={params.genomeSize} \
         minReadLength={params.minReadLength} \
         minOverlapLength={params.minOverlapLength} \
