@@ -59,12 +59,12 @@ rule remove_duplicate_headers:
     output:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
     script:
-        a_file = open(snakemake.input[0], "r")
+        with open(snakemake.input[0], "r") as f:
         # lines = a_file.readlines()
-        for num, line in enumerate(a_file, 0):
-            if "minimap2" in line:
-                last_to_delete = num
-        del lines[0:last_to_delete]
+            for num, line in enumerate(f):
+                if "minimap2" in line:
+                    last_to_delete = num
+            del lines[0:last_to_delete]
 
         a_file.close()
 
