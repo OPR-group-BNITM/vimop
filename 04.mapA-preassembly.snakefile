@@ -60,14 +60,12 @@ rule filter:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
     output:
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped.fastq',
+        MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped-samtools-output.txt',
     conda:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        '''
-        set +o pipefail;
-        samtools fastq --threads {threads} -F 4 --reference {input[0]} {input[1]} > {output[0]}'
-        '''
+        'samtools fastq --threads {threads} -F 4 --reference {input[0]} {input[1]} > {output[0]} 2> {output[1]}'
 
 
 rule stats_filter:
