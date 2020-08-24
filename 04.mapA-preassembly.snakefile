@@ -19,20 +19,14 @@ DB_DIR = config['db']
 
 
 
-# rule all:
-#     input:
-#         expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq', 
-#             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
-#             MAP_PATH + '/{sample}-{target}/03_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
-#             MAP_PATH + '/{sample}-{target}/04_subsample75000/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
-#             sample=SAMPLES, target=TARGET)
-
-
-
 rule all:
     input:
-        expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'], 
+        expand([MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.fastq', 
+            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
+            MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
+            MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
             sample=SAMPLES, target=TARGET)
+
 
 
 rule map:
@@ -40,7 +34,7 @@ rule map:
         DB_DIR+'/{target}.fasta',
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
-        temp(MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam')
+        temp(MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.sam')
     benchmark:
         BENCHMARK+'/03_map-{target}/'+RUNID+'-{sample}-{target}-map-benchmark.txt'
     conda:
@@ -51,10 +45,10 @@ rule map:
 
 rule sambam:
     input:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam',
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.sam',
         DB_DIR+'/{target}.fasta.fai'
     output:
-        temp(MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam')
+        temp(MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.bam')
     conda:
         'envs/general.yaml'
     threads: 4 #workflow.cores
@@ -65,9 +59,9 @@ rule sambam:
 rule filter:
     input:
         DB_DIR+'/{target}.fasta',
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.bam'
     output:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq',
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.fastq',
     conda:
         'envs/general.yaml'
     threads: 4 #workflow.cores
@@ -77,7 +71,7 @@ rule filter:
 
 rule stats_filter:
     input: 
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.fastq'
     output:
         RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt'
     conda:
@@ -86,48 +80,48 @@ rule stats_filter:
         'seqkit stats {input[0]} > {output[0]}'
 
 
-# rule normalize_depth:
-#     input: 
-#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
-#     output:
-#         MAP_PATH + '/{sample}-{target}/02_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
-#     conda:
-#         'envs/general.yaml'
-#     shell:
-#         'bbnorm.sh qin=33 in={input[0]} out={output[0]} target=40 mindepth=2'
+rule normalize_depth:
+    input: 
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped.fastq'
+    output:
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'bbnorm.sh qin=33 in={input[0]} out={output[0]} target=40 mindepth=2'
 
 
-# rule stats_normalize:
-#     input: 
-#         MAP_PATH + '/{sample}-{target}/02_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
-#     output:
-#         RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-normalized-stats.txt'
-#     conda:
-#         'envs/general.yaml'
-#     shell:
-#         'seqkit stats {input[0]} > {output[0]}'
+rule stats_normalize:
+    input: 
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+    output:
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-normalized-stats.txt'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'seqkit stats {input[0]} > {output[0]}'
 
 
-# rule subsample:
-#     input: 
-#         MAP_PATH + '/{sample}-{target}/02_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
-#     output:
-#         MAP_PATH + '/{sample}-{target}/03_subsample75000/' + RUNID+'-{sample}-{target}-subsampled.fastq'
-#     conda:
-#         'envs/general.yaml'
-#     shell:
-#         'reformat.sh qin=33 ow=t samplereadstarget=75000 in={input[0]} out={output[0]}'
+rule subsample:
+    input: 
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+    output:
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-subsampled.fastq'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'reformat.sh qin=33 ow=t samplereadstarget=75000 in={input[0]} out={output[0]}'
 
 
-# rule stats_subsample:
-#     input: 
-#         MAP_PATH + '/{sample}-{target}/03_subsample75000/' + RUNID+'-{sample}-{target}-subsampled.fastq'
-#     output:
-#         RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-stats.txt'
-#     conda:
-#         'envs/general.yaml'
-#     shell:
-#         'seqkit stats {input[0]} > {output[0]}'
+rule stats_subsample:
+    input: 
+        MAP_PATH + '/{sample}-{target}/' + RUNID+'-{sample}-{target}-subsampled.fastq'
+    output:
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-stats.txt'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'seqkit stats {input[0]} > {output[0]}'
 
 
 
