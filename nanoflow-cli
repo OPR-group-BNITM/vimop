@@ -306,9 +306,9 @@ if (All or inputArgs.map):
     logger.info("Canu environment file:")
 
     with open(scriptPath + '/envs/canu.yaml', 'r') as f:
-    lines = f.readlines() 
-    for line in lines:
-      logger.info(line)
+      lines = f.readlines() 
+      for line in lines:
+        logger.info(line)
 
 
     logger.info('Assembly with canu')
