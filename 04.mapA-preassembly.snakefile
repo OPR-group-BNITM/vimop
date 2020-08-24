@@ -53,23 +53,23 @@ rule map:
 #     shell:
 #         'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
 
-rule remove_duplicate_headers:
-    input:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
-    output:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
-    script:
-        with open(snakemake.input[0], "r") as f:
-        # lines = a_file.readlines()
-            for num, line in enumerate(f):
-                if "minimap2" in line:
-                    last_to_delete = num
-            del lines[0:last_to_delete]
+# rule remove_duplicate_headers:
+#     input:
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+#     output:
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
+#     script:
+#         with open(snakemake.input[0], "r") as f:
+#         # lines = a_file.readlines()
+#             for num, line in enumerate(f):
+#                 if "minimap2" in line:
+#                     last_to_delete = num
+#             del lines[0:last_to_delete]
 
-        a_file.close()
+#         a_file.close()
 
 
-del lines[1]
+# del lines[1]
 
 
 rule filter:
@@ -83,10 +83,7 @@ rule filter:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        '''
-        set +o pipefail; 
-        samtools fastq --threads {threads} -F 4 --reference {input[0]} {input[1]} > {output[0]} 2> {output[1]}
-        exit 0'''
+        'samtools fastq --threads {threads} -F 4 --reference {input[0]} -t {input[0]}.fai {input[1]} > {output[0]}'
 
 
 rule stats_filter:
