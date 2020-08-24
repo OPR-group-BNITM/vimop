@@ -291,13 +291,13 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-  # if (inputArgs.assembler == 'canu'):
-  #   canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads)
-  #   with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #     for line in p.stdout:
-  #       logger.info(line.rstrip())
+  if (inputArgs.assembler == 'canu'):
+    canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads)
+    with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+        logger.info(line.rstrip())
 
 
   # map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
