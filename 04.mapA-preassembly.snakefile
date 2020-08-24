@@ -75,7 +75,7 @@ rule map:
 rule filter:
     input:
         DB_DIR+'/{target}.fasta',
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
     output:
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped.fastq',
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped-samtools-output.txt',
