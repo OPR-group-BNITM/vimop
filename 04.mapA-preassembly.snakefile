@@ -66,7 +66,7 @@ rule filter:
     shell:
         '''
         set +o pipefail;
-        samtools fastq --threads {threads} -F 4 --reference {input[0]} > {output[0]}'
+        samtools fastq --threads {threads} -F 4 --reference {input[0]} {input[1]} > {output[0]}'
         '''
 
 
