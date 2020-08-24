@@ -19,12 +19,19 @@ DB_DIR = config['db']
 
 
 
+# rule all:
+#     input:
+#         expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq', 
+#             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
+#             MAP_PATH + '/{sample}-{target}/03_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
+#             MAP_PATH + '/{sample}-{target}/04_subsample75000/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
+#             sample=SAMPLES, target=TARGET)
+
+
+
 rule all:
     input:
-        expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq', 
-            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
-            MAP_PATH + '/{sample}-{target}/03_normalize/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
-            MAP_PATH + '/{sample}-{target}/04_subsample75000/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
+        expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'], 
             sample=SAMPLES, target=TARGET)
 
 
