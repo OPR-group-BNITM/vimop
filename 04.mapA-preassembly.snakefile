@@ -40,18 +40,18 @@ rule map:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        'minimap2 -a {input[0]} {input[1]} -t {threads} -o {output[0]}'
+        'minimap2 -ax map-ont -split-prefix myprefix {input[0]} {input[1]} -t {threads} -o {output[0]}'
 
-rule sambam:
-    input:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
-    output:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
-    conda:
-        'envs/general.yaml'
-    threads: 4 #workflow.cores
-    shell:
-        'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
+# rule sambam:
+#     input:
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+#     output:
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
+#     conda:
+#         'envs/general.yaml'
+#     threads: 4 #workflow.cores
+#     shell:
+#         'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
 
 
 rule filter:
@@ -86,7 +86,7 @@ rule normalize_depth:
     conda:
         'envs/general.yaml'
     shell:
-        'bbnorm.sh qin=33 in={input[0]} out={output[0]}.fq target=40 mindepth=2'
+        'bbnorm.sh qin=33 in={input[0]} out={output[0]} target=40 mindepth=2'
 
 
 rule stats_normalize:
