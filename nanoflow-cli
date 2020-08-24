@@ -171,7 +171,7 @@ logger.info("General environment file:")
 with open(scriptPath + '/envs/general.yaml', 'r') as f:
   lines = f.readlines() 
   for line in lines:
-    logger.info(line)
+    logger.info(''.join(line.split()))
 
 
 ###################################################################################################################################################################
@@ -308,7 +308,7 @@ if (All or inputArgs.map):
     with open(scriptPath + '/envs/canu.yaml', 'r') as f:
       lines = f.readlines() 
       for line in lines:
-        logger.info(line)
+        logger.info(''.join(line.split()))
 
 
     logger.info('Assembly with canu')
