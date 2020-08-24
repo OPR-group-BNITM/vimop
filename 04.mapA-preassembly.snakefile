@@ -53,11 +53,29 @@ rule map:
 #     shell:
 #         'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
 
+rule remove_duplicate_headers:
+    input:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+    output:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
+    script:
+        a_file = open(snakemake.input[0], "r")
+        # lines = a_file.readlines()
+        for num, line in enumerate(a_file, 0):
+            if "minimap2" in line:
+                last_to_delete = num
+        del lines[0:last_to_delete]
+
+        a_file.close()
+
+
+del lines[1]
+
 
 rule filter:
     input:
         DB_DIR+'/{target}.fasta',
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-corrected.sam'
     output:
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped.fastq',
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped-samtools-output.txt',
