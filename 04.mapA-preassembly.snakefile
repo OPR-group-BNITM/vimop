@@ -42,16 +42,17 @@ rule map:
     shell:
         'minimap2 -ax map-ont {input[0]} {input[1]} -t {threads} -o {output[0]}'
 
-# rule sambam:
-#     input:
-#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
-#     output:
-#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
-#     conda:
-#         'envs/general.yaml'
-#     threads: 4 #workflow.cores
-#     shell:
-#         'samtools view -b -o {output[0]} --threads {threads}  -s {output[0]}'
+rule sambam:
+    input:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam',
+        DB_DIR+'/{target}.fasta.fai'
+    output:
+        temp(MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam')
+    conda:
+        'envs/general.yaml'
+    threads: 4 #workflow.cores
+    shell:
+        'samtools view -b -o {output[0]} -t {input[1]} --threads {threads} {input[0]}'
 
 # rule remove_duplicate_headers:
 #     input:
@@ -75,15 +76,14 @@ rule map:
 rule filter:
     input:
         DB_DIR+'/{target}.fasta',
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.sam'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.bam'
     output:
         MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped.fastq',
-        MAP_PATH + '/{sample}-{target}/02_filter/' + RUNID+'-{sample}-{target}-mapped-samtools-output.txt',
     conda:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        'samtools fastq --threads {threads} -F 4 --reference {input[0]} -t {input[0]}.fai {input[1]} > {output[0]}'
+        'samtools fastq --threads {threads} -F 4 --reference {input[0]} {input[1]} > {output[0]}'
 
 
 rule stats_filter:
