@@ -17,46 +17,41 @@ ASSEMBLER = config['assembler']
 
 
 
-rule stats_assembly:
-    input: 
-        MAP_PATH + '/{sample}-{target}/05_assemble-{assembler}/contigs.fasta'
-    output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt')
-    conda:
-        'envs/general.yaml'
-    shell:
-        """
-        set +o pipefail;
-        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
-            seqkit stats {input[0]} > {output[0]}
-        fi
-        exit 0
-        """
-
-
-rule stats_assembly:
-    input: 
-        MAP_PATH + '/{sample}-{target}/05_assemble-{assembler}/contigs.fasta'
-    output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt')
-    conda:
-        'envs/general.yaml'
-    shell:
-        """
-        set +o pipefail;
-        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
-            seqkit stats {input[0]} > {output[0]}
-        fi
-        exit 0
-        """
-
-rule calc_read_length_trimmed:
+rule all:
     input:
-        MAP_PATH + '/{sample}-{target}/05_assemble-{assembler}/contigs.fasta'
+        expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt', 
+            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-read-length.txt',
+            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
+            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
+            sample=SAMPLES, target=TARGET)
+
+
+
+
+rule stats_assembly:
+    input: 
+        MAP_PATH + '/{sample}-{target}/02_assemble-{assembler}/contigs.fasta'
+    output:
+        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt')
+    conda:
+        'envs/general.yaml'
+    shell:
+        """
+        set +o pipefail;
+        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
+            seqkit stats {input[0]} > {output[0]}
+        fi
+        exit 0
+        """
+
+
+rule calc_read_length:
+    input:
+        MAP_PATH + '/{sample}-{target}/02_assemble-{assembler}/contigs.fasta'
     conda:
         'envs/general.yaml'
     output:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}read-length.txt'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-read-length.txt'
     shell:
         'readlength.sh in={input[0]} in2={input[1]} bin=1 out={output[0]}'
 

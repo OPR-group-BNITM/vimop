@@ -283,6 +283,8 @@ if (All or inputArgs.map):
   fileHandler = logging.FileHandler(map_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
+
+  logger.info('Map: pre-assembly')
   map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
@@ -291,7 +293,11 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
+
+
+
   if (inputArgs.assembler == 'canu'):
+    logger.info('Assembly with canu')
     canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads)
