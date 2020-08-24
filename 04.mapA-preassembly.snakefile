@@ -64,7 +64,10 @@ rule filter:
         'envs/general.yaml'
     threads: 4 #workflow.cores
     shell:
-        'samtools fastq --threads {threads} -F 4 --reference {input[0]} -1 {output[0]} -2 {output[0]} -n {input[1]} -0 {output[0]} -s {output[0]}'
+        '''
+        set +o pipefail;
+        samtools fastq --threads {threads} -F 4 --reference {input[0]} > {output[0]}'
+        '''
 
 
 rule stats_filter:
