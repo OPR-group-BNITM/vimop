@@ -30,8 +30,8 @@ rule canu:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'
     output:
         touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu/contigs.fasta'),
-    # conda:
-        # 'envs/general.yaml'
+    conda:
+        'envs/canu.yaml'
     params:
         outdir = MAP_PATH + '/{sample}-{target}/02_assemble-canu/',
         prefix = RUNID + '-{sample}-{target}',
