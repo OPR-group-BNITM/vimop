@@ -347,7 +347,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -370,7 +370,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
             
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -392,7 +392,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -403,19 +403,19 @@ if (All or inputArgs.map):
 
 
 
-          if (lastAttempt == 3):
+          if (lastAttempt == 4):
             minReadLength = 300
             minOverlapLength = 200
             subsampleLevel = 50000
             logger.info('Forth canu attempt')
             canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -423,6 +423,7 @@ if (All or inputArgs.map):
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               canuAttempts.append(data)
+              break
 
 
 
