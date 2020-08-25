@@ -327,13 +327,12 @@ if (All or inputArgs.map):
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         if (os.path.exists(canuAttemps_file.read_tsv())):
           canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
+        else:
+          canuAttemps = pd.DataFrame({'Attempt number'}: 0, 'Status': 'failed')
+
+        while (canuAttempts['Status'].tail(1) == 'success'):
           lastAttempt = canuAttempts['Attempt number'].tail(1)
           lastAttemptStatus = canuAttempts['Status'].tail(1)
-        else:
-          lastAttempt = 0
-
-        while (not (pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])['Status'].tail(1) == 'success'):
-
           lastAttempt += 1
 
           if (lastAttempt == 1):
