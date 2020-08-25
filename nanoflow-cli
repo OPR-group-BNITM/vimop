@@ -347,7 +347,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -378,7 +378,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
             
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -408,7 +408,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -438,7 +438,7 @@ if (All or inputArgs.map):
               for line in p.stdout:
                 logger.info(line.rstrip())
 
-            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/contigs.fasta'
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
