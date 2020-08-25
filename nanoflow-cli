@@ -324,7 +324,7 @@ if (All or inputArgs.map):
         logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         if (os.path.exists(canuAttemps_file)):
-          canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
+          canuAttempts = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'] ,sep="\t")
         else:
           data = {'Attempt number':[0], 'Status':['failed']}
           canuAttempts = pd.DataFrame(data)
