@@ -329,13 +329,10 @@ if (All or inputArgs.map):
           data = {'Attempt number':[0], 'Status':['failed']}
           canuAttempts = pd.DataFrame(data)
 
-        print(canuAttempts)
-        exit()
+
         while (canuAttempts['Status'].iloc[-1] != 'success'):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
-          print(lastAttempt)
-          exit()
           lastAttempt += 1
 
           if (lastAttempt == 1):
