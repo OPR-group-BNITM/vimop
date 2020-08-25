@@ -23,7 +23,6 @@ rule all:
     input:
         expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq', 
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
             MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
             sample=SAMPLES, target=TARGET)
 
@@ -80,31 +79,9 @@ rule stats_filter:
         'seqkit stats {input[0]} > {output[0]}'
 
 
-rule normalize_depth:
-    input: 
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
-    output:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
-    conda:
-        'envs/general.yaml'
-    shell:
-        'bbnorm.sh qin=33 in={input[0]} out={output[0]} target=40 mindepth=2'
-
-
-rule stats_normalize:
-    input: 
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
-    output:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-normalized-stats.txt'
-    conda:
-        'envs/general.yaml'
-    shell:
-        'seqkit stats {input[0]} > {output[0]}'
-
-
 rule subsample:
     input: 
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
     output:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'
     conda:
@@ -128,6 +105,26 @@ rule stats_subsample:
 
 
 
+# rule normalize_depth:
+#     input: 
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
+#     output:
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+#     conda:
+#         'envs/general.yaml'
+#     shell:
+#         'bbnorm.sh qin=33 in={input[0]} out={output[0]} target=40 mindepth=2'
+
+
+# rule stats_normalize:
+#     input: 
+#         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq'
+#     output:
+#         RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-normalized-stats.txt'
+#     conda:
+#         'envs/general.yaml'
+#     shell:
+#         'seqkit stats {input[0]} > {output[0]}'
 
 
 

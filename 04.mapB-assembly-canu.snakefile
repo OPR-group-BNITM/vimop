@@ -16,6 +16,10 @@ TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
 
 
+GENOME_SIZE = config['genomeSize']
+MIN_READ_LENGTH = config['minReadLength']
+MIN_OVERLAP_LENGTH = config['minOverlapLength']
+COR_OUT_COVERAGE = 10000
 
 
 rule all:
@@ -35,11 +39,10 @@ rule canu:
     params:
         outdir = MAP_PATH + '/{sample}-{target}/02_assemble-canu/',
         prefix = RUNID + '-{sample}-{target}',
-        cov_cutoff = 5,
-        genomeSize = 10000,
-        minReadLength = 300,
-        minOverlapLength = 200,
-        corOutCoverage = 10000
+        genomeSize = GENOME_SIZE,
+        minReadLength = MIN_READ_LENGTH,
+        minOverlapLength = MIN_OVERLAP_LENGTH,
+        corOutCoverage = COR_OUT_COVERAGE
     benchmark:
         BENCHMARK+'/03_map-{target}/'+RUNID+'-{sample}-{target}-canu-assemble.txt'
     threads: 8 #workflow.cores

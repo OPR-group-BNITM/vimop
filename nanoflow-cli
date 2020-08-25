@@ -86,6 +86,7 @@ optionalArgs.add_argument('-5', '--assemble', action='store_true', help='De Novo
 optionalArgs.add_argument('-6', '--consensus', action='store_true', help='Generation of the consensus')
 optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs='*', type=str, metavar='STR', help='Assembler: canu, flye or wtdbg2', default='canu')
 optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
+optionalArgs.add_argument('-size','-genomeSize', action='store', dest='genomeSize', type=str, metavar='INT', help='Best guess for genome size, default=10000', default=10000)
 
 
 
@@ -138,6 +139,8 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('target: ' + (',').join(inputArgs.targetPathogen) + '\n')
   f.write('script_path: ' + scriptPath + '\n')
   f.write('assembler: ' + inputArgs.assembler + '\n')
+  f.write('genomeSize: ' + inputArgs.genomeSize + '\n')
+
   if (inputArgs.manualRef):
     f.write('manual_ref: ' + inputArgs.manualRef)
 
@@ -290,14 +293,14 @@ if (All or inputArgs.map):
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
 
-  logger.info('Map: pre-assembly')
-  map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  --cores '+ str(inputArgs.threads) 
+  # logger.info('Map: pre-assembly')
+  # map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
+  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  # --cores '+ str(inputArgs.threads) 
 
-  with subprocess.Popen(map_scriptA_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-    for line in p.stdout:
-        logger.info(line.rstrip())
+  # with subprocess.Popen(map_scriptA_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+  #   for line in p.stdout:
+  #       logger.info(line.rstrip())
 
 
 
@@ -310,14 +313,53 @@ if (All or inputArgs.map):
       for line in lines:
         logger.info(''.join(line.split()))
 
+    while not os.path.exists():
+
+
 
     logger.info('Assembly with canu')
-    canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  --cores '+ str(inputArgs.threads)
-    with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-      for line in p.stdout:
-        logger.info(line.rstrip())
+
+    df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
+    SAMPLES = df['sample']
+    TARGETS = (',').join(inputArgs.targetPathogen).split(',')
+    for sample in SAMPLES:
+      for target in TARGETS:
+        canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
+        if (os.path.exists(canuAttemps_file.read_tsv())):
+          canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
+          lastAttempt = canuAttempts['Attempt number'].tail(1)
+          lastAttemptStatus = canuAttempts['Status'].tail(1)
+        else:
+          lastAttempt = 0
+
+        while (not (pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])['Status'].tail(1) == 'success'):
+
+          lastAttempt += 1
+
+          if (lastAttempt == 1):
+            print(lastAttempt)
+
+
+
+
+
+
+  #   canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+  #   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  #   --cores '+ str(inputArgs.threads)
+  #   with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+  #     for line in p.stdout:
+  #       logger.info(line.rstrip())
+
+
+
+
+
+
+
+
+
+
 
 
   # map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
