@@ -330,6 +330,7 @@ if (All or inputArgs.map):
           canuAttempts = pd.DataFrame(data)
 
         print(canuAttempts)
+        exit()
         while (canuAttempts['Status'].iloc[-1] != 'success'):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
