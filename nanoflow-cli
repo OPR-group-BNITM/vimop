@@ -139,7 +139,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('target: ' + (',').join(inputArgs.targetPathogen) + '\n')
   f.write('script_path: ' + scriptPath + '\n')
   f.write('assembler: ' + inputArgs.assembler + '\n')
-  f.write('genomeSize: ' + inputArgs.genomeSize + '\n')
+  f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
 
   if (inputArgs.manualRef):
     f.write('manual_ref: ' + inputArgs.manualRef)
