@@ -331,7 +331,7 @@ if (All or inputArgs.map):
 
         # print(canuAttempts)
         while (canuAttempts['Status'].iloc[-1] != 'success'):
-          lastAttempt = canuAttempts['Attempt number'].iloc[-1].astype(int)
+          lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
           lastAttempt += 1
 
