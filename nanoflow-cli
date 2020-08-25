@@ -330,15 +330,18 @@ if (All or inputArgs.map):
           canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
         else:
           data = {'Attempt number':[0], 'Status':['failed']}
-          canuAttemps = pd.DataFrame(data)
+          canuAttempts = pd.DataFrame(data)
 
-        while (canuAttempts['Status'].tail(1) == 'success'):
+        # print(canuAttempts)
+        while (canuAttempts['Status'].tail(1) != 'success'):
           lastAttempt = canuAttempts['Attempt number'].tail(1)
           lastAttemptStatus = canuAttempts['Status'].tail(1)
-          lastAttempt += 1
+        #   lastAttempt += 1
 
-          if (lastAttempt == 1):
-            print(lastAttempt)
+        #   if (lastAttempt == 1):
+          print(lastAttempt)
+          print(lastAttemptStatus)
+
 
 
 
