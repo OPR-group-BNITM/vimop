@@ -334,8 +334,7 @@ if (All or inputArgs.map):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
           lastAttempt += 1
-          print(lastAttempt)
-          exit()
+
           if (lastAttempt == 1):
             minReadLength = 300
             minOverlapLength = 200
@@ -365,7 +364,7 @@ if (All or inputArgs.map):
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
 
-          exit()
+
 
           if (lastAttempt == 2):
             minReadLength = 200
