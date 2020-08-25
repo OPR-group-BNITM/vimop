@@ -326,7 +326,7 @@ if (All or inputArgs.map):
     for sample in SAMPLES:
       for target in TARGETS:
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
-        if (os.path.exists(canuAttemps_file.read_tsv())):
+        if (os.path.exists(canuAttemps_file)):
           canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
         else:
           data = {'Attempt number':[0], 'Status':['failed']}
