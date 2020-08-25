@@ -40,6 +40,8 @@ import glob
 import time
 import GPUtil
 import pandas as pd
+from shutil import copyfile
+
 # import shlex
 # from StringIO import StringIO
 import threading
@@ -294,16 +296,14 @@ if (All or inputArgs.map):
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
 
-  # logger.info('Map: pre-assembly')
-  # map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads) 
+  logger.info('Map: pre-assembly')
+  map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
 
-  # with subprocess.Popen(map_scriptA_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #   for line in p.stdout:
-  #       logger.info(line.rstrip())
-
-
+  with subprocess.Popen(map_scriptA_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+        logger.info(line.rstrip())
 
 
   if (inputArgs.assembler == 'canu'):
@@ -314,17 +314,14 @@ if (All or inputArgs.map):
       for line in lines:
         logger.info(''.join(line.split()))
 
-    # while not os.path.exists():
-
-
-
-    logger.info('Assembly with canu')
+    
 
     df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
     SAMPLES = df['sample']
     TARGETS = (',').join(inputArgs.targetPathogen).split(',')
     for sample in SAMPLES:
       for target in TARGETS:
+        logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         if (os.path.exists(canuAttemps_file)):
           canuAttempts = pd.read_tsv(ANALYSIS_FOLDER + '/table.csv', names = ['Attempt number','Status'])
@@ -336,11 +333,96 @@ if (All or inputArgs.map):
         while (canuAttempts['Status'].iloc[-1] != 'success'):
           lastAttempt = canuAttempts['Attempt number'].iloc[-1]
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
-        #   lastAttempt += 1
+          lastAttempt += 1
 
-        #   if (lastAttempt == 1):
-          print(lastAttempt)
-          print(lastAttemptStatus)
+          if (lastAttempt == 1):
+            minReadLength = 300
+            minOverlapLength = 200
+            subsampleLevel = 75000
+            logger.info('First canu attempt')
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+lastAttempt+' minReadLength='+minReadLength+' minOverlapLength='+minOverlapLength+' subsampleLevel='+subsampleLevel+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --cores '+ str(inputArgs.threads)
+            with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+              for line in p.stdout:
+                logger.info(line.rstrip())
+
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              data = {'Attempt number':lastAttempt, 'Status':['success']}
+              canuAttempts.append(data)
+            else:
+              data = {'Attempt number':lastAttempt, 'Status':['failed']}
+              canuAttempts.append(data)
+
+
+
+          if (lastAttempt == 2):
+            minReadLength = 200
+            minOverlapLength = 50
+            subsampleLevel = 75000
+            logger.info('Second canu attempt')
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --cores '+ str(inputArgs.threads)
+            with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+              for line in p.stdout:
+                logger.info(line.rstrip())
+            
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              data = {'Attempt number':lastAttempt, 'Status':['success']}
+              canuAttempts.append(data)
+            else:
+              data = {'Attempt number':lastAttempt, 'Status':['failed']}
+              canuAttempts.append(data)
+
+
+          if (lastAttempt == 3):
+            minReadLength = 300
+            minOverlapLength = 200
+            subsampleLevel = 50000
+            logger.info('Second canu attempt')
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --cores '+ str(inputArgs.threads)
+            with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+              for line in p.stdout:
+                logger.info(line.rstrip())
+
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              data = {'Attempt number':lastAttempt, 'Status':['success']}
+              canuAttempts.append(data)
+            else:
+              data = {'Attempt number':lastAttempt, 'Status':['failed']}
+              canuAttempts.append(data)
+
+
+
+          if (lastAttempt == 3):
+            minReadLength = 300
+            minOverlapLength = 200
+            subsampleLevel = 50000
+            logger.info('Second canu attempt')
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --cores '+ str(inputArgs.threads)
+            with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+              for line in p.stdout:
+                logger.info(line.rstrip())
+
+            contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+lastAttempt+'/contigs.fasta'
+            if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              data = {'Attempt number':lastAttempt, 'Status':['success']}
+              canuAttempts.append(data)
+            else:
+              data = {'Attempt number':lastAttempt, 'Status':['failed']}
+              canuAttempts.append(data)
 
 
 
@@ -348,12 +430,8 @@ if (All or inputArgs.map):
 
 
 
-  #   canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  #   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  #   --cores '+ str(inputArgs.threads)
-  #   with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #     for line in p.stdout:
-  #       logger.info(line.rstrip())
+
+
 
 
 

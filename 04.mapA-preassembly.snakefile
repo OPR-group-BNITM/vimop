@@ -23,7 +23,10 @@ rule all:
     input:
         expand([MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq', 
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-stats.txt',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
+            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-75000.fastq',
+            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-50000.fastq',
+            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-75000-stats.txt',
+            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-50000-stats.txt'], 
             sample=SAMPLES, target=TARGET)
 
 
@@ -79,22 +82,45 @@ rule stats_filter:
         'seqkit stats {input[0]} > {output[0]}'
 
 
-rule subsample:
+rule subsample75000:
     input: 
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
     output:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-75000.fastq'
     conda:
         'envs/general.yaml'
     shell:
         'reformat.sh qin=33 ow=t samplereadstarget=75000 in={input[0]} out={output[0]}'
 
-
-rule stats_subsample:
+rule stats_subsample75000:
     input: 
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-75000.fastq'
     output:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-stats.txt'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-75000-stats.txt'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'seqkit stats {input[0]} > {output[0]}'
+
+
+
+
+rule subsample50000:
+    input: 
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped.fastq'
+    output:
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-50000.fastq'
+    conda:
+        'envs/general.yaml'
+    shell:
+        'reformat.sh qin=33 ow=t samplereadstarget=50000 in={input[0]} out={output[0]}'
+
+
+rule stats_subsample50000:
+    input: 
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-50000.fastq'
+    output:
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-50000-stats.txt'
     conda:
         'envs/general.yaml'
     shell:

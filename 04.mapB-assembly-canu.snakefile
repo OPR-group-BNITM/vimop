@@ -20,7 +20,8 @@ GENOME_SIZE = config['genomeSize']
 MIN_READ_LENGTH = config['minReadLength']
 MIN_OVERLAP_LENGTH = config['minOverlapLength']
 COR_OUT_COVERAGE = 10000
-
+ATTEMPT_NUMBER = config['attemptNumber']
+SUBSAMPLE_LEVEL = config['subsampleLevel']
 
 rule all:
     input:
@@ -31,20 +32,20 @@ rule all:
 
 rule canu:
     input:
-        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'
+        MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-'+SUBSAMPLE_LEVEL+'.fastq'
     output:
-        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu/contigs.fasta'),
+        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/contigs.fasta'),
     conda:
         'envs/canu.yaml'
     params:
-        outdir = MAP_PATH + '/{sample}-{target}/02_assemble-canu/',
+        outdir = MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/',
         prefix = RUNID + '-{sample}-{target}',
         genomeSize = GENOME_SIZE,
         minReadLength = MIN_READ_LENGTH,
         minOverlapLength = MIN_OVERLAP_LENGTH,
         corOutCoverage = COR_OUT_COVERAGE
     benchmark:
-        BENCHMARK+'/03_map-{target}/'+RUNID+'-{sample}-{target}-canu-assemble.txt'
+        BENCHMARK+'/03_map-{target}/'+RUNID+'-{sample}-{target}-canu-assemble-'+ATTEMPT_NUMBER+'.txt'
     threads: 8 #workflow.cores
     shell:
         """
