@@ -333,9 +333,9 @@ if (All or inputArgs.map):
           canuAttempts = pd.DataFrame(data)
 
         # print(canuAttempts)
-        while (canuAttempts['Status'].tail(1) != 'success'):
-          lastAttempt = canuAttempts['Attempt number'].tail(1)
-          lastAttemptStatus = canuAttempts['Status'].tail(1)
+        while (canuAttempts['Status'].iloc[-1] != 'success'):
+          lastAttempt = canuAttempts['Attempt number'].iloc[-1]
+          lastAttemptStatus = canuAttempts['Status'].iloc[-1]
         #   lastAttempt += 1
 
         #   if (lastAttempt == 1):
