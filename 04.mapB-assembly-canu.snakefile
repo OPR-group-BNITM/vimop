@@ -25,7 +25,7 @@ SUBSAMPLE_LEVEL = str(config['subsampleLevel'])
 
 rule all:
     input:
-        expand([MAP_PATH + '/{sample}-{target}/02_assemble-canu/contigs.fasta'], 
+        expand([MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/contigs.fasta'], 
             sample=SAMPLES, target=TARGET)
 
 
