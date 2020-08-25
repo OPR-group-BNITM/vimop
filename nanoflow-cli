@@ -354,14 +354,14 @@ if (All or inputArgs.map):
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tsuccess')
+              canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tfailed')
+              canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
 
 
@@ -384,14 +384,14 @@ if (All or inputArgs.map):
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tsuccess')
+              canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tfailed')
+              canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
 
 
@@ -414,14 +414,14 @@ if (All or inputArgs.map):
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tsuccess')
+              canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tfailed')
+              canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
 
 
@@ -444,14 +444,14 @@ if (All or inputArgs.map):
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tsuccess')
+              canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
               canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
-              canufile.write(lastAttempt+'\tfailed')
+              canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
               break
 
