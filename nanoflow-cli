@@ -341,7 +341,7 @@ if (All or inputArgs.map):
             subsampleLevel = 75000
             logger.info('First canu attempt')
             canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+lastAttempt+' minReadLength='+minReadLength+' minOverlapLength='+minOverlapLength+' subsampleLevel='+subsampleLevel+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
               for line in p.stdout:
@@ -364,7 +364,7 @@ if (All or inputArgs.map):
             subsampleLevel = 75000
             logger.info('Second canu attempt')
             canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
               for line in p.stdout:
@@ -384,9 +384,9 @@ if (All or inputArgs.map):
             minReadLength = 300
             minOverlapLength = 200
             subsampleLevel = 50000
-            logger.info('Second canu attempt')
+            logger.info('Third canu attempt')
             canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
+            --configfile '+ANALYSIS_FOLDER+'/config.yaml --config attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
               for line in p.stdout:
@@ -407,7 +407,7 @@ if (All or inputArgs.map):
             minReadLength = 300
             minOverlapLength = 200
             subsampleLevel = 50000
-            logger.info('Second canu attempt')
+            logger.info('Forth canu attempt')
             canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
             --configfile '+ANALYSIS_FOLDER+'/config.yaml --config minReadLength='+minReadLength+'minOverlapLength='+minOverlapLength+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
