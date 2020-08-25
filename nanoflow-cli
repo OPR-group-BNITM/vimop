@@ -351,10 +351,12 @@ if (All or inputArgs.map):
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
 
 
 
@@ -374,10 +376,12 @@ if (All or inputArgs.map):
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
 
 
           if (lastAttempt == 3):
@@ -396,10 +400,12 @@ if (All or inputArgs.map):
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
 
 
 
@@ -419,10 +425,12 @@ if (All or inputArgs.map):
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
-              canuAttempts.append(data)
+              tmp = pd.DataFrame(data)
+              canuAttempts.append(tmp)
               break
 
 
