@@ -24,7 +24,7 @@ SUBSAMPLE_LEVEL = str(config['subsampleLevel'])
 
 rule all:
     input:
-        expand([MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/'+RUNID + '-{sample}-{target}-contigs.fasta'], 
+        expand([MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/'+RUNID + '-{sample}-{target}.contigs.fasta'], 
             sample=SAMPLES, target=TARGET)
 
 
@@ -33,7 +33,7 @@ rule canu:
     input:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-'+SUBSAMPLE_LEVEL+'.fastq'
     output:
-        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/'+RUNID + '-{sample}-{target}-contigs.fasta'),
+        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/'+RUNID + '-{sample}-{target}.contigs.fasta'),
     conda:
         'envs/canu.yaml'
     params:
@@ -49,7 +49,7 @@ rule canu:
     shell:
         """
         canu \
-        -nanopore-raw {input[0]}\
+        -nanopore {input[0]}\
         -fast -d {params.outdir}/ \
         -p {params.prefix} \
         genomeSize={params.genomeSize} \
