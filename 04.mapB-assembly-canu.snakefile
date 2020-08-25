@@ -16,12 +16,12 @@ TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
 
 
-GENOME_SIZE = config['genomeSize']
-MIN_READ_LENGTH = config['minReadLength']
-MIN_OVERLAP_LENGTH = config['minOverlapLength']
-COR_OUT_COVERAGE = 10000
-ATTEMPT_NUMBER = config['attemptNumber']
-SUBSAMPLE_LEVEL = config['subsampleLevel']
+GENOME_SIZE = str(config['genomeSize'])
+MIN_READ_LENGTH = str(config['minReadLength'])
+MIN_OVERLAP_LENGTH = str(config['minOverlapLength'])
+COR_OUT_COVERAGE = str(10000)
+ATTEMPT_NUMBER = str(config['attemptNumber'])
+SUBSAMPLE_LEVEL = str(config['subsampleLevel'])
 
 rule all:
     input:
