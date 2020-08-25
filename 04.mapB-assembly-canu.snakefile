@@ -1,9 +1,6 @@
 import pandas as pd
 
-df=pd.read_csv(config['table'], names = ['sample'])
 
-
-SAMPLES = df['sample']
 RESULTS = config['results']
 BENCHMARK = config['benchmark']
 TRIM_PATH = config['trim_path']
@@ -12,7 +9,9 @@ MAP_PATH = config['map_path']
 
 RUNID = config['runid']
 
-TARGET = list((config['target']).split(","))
+TARGET = (config['currentTarget'])
+SAMPLES = (config['currentSample'])
+
 DB_DIR = config['db']
 
 
