@@ -33,7 +33,7 @@ rule canu:
     input:
         MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-'+SUBSAMPLE_LEVEL+'.fastq'
     output:
-        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/contigs.fasta'),
+        touch(MAP_PATH + '/{sample}-{target}/02_assemble-canu-'+ATTEMPT_NUMBER+'/'+RUNID + '-{sample}-{target}-contigs.fasta'),
     conda:
         'envs/canu.yaml'
     params:
