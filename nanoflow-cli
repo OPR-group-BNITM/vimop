@@ -313,7 +313,7 @@ if (All or inputArgs.map):
       for line in lines:
         logger.info(''.join(line.split()))
 
-    while not os.path.exists():
+    # while not os.path.exists():
 
 
 
