@@ -712,8 +712,14 @@ if (All or inputArgs.consensus):
             tmp = {'sampe': sample, 'ref': manRef}
             blastedList = blastedList.append(tmp)  
 
-    blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/-all-blasted-list.csv', index=False)
+    blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
 
+    with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
+      lines = f.readlines() 
+      for line in lines:
+        logger.info(''.join(line.split()))
+
+    
 
 
 # grep -hs ^ $ANALYSIS_FOLDER/${RUNID}_RESULTS/*/03_map-*/$RUNID-*-blasted_list \
