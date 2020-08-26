@@ -24,7 +24,11 @@ fig, ax = plt.subplots()
 fig.set_size_inches(30,20)
 # ax.plot(rl, color='#3b5b92',linewidth=1.8)
 ax = rl.plot.bar(x='Length', y='Count', color='#3b5b92', rot=0)
-
+left = 0.25
+bottom = 0.25 
+width = 1
+height = 1.2
+ax = fig.add_axes([left, bottom, width, height])
 # ax.set_facecolor('white')
 # ax.axhline(y=20, linewidth=3, color='black',alpha=0.5, linestyle='dashed', label='20x')
 
