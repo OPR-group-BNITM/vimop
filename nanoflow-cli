@@ -356,14 +356,14 @@ if (All or inputArgs.map):
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
@@ -390,14 +390,14 @@ if (All or inputArgs.map):
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
@@ -422,14 +422,14 @@ if (All or inputArgs.map):
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
@@ -454,14 +454,14 @@ if (All or inputArgs.map):
               copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tsuccess')
               canufile.close()
             else:
               data = {'Attempt number':lastAttempt, 'Status':['failed']}
               tmp = pd.DataFrame(data)
-              canuAttempts.append(tmp)
+              canuAttempts = canuAttempts.append(tmp)
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
