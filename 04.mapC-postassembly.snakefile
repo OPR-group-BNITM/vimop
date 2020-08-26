@@ -52,7 +52,7 @@ rule calc_read_length:
     output:
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
     shell:
-        'readlength.sh in={input[0]} in2={input[1]} bin=1 out={output[0]}'
+        'readlength.sh in={input[0]} bin=1 out={output[0]}'
 
 
 rule read_length_png:
