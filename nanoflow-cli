@@ -697,6 +697,7 @@ if (All or inputArgs.consensus):
   for sample in SAMPLES:
     for target in TARGETS:
       for assembler in ASSEMBLERS:
+        print(sample + ' ' + target + ' ' + assembler)
         mappedList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'
         if os.path.exists(mappedList) and os.path.getsize(mappedList) > 0:
           tmp = pd.read_csv(mappedList, names = ['sample','ref','def','length','target','assembler','bitscore'])
