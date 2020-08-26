@@ -80,7 +80,7 @@ rule blast:
     conda:
         'envs/general.yaml'
     params:
-        virus_db=DB+'/ALL'
+        virus_db=DB_DIR+'/ALL'
     threads: 4 #workflow.cores
     shell:
         """
