@@ -24,7 +24,7 @@ SUBSAMPLE_LEVEL = str(config['subsampleLevel'])
 
 rule all:
     input:
-        expand([ASSEMBLE_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/' + RUNID+'-{sample}.contigs.fastq'], sample=SAMPLES)
+        expand([ASSEMBLE_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/' + RUNID+'-{sample}.contigs.fasta'], sample=SAMPLES)
 
 
 
