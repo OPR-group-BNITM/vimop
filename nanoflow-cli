@@ -700,17 +700,15 @@ if (All or inputArgs.consensus):
     for assembler in ASSEMBLERS:
       for target in TARGETS:
         mappedList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+assembler+'-blasted-list.csv'
-        print(mappedList)
         if os.path.exists(mappedList) and os.path.getsize(mappedList) > 0:
           tmp = pd.read_csv(mappedList, names = ['sample','ref','def','length','target','assembler','bitscore'])
-          blastedList = blastedList.append(tmp)
+          blastedList = blastedList.append(tmp[['sample','ref']])
 
 
       assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+assembler+'-blasted-list.csv'
-      print(assembledList)
       if os.path.exists(assembledList) and os.path.getsize(assembledList) > 0:
         tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
-        blastedList = blastedList.append(tmp)  
+          blastedList = blastedList.append(tmp[['sample','ref']])
   
       if (inputArgs.manualRef):
         for manRef in inputArgs.manualRef:
@@ -719,19 +717,13 @@ if (All or inputArgs.consensus):
 
     blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
 
+    logger.info('Blasted list considered:')
     with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
       lines = f.readlines() 
       for line in lines:
         logger.info(''.join(line.split()))
 
     
-
-
-# grep -hs ^ $ANALYSIS_FOLDER/${RUNID}_RESULTS/*/03_map-*/$RUNID-*-blasted_list \
-# $ANALYSIS_FOLDER/${RUNID}_RESULTS/*/04_assemble/$RUNID-*-assembled-blasted_list \
-# $ANALYSIS_FOLDER/${RUNID}_RESULTS/${RUNID}-manual_ref-blasted-list.txt \
-# > $ANALYSIS_FOLDER/${RUNID}_RESULTS/${RUNID}-all-blasted-list.txt
-# sed -i 's/,  /,/g' $ANALYSIS_FOLDER/${RUNID}_RESULTS/${RUNID}-all-blasted-list.txt
 
   # consensus_script_command = 'python '+scriptPath+'/03.clean.py ' + ANALYSIS_FOLDER + ' \
   # '+ cleanOpts + ' '+ RUNID + ' ' +ANALYSIS_FOLDER + '/' + RUNID + '-02-trim \
