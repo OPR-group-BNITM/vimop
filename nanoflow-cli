@@ -147,7 +147,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
 
   if (inputArgs.manualRef):
-    f.write('manual_ref: ' + inputArgs.manualRef)
+    f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
 
 
 logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')
