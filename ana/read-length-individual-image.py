@@ -19,7 +19,7 @@ rl = rl.astype('int64')
 # rl = pd.read_csv(snakemake.input[0], sep='\t', names=['Length','Count','Pct_reads','cum_reads', 'cum_pct_reads','bases','pct_bases','cum_bases','cum_pct_bases'])
 
 # plt.rc('sans-serif':['Arial'], 'size':20})
-# fig, ax = plt.subplots(figsize=(20,10))
+fig, ax = plt.subplots()
 # rl = rl.set_index('Length')
 fig.set_size_inches(20,10)
 # ax.plot(rl, color='#3b5b92',linewidth=1.8)
