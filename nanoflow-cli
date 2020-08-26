@@ -330,12 +330,12 @@ if (All or inputArgs.map):
           canuAttempts = pd.DataFrame(data)
           # print(canuAttempts['Status'].iloc[-1])
 
-        logger.info('Starting with: '+canuAttempts['Attempt number'].iloc[-1])
+        logger.info('Starting with: '+str(canuAttempts['Attempt number'].iloc[-1]))
         while (canuAttempts['Status'].iloc[-1] != 'success'):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
           lastAttempt += 1
-          logger.info('Running attempt number: '+lastAttempt)
+          logger.info('Running attempt number: '+str(lastAttempt))
 
           if (lastAttempt == 1):
             logger.info('Running attempt number 1')
