@@ -147,8 +147,6 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
 
   if (inputArgs.manualRef):
-    print(inputArgs.manualRef)
-    exit()
     f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
 
 
