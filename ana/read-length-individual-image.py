@@ -35,6 +35,6 @@ ax.set_ylabel('Number of reads', size=15,weight='bold')
 ax.tick_params(axis='both', which='major', labelsize=18)
 
 # ax.title.set_text(str(snakemake.params.RUNID)+"-"+str(snakemake.params.sample)+", reference: "+str(snakemake.params.ref))
-ax.set_title('Run: '+str(snakemake.params.RUNID)+", sample: "+str(snakemake.params.sample)+", trimmed", fontdict={'fontsize': 24, 'fontweight': 'bold'})
+ax.set_title('Run: '+str(snakemake.params.RUNID)+", sample: "+str(snakemake.params.sample)+", trimmed", fontdict={'fontsize': 18, 'fontweight': 'bold'})
 ax.title.set_position((0.5,1.03))
 plt.savefig(snakemake.output[0])
