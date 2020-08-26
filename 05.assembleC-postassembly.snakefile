@@ -195,7 +195,8 @@ rule merge_id_bitscore:
         touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv')
     params:
         sample = '{sample}',
-        target = '{assembler}'
+        target = '{target}',
+        assembler = '{assembler}'
     run:
         ref = pd.read_csv(input[0],names=['ref'])
         description = pd.read_csv(input[1],names=['def'])
