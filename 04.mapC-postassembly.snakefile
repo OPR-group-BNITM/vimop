@@ -62,7 +62,7 @@ rule read_length_png:
     conda:
         'envs/general.yaml'
     params:
-        RUNID = '{RUNID}',
+        RUNID = RUNID,
         sample = '{sample}'
     output:
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
