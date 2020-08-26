@@ -24,11 +24,9 @@ rule all:
     input:
         expand([ASSEMBLE_PATH + '/{sample}/01_subsample/' + RUNID+'-{sample}-trim-subsampled-75000.fastq', 
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-trim-subsampled-75000-stats.txt',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-75000.fastq',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled-50000.fastq',
-            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-75000-stats.txt',
-            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-subsampled-50000-stats.txt'], 
-            sample=SAMPLES, target=TARGET)
+            ASSEMBLE_PATH + '/{sample}/01_subsample/' + RUNID+'-{sample}-trim-subsampled-50000.fastq',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-trim-subsampled-50000-stats.txt'],
+            sample=SAMPLES)
 
 
 
