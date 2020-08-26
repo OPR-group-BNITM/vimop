@@ -545,7 +545,7 @@ if (All or inputArgs.assemble):
               logger.info(line.rstrip())
 
 
-          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -576,7 +576,7 @@ if (All or inputArgs.assemble):
             for line in p.stdout:
               logger.info(line.rstrip())
 
-          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -608,7 +608,7 @@ if (All or inputArgs.assemble):
             for line in p.stdout:
               logger.info(line.rstrip())
 
-          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -640,7 +640,7 @@ if (All or inputArgs.assemble):
             for line in p.stdout:
               logger.info(line.rstrip())
 
-          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -670,6 +670,9 @@ if (All or inputArgs.assemble):
       with subprocess.Popen(assemble_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             logger.info(line.rstrip())
+
+
+
 
 
 

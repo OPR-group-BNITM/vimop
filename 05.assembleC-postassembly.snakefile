@@ -65,7 +65,7 @@ rule read_length_png:
     params:
         RUNID = RUNID,
         sample = '{sample}',
-        label = 'mapped-{target}-{assembler}'
+        label = 'assembly-{assembler}'
     output:
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
     script:

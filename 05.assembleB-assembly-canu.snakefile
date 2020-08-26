@@ -32,7 +32,7 @@ rule canu:
     input:
         ASSEMBLE_PATH + '/{sample}/01_subsample/' + RUNID+'-{sample}-trim-subsampled-'+SUBSAMPLE_LEVEL+'.fastq'
     output:
-        touch(ASSEMBLE_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/' + RUNID+'-{sample}.contigs.fastq')
+        touch(ASSEMBLE_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/' + RUNID+'-{sample}.contigs.fasta')
     conda:
         'envs/canu.yaml'
     params:
