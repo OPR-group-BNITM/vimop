@@ -503,174 +503,173 @@ if (All or inputArgs.assemble):
         logger.info(line.rstrip())
 
 
-  # if (inputArgs.assembler == 'canu'):
-  #   logger.info("Canu environment file:")
+  if (inputArgs.assembler == 'canu'):
+    logger.info("Canu environment file:")
 
-  #   with open(scriptPath + '/envs/canu.yaml', 'r') as f:
-  #     lines = f.readlines() 
-  #     for line in lines:
-  #       logger.info(''.join(line.split()))
+    with open(scriptPath + '/envs/canu.yaml', 'r') as f:
+      lines = f.readlines() 
+      for line in lines:
+        logger.info(''.join(line.split()))
 
     
 
-  #   df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
-  #   SAMPLES = df['sample']
-  #   TARGETS = (',').join(inputArgs.targetPathogen).split(',')
-  #   for sample in SAMPLES:
-  #     for target in TARGETS:
-  #       logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
-  #       canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
-  #       if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
-  #         canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
-  #       else:
-  #         data = {'Attempt number':[0], 'Status':['failed']}
-  #         canuAttempts = pd.DataFrame(data)
+    df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
+    SAMPLES = df['sample']
+    TARGETS = (',').join(inputArgs.targetPathogen).split(',')
+    for sample in SAMPLES:
+      logger.info(sample+ ': Assembly with canu')
+      canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assembly/canu-attempts.tsv'
+      if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
+        canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
+      else:
+        data = {'Attempt number':[0], 'Status':['failed']}
+        canuAttempts = pd.DataFrame(data)
 
-  #       # logger.info('Starting with: '+str(canuAttempts['Attempt number'].iloc[-1]))
-  #       while (canuAttempts['Status'].iloc[-1] != 'success'):
-  #         lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
-  #         lastAttemptStatus = canuAttempts['Status'].iloc[-1]
-  #         lastAttempt += 1
+      while (canuAttempts['Status'].iloc[-1] != 'success'):
+        lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
+        lastAttemptStatus = canuAttempts['Status'].iloc[-1]
+        lastAttempt += 1
 
-  #         if (lastAttempt == 1):
-  #           logger.info('Running attempt number 1')
+        if (lastAttempt == 1):
+          logger.info('Running attempt number 1')
 
-  #           minReadLength = 300
-  #           minOverlapLength = 200
-  #           subsampleLevel = 75000
-  #           logger.info('First canu attempt')
-  #           canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  #           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
-  #           --cores '+ str(inputArgs.threads)
-  #           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #             for line in p.stdout:
-  #               logger.info(line.rstrip())
-
-  #           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
-  #           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-  #             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
-  #             data = {'Attempt number':lastAttempt, 'Status':['success']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tsuccess')
-  #             canufile.close()
-  #           else:
-  #             data = {'Attempt number':lastAttempt, 'Status':['failed']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tfailed')
-  #             canufile.close()
-
-  #         if (lastAttempt == 2):
-  #           logger.info('Running attempt number 2')
-
-  #           minReadLength = 200
-  #           minOverlapLength = 50
-  #           subsampleLevel = 75000
-  #           logger.info('Second canu attempt')
-  #           canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  #           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
-  #           --cores '+ str(inputArgs.threads)
-  #           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #             for line in p.stdout:
-  #               logger.info(line.rstrip())
-            
-  #           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
-  #           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-  #             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
-  #             data = {'Attempt number':lastAttempt, 'Status':['success']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tsuccess')
-  #             canufile.close()
-  #           else:
-  #             data = {'Attempt number':lastAttempt, 'Status':['failed']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tfailed')
-  #             canufile.close()
+          minReadLength = 300
+          minOverlapLength = 200
+          subsampleLevel = 75000
+          logger.info('First canu attempt')
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
+          --cores '+ str(inputArgs.threads)
+          with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+              logger.info(line.rstrip())
 
 
-  #         if (lastAttempt == 3):
-  #           logger.info('Running attempt number 3')
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            data = {'Attempt number':lastAttempt, 'Status':['success']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tsuccess')
+            canufile.close()
+          else:
+            data = {'Attempt number':lastAttempt, 'Status':['failed']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tfailed')
+            canufile.close()
 
-  #           minReadLength = 300
-  #           minOverlapLength = 200
-  #           subsampleLevel = 50000
-  #           logger.info('Third canu attempt')
-  #           canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  #           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
-  #           --cores '+ str(inputArgs.threads)
-  #           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #             for line in p.stdout:
-  #               logger.info(line.rstrip())
+        if (lastAttempt == 2):
+          logger.info('Running attempt number 2')
 
-  #           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
-  #           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-  #             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
-  #             data = {'Attempt number':lastAttempt, 'Status':['success']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tsuccess')
-  #             canufile.close()
-  #           else:
-  #             data = {'Attempt number':lastAttempt, 'Status':['failed']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tfailed')
-  #             canufile.close()
+          minReadLength = 200
+          minOverlapLength = 50
+          subsampleLevel = 75000
+          logger.info('Second canu attempt')
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
+          --cores '+ str(inputArgs.threads)
+          with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+              logger.info(line.rstrip())
 
-
-  #         if (lastAttempt == 4):
-  #           logger.info('Running attempt number 4')
-
-  #           minReadLength = 300
-  #           minOverlapLength = 200
-  #           subsampleLevel = 50000
-  #           logger.info('Forth canu attempt')
-  #           canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
-  #           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
-  #           --cores '+ str(inputArgs.threads)
-  #           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #             for line in p.stdout:
-  #               logger.info(line.rstrip())
-
-  #           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
-  #           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-  #             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
-  #             data = {'Attempt number':lastAttempt, 'Status':['success']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tsuccess')
-  #             canufile.close()
-  #           else:
-  #             data = {'Attempt number':lastAttempt, 'Status':['failed']}
-  #             tmp = pd.DataFrame(data)
-  #             canuAttempts = canuAttempts.append(tmp)
-  #             canufile = open(canuAttemps_file, 'w+')
-  #             canufile.write(str(lastAttempt)+'\tfailed')
-  #             canufile.close()
-  #             break
-
-  #         logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
-        
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            data = {'Attempt number':lastAttempt, 'Status':['success']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tsuccess')
+            canufile.close()
+          else:
+            data = {'Attempt number':lastAttempt, 'Status':['failed']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tfailed')
+            canufile.close()
 
 
-  #       logger.info('Map: post-assembly')
-  #       map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
-  #       --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  #       --cores '+ str(inputArgs.threads) 
+        if (lastAttempt == 3):
+          logger.info('Running attempt number 3')
 
-  #       with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #         for line in p.stdout:
-  #             logger.info(line.rstrip())
+          minReadLength = 300
+          minOverlapLength = 200
+          subsampleLevel = 50000
+          logger.info('Third canu attempt')
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
+          --cores '+ str(inputArgs.threads)
+          with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+              logger.info(line.rstrip())
+
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            data = {'Attempt number':lastAttempt, 'Status':['success']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tsuccess')
+            canufile.close()
+          else:
+            data = {'Attempt number':lastAttempt, 'Status':['failed']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tfailed')
+            canufile.close()
+
+
+        if (lastAttempt == 4):
+          logger.info('Running attempt number 4')
+
+          minReadLength = 300
+          minOverlapLength = 200
+          subsampleLevel = 50000
+          logger.info('Forth canu attempt')
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
+          --cores '+ str(inputArgs.threads)
+          with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+              logger.info(line.rstrip())
+
+          contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fastq'
+          if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            data = {'Attempt number':lastAttempt, 'Status':['success']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tsuccess')
+            canufile.close()
+          else:
+            data = {'Attempt number':lastAttempt, 'Status':['failed']}
+            tmp = pd.DataFrame(data)
+            canuAttempts = canuAttempts.append(tmp)
+            canufile = open(canuAttemps_file, 'w+')
+            canufile.write(str(lastAttempt)+'\tfailed')
+            canufile.close()
+            break
+
+        logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
+      
+
+
+      logger.info('Assemble: post-assembly')
+      assemble_scriptC_command = 'snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
+      --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+      --cores '+ str(inputArgs.threads) 
+
+      with subprocess.Popen(assemble_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            logger.info(line.rstrip())
 
 
 
