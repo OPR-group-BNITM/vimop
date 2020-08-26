@@ -714,7 +714,7 @@ if (All or inputArgs.consensus):
   
       if (inputArgs.manualRef):
         for manRef in inputArgs.manualRef:
-          tmp = {'sampe': sample, 'ref': manRef, 'def': 'length': 'target': 'assembler': 'bitscore':}
+          tmp = {'sampe': sample, 'ref': manRef, 'def': [],'length': [],'target': [],'assembler': [],'bitscore': []}
           blastedList = blastedList.append(tmp)  
 
     blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
