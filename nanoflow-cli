@@ -695,23 +695,25 @@ if (All or inputArgs.consensus):
   blastedList = pd.DataFrame()
 
   for sample in SAMPLES:
-    for target in TARGETS:
-      for assembler in ASSEMBLERS:
-        print(sample + ' ' + target + ' ' + assembler)
+    for assembler in ASSEMBLERS:
+      for target in TARGETS:
         mappedList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'
+        print(mappedList)
         if os.path.exists(mappedList) and os.path.getsize(mappedList) > 0:
           tmp = pd.read_csv(mappedList, names = ['sample','ref','def','length','target','assembler','bitscore'])
           blastedList = blastedList.append(tmp)
 
-        assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'
-        if os.path.exists(assembledList) and os.path.getsize(assembledList) > 0:
-          tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
+
+      assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'
+      print(assembledList)
+      if os.path.exists(assembledList) and os.path.getsize(assembledList) > 0:
+        tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
+        blastedList = blastedList.append(tmp)  
+  
+      if (inputArgs.manualRef):
+        for manRef in inputArgs.manualRef:
+          tmp = {'sampe': sample, 'ref': manRef}
           blastedList = blastedList.append(tmp)  
-    
-        if (inputArgs.manualRef):
-          for manRef in inputArgs.manualRef:
-            tmp = {'sampe': sample, 'ref': manRef}
-            blastedList = blastedList.append(tmp)  
 
     blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
 
