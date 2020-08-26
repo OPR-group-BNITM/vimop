@@ -328,14 +328,12 @@ if (All or inputArgs.map):
         else:
           data = {'Attempt number':[0], 'Status':['failed']}
           canuAttempts = pd.DataFrame(data)
-          # print(canuAttempts['Status'].iloc[-1])
 
         logger.info('Starting with: '+str(canuAttempts['Attempt number'].iloc[-1]))
         while (canuAttempts['Status'].iloc[-1] != 'success'):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
           lastAttempt += 1
-          logger.info('Running attempt number: '+str(lastAttempt))
 
           if (lastAttempt == 1):
             logger.info('Running attempt number 1')
@@ -353,7 +351,7 @@ if (All or inputArgs.map):
 
             contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
               canuAttempts = canuAttempts.append(tmp)
@@ -367,9 +365,6 @@ if (All or inputArgs.map):
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
-
-          # print(canuAttempts['Status'].iloc[-1])
-
 
           if (lastAttempt == 2):
             logger.info('Running attempt number 2')
@@ -387,7 +382,7 @@ if (All or inputArgs.map):
             
             contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
               canuAttempts = canuAttempts.append(tmp)
@@ -419,7 +414,7 @@ if (All or inputArgs.map):
 
             contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
               canuAttempts = canuAttempts.append(tmp)
@@ -451,7 +446,7 @@ if (All or inputArgs.map):
 
             contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/'+sample+'-'+target+'/02_assemble-canu-'+str(lastAttempt)+'/'+RUNID+'-'+sample+'-'+target+'.contigs.fasta'
             if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/contigs.fasta')
+              copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+inputArgs.assembler +'-contigs.fasta')
               data = {'Attempt number':lastAttempt, 'Status':['success']}
               tmp = pd.DataFrame(data)
               canuAttempts = canuAttempts.append(tmp)
@@ -467,12 +462,21 @@ if (All or inputArgs.map):
               canufile.close()
               break
 
+          logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
+        
 
 
+        logger.info('Map: post-assembly')
+        map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
+        --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+        --cores '+ str(inputArgs.threads) 
 
-          # print(canuAttempt)
-          logger.info('Finishing loop with: '+str(canuAttempts['Attempt number'].iloc[-1]))
-        print("Out of loop!")
+        with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+          for line in p.stdout:
+              logger.info(line.rstrip())
+
+
+        
 
 
 
