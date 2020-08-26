@@ -36,7 +36,7 @@ rule canu:
     conda:
         'envs/canu.yaml'
     params:
-        outdir = MAP_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/',
+        outdir = ASSEMBLE_PATH + '/{sample}/02_assemble-canu-'+ATTEMPT_NUMBER+'/',
         prefix = RUNID + '-{sample}',
         genomeSize = GENOME_SIZE,
         minReadLength = MIN_READ_LENGTH,
