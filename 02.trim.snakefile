@@ -106,7 +106,8 @@ rule trimmed_read_length_png:
         'envs/general.yaml'
     params:
         RUNID = '{RUNID}',
-        sample = '{sample}'
+        sample = '{sample}',
+        label = 'trimmed'
     output:
         RESULTS+'/{sample}/01_trim/{RUNID}-{sample}-trimmed-read-length.png'
     script:

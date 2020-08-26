@@ -8,6 +8,7 @@ BENCHMARK = config['benchmark']
 TRIM_PATH = config['trim_path']
 CLEAN_PATH = config['clean_path']
 MAP_PATH = config['map_path']
+ASSEMBLE_PATH = config['assemble_path']
 
 RUNID = config['runid']
 
