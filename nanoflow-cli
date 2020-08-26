@@ -697,14 +697,14 @@ if (All or inputArgs.consensus):
   for sample in SAMPLES:
     for assembler in ASSEMBLERS:
       for target in TARGETS:
-        mappedList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'
+        mappedList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+assembler+'-blasted-list.csv'
         print(mappedList)
         if os.path.exists(mappedList) and os.path.getsize(mappedList) > 0:
           tmp = pd.read_csv(mappedList, names = ['sample','ref','def','length','target','assembler','bitscore'])
           blastedList = blastedList.append(tmp)
 
 
-      assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'
+      assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+assembler+'-blasted-list.csv'
       print(assembledList)
       if os.path.exists(assembledList) and os.path.getsize(assembledList) > 0:
         tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
