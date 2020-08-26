@@ -21,7 +21,7 @@ rl = rl.astype('int64')
 # plt.rc('sans-serif':['Arial'], 'size':20})
 fig, ax = plt.subplots()
 # rl = rl.set_index('Length')
-fig.set_size_inches(20,10)
+# fig.set_size_inches(20,10)
 # ax.plot(rl, color='#3b5b92',linewidth=1.8)
 ax = rl.plot.bar(x='Length', y='Count', color='#3b5b92', rot=0)
 
