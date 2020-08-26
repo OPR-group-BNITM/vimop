@@ -26,11 +26,27 @@ rule all:
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
 
 
+rule sort:
+    input: 
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+    output:
+        touch(RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-sorted.fasta')
+    conda:
+        'envs/general.yaml'
+    shell:
+        """
+        set +o pipefail;
+        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
+            seqkit sort --by-length --reverse {input[0]} > {output[0]}
+        fi
+        exit 0
+        """
+
 
 
 rule stats_assembly:
     input: 
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-sorted.fasta'
     output:
         touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt')
     conda:
@@ -47,7 +63,7 @@ rule stats_assembly:
 
 rule calc_read_length:
     input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-sorted.fasta'
     conda:
         'envs/general.yaml'
     output:
@@ -76,7 +92,7 @@ rule read_length_png:
 
 rule blast:
     input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-sorted.fasta'
     output:
         touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst')
     conda:

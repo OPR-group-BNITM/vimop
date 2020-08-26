@@ -19,21 +19,40 @@ ASSEMBLER = list((config['assembler']).split(","))
 
 rule all:
     input:
-        expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
-            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt',
-            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png',
-            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst',
-            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'], 
+        expand([RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-mapped-assembly-stats.txt',
+            RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt',
+            RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}}-{assembler}-blast-results.lst',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'], 
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
+
+
+
+rule sort:
+    input: 
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs.fasta'
+    output:
+        touch(RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta')
+    conda:
+        'envs/general.yaml'
+    shell:
+        """
+        set +o pipefail;
+        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
+            seqkit sort --by-length --reverse {input[0]} > {output[0]}
+        fi
+        exit 0
+        """
 
 
 
 
 rule stats_assembly:
     input: 
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt')
+        touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-mapped-assembly-stats.txt')
     conda:
         'envs/general.yaml'
     shell:
@@ -46,20 +65,25 @@ rule stats_assembly:
         """
 
 
+
+
+
+
+
 rule calc_read_length:
     input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta'
     conda:
         'envs/general.yaml'
     output:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt'
     shell:
         'readlength.sh in={input[0]} bin=1 out={output[0]}'
 
 
 rule read_length_png:
     input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
+        RESULTS +'/{sample}/04_assemble}/'+RUNID+'-{sample}-{assembler}-read-length.txt'
     conda:
         'envs/general.yaml'
     params:
@@ -67,7 +91,7 @@ rule read_length_png:
         sample = '{sample}',
         label = 'assembly-{assembler}'
     output:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png'
     script:
         'ana/read-length-individual-image.py'
 
@@ -77,9 +101,9 @@ rule read_length_png:
 
 rule blast:
     input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst')
+        touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst')
     conda:
         'envs/general.yaml'
     params:
@@ -97,9 +121,9 @@ rule blast:
  
 rule get_hit_id:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst'
     output:
-        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-ids'))
+        temp(touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-ids'))
     conda:
         'envs/general.yaml'
     shell:
@@ -113,9 +137,9 @@ rule get_hit_id:
 
 rule get_hit_bitscore:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst'
     output:
-        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-bitscore'))
+        temp(touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-bitscore'))
     conda:
         'envs/general.yaml'
     shell:
@@ -130,9 +154,9 @@ rule get_hit_bitscore:
 
 rule get_hit_length:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst'
     output:
-        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-length'))
+        temp(touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-length'))
     conda:
         'envs/general.yaml'
     shell:
@@ -146,9 +170,9 @@ rule get_hit_length:
 
 rule get_hit_def:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst'
     output:
-        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-def'))
+        temp(touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-def'))
     conda:
         'envs/general.yaml'
     shell:
@@ -163,12 +187,12 @@ rule get_hit_def:
 
 rule merge_id_bitscore:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-ids',
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-def',
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-length',
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-bitscore'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-ids',
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-def',
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-length',
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-hits-bitscore'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv')
+        touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv')
     params:
         sample = '{sample}',
         target = '{target}'
