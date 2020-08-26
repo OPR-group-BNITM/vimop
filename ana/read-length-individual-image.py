@@ -24,11 +24,7 @@ fig, ax = plt.subplots()
 fig.set_size_inches(30,20)
 # ax.plot(rl, color='#3b5b92',linewidth=1.8)
 ax = rl.plot.bar(x='Length', y='Count', color='#3b5b92', rot=0)
-left = 0.25
-bottom = 0.25 
-width = 1
-height = 1.2
-ax = fig.add_axes([left, bottom, width, height])
+
 # ax.set_facecolor('white')
 # ax.axhline(y=20, linewidth=3, color='black',alpha=0.5, linestyle='dashed', label='20x')
 
@@ -39,6 +35,6 @@ ax.set_ylabel('Number of reads', size=12,weight='bold')
 ax.tick_params(axis='both', which='major', labelsize=10)
 
 # ax.title.set_text(str(snakemake.params.RUNID)+"-"+str(snakemake.params.sample)+", reference: "+str(snakemake.params.ref))
-ax.set_title('Run: '+str(snakemake.params.RUNID)+"\n sample: "+str(snakemake.params.sample), fontdict={'fontsize': 15, 'fontweight': 'bold'})
+ax.set_title('Run: '+str(snakemake.params.RUNID)+"\n sample: "+str(snakemake.params.sample), fontdict={'fontsize': 14, 'fontweight': 'bold'})
 ax.title.set_position((0.5,1.03))
 plt.savefig(snakemake.output[0])
