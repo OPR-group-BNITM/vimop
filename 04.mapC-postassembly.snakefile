@@ -67,7 +67,7 @@ rule read_length_png:
     output:
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
     script:
-        'ana/read_length.py'
+        'ana/read-length-individual-image.py'
 
 
 
