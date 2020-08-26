@@ -1,6 +1,6 @@
 import pandas as pd
 
-df=pd.read_csv(config['table'])
+df=pd.read_csv(config['table'], names = ['sample'])
 
 SAMPLES = df['sample']
 RESULTS = config['results']
@@ -12,27 +12,26 @@ MAP_PATH = config['map_path']
 RUNID = config['runid']
 
 TARGET = list((config['target']).split(","))
-VIRUS_DB = config['virus_db']
-ASSEMBLER = config['assembler']
-
+DB_DIR = config['db']
+ASSEMBLER = list((config['assembler']).split(","))
 
 
 rule all:
     input:
-        expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt', 
-            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-read-length.txt',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-mapped-normalized.fastq',
-            MAP_PATH + '/{sample}-{target}/01_map/' + RUNID+'-{sample}-{target}-subsampled.fastq'], 
-            sample=SAMPLES, target=TARGET)
+        expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
+            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt',
+            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst',
+            RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'], 
+            sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
 
 
 
 
 rule stats_assembly:
     input: 
-        MAP_PATH + '/{sample}-{target}/02_assemble-{assembler}/contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-mapped-{assembler}-stats.txt')
+        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt')
     conda:
         'envs/general.yaml'
     shell:
@@ -47,25 +46,25 @@ rule stats_assembly:
 
 rule calc_read_length:
     input:
-        MAP_PATH + '/{sample}-{target}/02_assemble-{assembler}/contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
     conda:
         'envs/general.yaml'
     output:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-read-length.txt'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
     shell:
         'readlength.sh in={input[0]} in2={input[1]} bin=1 out={output[0]}'
 
 
-rule trimmed_read_length_png:
+rule read_length_png:
     input:
-        RESULTS+'/{sample}/ana/read_length/{RUNID}_{sample}_trimmed_read_length.txt'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
     conda:
         'envs/general.yaml'
     params:
         RUNID = '{RUNID}',
         sample = '{sample}'
     output:
-        RESULTS+'/{sample}/ana/read_length/{RUNID}_{sample}_trimmed_read_length.png'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
     script:
         'read_length.py'
 
@@ -75,13 +74,13 @@ rule trimmed_read_length_png:
 
 rule blast:
     input:
-        MAP_PATH + '/{sample}-{target}/03_assemble/contigs.fasta'
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blast-results.lst')
+        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst')
     conda:
         'envs/general.yaml'
     params:
-        virus_db=VIRUS_DB+'ALL'
+        virus_db=VIRUS_DB+'/ALL'
     threads: 4 #workflow.cores
     shell:
         """
@@ -95,9 +94,9 @@ rule blast:
  
 rule get_hit_id:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blast-results.lst'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
     output:
-        temp(touch(MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_ids'))
+        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-ids'))
     conda:
         'envs/general.yaml'
     shell:
@@ -111,9 +110,9 @@ rule get_hit_id:
 
 rule get_hit_bitscore:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blast-results.lst'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
     output:
-        temp(touch(MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_bitscore'))
+        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-bitscore'))
     conda:
         'envs/general.yaml'
     shell:
@@ -128,9 +127,9 @@ rule get_hit_bitscore:
 
 rule get_hit_length:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blast-results.lst'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
     output:
-        temp(touch(MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_length'))
+        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-length'))
     conda:
         'envs/general.yaml'
     shell:
@@ -144,9 +143,9 @@ rule get_hit_length:
 
 rule get_hit_def:
     input:
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blast-results.lst'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst'
     output:
-        temp(touch(MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_def'))
+        temp(touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-def'))
     conda:
         'envs/general.yaml'
     shell:
@@ -161,12 +160,12 @@ rule get_hit_def:
 
 rule merge_id_bitscore:
     input:
-        MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_ids',
-        MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_def',
-        MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_length',
-        MAP_PATH + '/{sample}-{target}/04_blast/'+RUNID+'-{sample}-{target}-hits_bitscore'
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-ids',
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-def',
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-length',
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-hits-bitscore'
     output:
-        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-blasted_list')
+        touch(RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv')
     params:
         sample = '{sample}',
         target = '{target}'
