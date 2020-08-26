@@ -206,12 +206,11 @@ rule merge_id_bitscore:
         merged = pd.concat([ref, description, length, bitscore], axis=1)
         merged['sample']=sam
         merged['target']='trimmed'
-        merged = merged.groupby(['sample','ref','def','length','target']).aggregate(aggregation_functions).reset_index()
-        merged.to_csv(output[0], header=False, index=False)
         merged['assembler']=assembler
         merged = merged[['sample','ref','def','length','target','assembler','bitscore']]
         aggregation_functions = {'bitscore': 'sum'}
         merged = merged.groupby(['sample','ref','def','length','target','assembler']).aggregate(aggregation_functions).reset_index()
+        merged.to_csv(output[0], header=False, index=False)
 
 
 
