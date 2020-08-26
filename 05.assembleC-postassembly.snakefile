@@ -23,7 +23,7 @@ rule all:
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-mapped-assembly-stats.txt',
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt',
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
-            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}}-{assembler}-blast-results.lst',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'], 
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
 
