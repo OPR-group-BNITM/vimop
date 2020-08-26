@@ -205,5 +205,3 @@ rule merge_id_bitscore:
         merged = merged.groupby(['sample','ref','def','length','target','assembler']).aggregate(aggregation_functions).reset_index()
         merged.to_csv(output[0], header=False, index=False)
 
-
-
