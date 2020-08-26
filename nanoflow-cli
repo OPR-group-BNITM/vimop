@@ -714,7 +714,7 @@ if (All or inputArgs.consensus):
         for manRef in inputArgs.manualRef:
           tmp = {'sample': sample, 'ref': manRef}
           blastedList = blastedList.append(tmp,ignore_index=True)  
-
+    blastedList.drop_duplicates(keep = False, inplace = True) 
     blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
 
     logger.info('Blasted list considered:')
