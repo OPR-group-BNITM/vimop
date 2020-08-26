@@ -470,7 +470,7 @@ if (All or inputArgs.map):
 
 
 
-          print('Status: '+canuAttempt)
+          print(canuAttempt)
 
 
 
