@@ -195,7 +195,7 @@ rule merge_id_bitscore:
         touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv')
     params:
         sample = '{sample}',
-        target = '{target}'
+        target = '{assembler}'
     run:
         ref = pd.read_csv(input[0],names=['ref'])
         description = pd.read_csv(input[1],names=['def'])
@@ -205,11 +205,13 @@ rule merge_id_bitscore:
         target = params.target
         merged = pd.concat([ref, description, length, bitscore], axis=1)
         merged['sample']=sam
-        merged['target']=target
-        merged = merged[['sample','ref','def','length','target','bitscore']]
-        aggregation_functions = {'bitscore': 'sum'}
+        merged['target']='trimmed'
         merged = merged.groupby(['sample','ref','def','length','target']).aggregate(aggregation_functions).reset_index()
         merged.to_csv(output[0], header=False, index=False)
+        merged['assembler']=assembler
+        merged = merged[['sample','ref','def','length','target','assembler','bitscore']]
+        aggregation_functions = {'bitscore': 'sum'}
+        merged = merged.groupby(['sample','ref','def','length','target','assembler']).aggregate(aggregation_functions).reset_index()
 
 
 
