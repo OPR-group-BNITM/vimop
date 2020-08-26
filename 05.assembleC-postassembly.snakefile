@@ -83,7 +83,7 @@ rule calc_read_length:
 
 rule read_length_png:
     input:
-        RESULTS +'/{sample}/04_assemble}/'+RUNID+'-{sample}-{assembler}-read-length.txt'
+        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt'
     conda:
         'envs/general.yaml'
     params:
