@@ -470,8 +470,9 @@ if (All or inputArgs.map):
 
 
 
-          print(canuAttempt)
-
+          # print(canuAttempt)
+          logger.info('Finishing loop with: '+str(canuAttempts['Attempt number'].iloc[-1]))
+        print("Out of loop!")
 
 
 
