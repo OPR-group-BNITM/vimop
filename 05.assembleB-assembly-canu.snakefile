@@ -43,7 +43,7 @@ rule canu:
         minOverlapLength = MIN_OVERLAP_LENGTH,
         corOutCoverage = COR_OUT_COVERAGE
     benchmark:
-        BENCHMARK+'/04_assemble/'+RUNID+'-{sample}-{target}-canu-assemble-'+ATTEMPT_NUMBER+'.txt'
+        BENCHMARK+'/04_assemble/'+RUNID+'-{sample}-canu-assemble-'+ATTEMPT_NUMBER+'.txt'
     threads: 8 #workflow.cores
     shell:
         """
