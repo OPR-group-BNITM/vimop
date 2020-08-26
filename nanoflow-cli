@@ -708,7 +708,7 @@ if (All or inputArgs.consensus):
       assembledList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+assembler+'-blasted-list.csv'
       if os.path.exists(assembledList) and os.path.getsize(assembledList) > 0:
         tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
-          blastedList = blastedList.append(tmp[['sample','ref']])
+        blastedList = blastedList.append(tmp[['sample','ref']])
   
       if (inputArgs.manualRef):
         for manRef in inputArgs.manualRef:
