@@ -204,6 +204,7 @@ rule merge_id_bitscore:
         bitscore = pd.read_csv(input[3], names=['bitscore'])
         sam = params.sample
         target = params.target
+        assembler = params.assembler
         merged = pd.concat([ref, description, length, bitscore], axis=1)
         merged['sample']=sam
         merged['target']=target
