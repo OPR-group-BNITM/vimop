@@ -20,6 +20,7 @@ rule all:
     input:
         expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
             RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt',
+            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png',
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst',
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'], 
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
