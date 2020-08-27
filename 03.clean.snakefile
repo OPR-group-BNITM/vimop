@@ -43,7 +43,8 @@ fastq -f 4 \
 # -1 {output[0]} -2 {output[1]}'
 rule all:
     input:
-        expand([CLEAN_PATH + '/{sample}/'+step+'/'+RUNID+'-{sample}-no-'+step+'.fastq'], sample=SAMPLES)
+        expand([CLEAN_PATH + '/{sample}/'+step+'/'+RUNID+'-{sample}-no-'+step+'.fastq',
+        CLEAN_PATH + '/{sample}/'+step+'/' + RUNID+'-{sample}-no-'+step+'-stats.txt'], sample=SAMPLES)
 
 rule remove_db:
     input:
