@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 from shutil import copyfile
 from pathlib import Path
-
+import re
 
 ANALYSIS_FOLDER = sys.argv[1]
 
