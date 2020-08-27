@@ -75,7 +75,7 @@ rule filter_unmapped:
         FILTER_CMD
 
 
-rule filter_unmapped:
+rule stats:
     input:
         CLEAN_PATH + '/{sample}/'+step+'/' + RUNID+'-{sample}-no-'+step+'.fastq'
     output:

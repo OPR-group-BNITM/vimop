@@ -1,8 +1,8 @@
 import pandas as pd
 
-df=pd.read_csv(config['table'], names = ['sample'])
+# df=pd.read_csv(config['table'], names = ['sample'])
 
-SAMPLES = df['sample']
+# SAMPLES = df['sample']
 RESULTS = config['results']
 BENCHMARK = config['benchmark']
 TRIM_PATH = config['trim_path']
@@ -12,24 +12,18 @@ ASSEMBLE_PATH = config['assemble_path']
 
 RUNID = config['runid']
 
-TARGET = list((config['target']).split(","))
+# TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
-ASSEMBLER = list((config['assembler']).split(","))
+# ASSEMBLER = list((config['assembler']).split(","))
 
 
+df=pd.read_csv(config['list'], names = ['sample','ref'])
 
+STEPS = config['steps'].split(',')
+# df1=pd.read_csv(config['all_blasted_list'], names=['sample','ref','def','length','target','assembler','bitscore'])
+# df_new=pd.merge(df, df1)
 
-df1=pd.read_csv(config['all_blasted_list'], names=['sample','ref','def','length','target','assembler','bitscore'])
-df_new=pd.merge(df, df1)
-
-
-# aggregation_functions = {'bitscore': 'sum','target': lambda x: ' '.join(x)}
-
-
-
-
-# df_refs = df_new.groupby(['sample','ref'])
-df_refs=df_new.groupby(['sample','ref']).aggregate({'bitscore': 'sum'}).reset_index()
+# df_refs=df_new.groupby(['sample','ref']).aggregate({'bitscore': 'sum'}).reset_index()
 # df.sort_values(by=['ref'])
 # df_refs=df_new[['sample','ref','def','length']]
 
@@ -49,22 +43,21 @@ df_refs=df_new.groupby(['sample','ref']).aggregate({'bitscore': 'sum'}).reset_in
 # df_refs = pd.concat([df_short, df_medium, df_long], axis=0, join='outer', ignore_index=False, copy=True)
 
 
-SAMPLES=df_refs['sample'].tolist()
-REF=df_refs['ref'].tolist()
+SAMPLES=df['sample'].tolist()
+REF=df['ref'].tolist()
 
 rule all:
   input:
     [CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'.format(sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta.sa'.format(sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/05_consensus/{RUNID}-{sample}_{ref}_stats.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [RESULTS +'/{sample}/06_consensus/{RUNID}-{sample}-{ref}-stats.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.sam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/05_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_{ref}_consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_{ref}_alignment_file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-alignment-file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-consensus.fasta'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_all.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
@@ -73,7 +66,7 @@ rule all:
 
 rule get_ref_fasta:
     params:
-        virus_db = VIRUS_DB+'/ALL',
+        virus_db = DB_DIR+'/ALL',
         ref = '{ref}'
     output:
         CONSENSUS_PATH + "/{sample}/refs/{ref}.fasta"
@@ -86,11 +79,11 @@ rule index_fasta:
     input:
         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta'
     output:
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb'
+        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa'),
+        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac'),
+        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt'),
+        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann'),
+        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb')
     conda:
         'envs/general.yaml'
     shell: 
@@ -101,18 +94,17 @@ rule stats_ref_fasta:
     input: 
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'
     output:
-        RESULTS+'/{sample}/05_consensus/'+RUNID+'-{sample}_{ref}_stats.txt'
+        RESULTS+'/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt'
     conda:
         'envs/general.yaml'
     shell:
         'seqkit stats {input} > {output}'
 
 
-rule bwa_mem:
+rule mapping:
     input: 
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
-        TRIM_PATH+'/02_seqtk_trimfq/'+RUNID+'-{sample}_P1_seqtk_trimfq.fastq',
-        TRIM_PATH+'/02_seqtk_trimfq/'+RUNID+'-{sample}_P2_seqtk_trimfq.fastq',
+        TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq',
         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa',
         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac',
         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt',
@@ -122,9 +114,9 @@ rule bwa_mem:
         temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.sam')
     conda:
         'envs/general.yaml'
-    threads: 4 #workflow.cores
+    threads: 8 #workflow.cores
     shell:
-        'bwa mem -t {threads} {input[0]} {input[1]} {input[2]} > {output[0]}'
+        'minimap2 -ax map-ont {input[0]} {input[1]} -t {threads} -o {output[0]}'
 
 
 rule sam_to_bam:
@@ -166,7 +158,7 @@ rule bam_flagstat:
     input: 
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam'
     output:
-        RESULTS+'/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt'
+        RESULTS+'/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -188,10 +180,10 @@ rule consensus:
     input:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam',
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
-        RESULTS + '/{sample}/01_trim/02_seqtk_trimfq_stats/'+RUNID+'-{sample}_P1_seqtk_trimfq_stats.txt',
-        RESULTS + '/{sample}/01_trim/02_seqtk_trimfq_stats/'+RUNID+'-{sample}_P2_seqtk_trimfq_stats.txt',
-        RESULTS + '/{sample}/05_consensus/'+RUNID+'-{sample}_{ref}_stats.txt',
-        RESULTS + '/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
+        RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
+        # RESULTS + '/{sample}/01_trim/02_seqtk_trimfq_stats/'+RUNID+'-{sample}_P2_seqtk_trimfq_stats.txt',
+        RESULTS + '/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
+        RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam.bai',
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta.sa',
@@ -204,9 +196,9 @@ rule consensus:
         RUNID = '{RUNID}',
         sample = '{sample}'
     output:
-        CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_{ref}_consensus.csv',
-        CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_{ref}_alignment_file.csv',
-        CONSENSUS_PATH +'/{sample}/fasta/{RUNID}_{sample}_{ref}_consensus.fasta'
+        CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-consensus.csv',
+        CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-alignment-file.csv',
+        CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
