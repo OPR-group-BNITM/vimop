@@ -73,3 +73,16 @@ rule filter_unmapped:
     threads: 4 #workflow.cores
     shell:
         FILTER_CMD
+
+
+rule filter_unmapped:
+    input:
+        CLEAN_PATH + '/{sample}/'+step+'/' + RUNID+'-{sample}-no-'+step+'.fastq'
+    output:
+        CLEAN_PATH + '/{sample}/'+step+'/' + RUNID+'-{sample}-no-'+step+'-stats.txt'
+    conda:
+        'envs/general.yaml'
+    threads: 1 #workflow.cores
+    shell:
+        'seqkit stats {input} > {output}'
+

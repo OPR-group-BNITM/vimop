@@ -724,16 +724,19 @@ if (All or inputArgs.consensus):
         logger.info(''.join(line.split()))
 
     
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensus.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config list='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv --config steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
 
-  # consensus_script_command = 'python '+scriptPath+'/03.clean.py ' + ANALYSIS_FOLDER + ' \
-  # '+ cleanOpts + ' '+ RUNID + ' ' +ANALYSIS_FOLDER + '/' + RUNID + '-02-trim \
-  # ' +' ' +  ANALYSIS_FOLDER + '/' + RUNID + '-03-clean '+ scriptPath + ' ' + str(inputArgs.threads)
+  with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
 
-  # with subprocess.Popen(clean_script_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #     for line in p.stdout:
-  #         logger.info(line.rstrip())
-# df1=pd.read_csv(config['all_blasted_list'], names=['sample','ref','def','length','target','assembler','bitscore'])
 
+  fileHandler = logging.FileHandler(analysis_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  logger.info('Trim finished')
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
