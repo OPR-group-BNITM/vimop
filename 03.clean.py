@@ -2,6 +2,8 @@ import os
 import sys
 import pandas as pd
 from shutil import copyfile
+from shutil import rmtree
+
 from pathlib import Path
 import re
 
@@ -56,11 +58,7 @@ for step in SPEC2:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-pre_'+next_step+'.fastq')
         else:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-cleaned.fastq')
-                # os.system('snakemake \
-                # --snakefile '+scriptPath+'/03.clean.snakefile \
-                # --config step='+step+' \
-                # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+HOME+'/opt/iflow \
-                # --cores '+ threads)
+            # os.system('')
 for sample in SAMPLES:
     stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
     for step in SPEC2:
@@ -73,6 +71,6 @@ for sample in SAMPLES:
     stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt')
 
 
-    shutil.rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
+    rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
 
 
