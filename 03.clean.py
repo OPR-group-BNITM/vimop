@@ -28,7 +28,6 @@ for i in range(1,len(SPEC)):
 first_step = SPEC2[0]
 last_step = SPEC2[-1]
 
-# os.mkdir(CLEAN_PATH, mode = 0o777)
 
 for sample in SAMPLES:
     # print(TRIM_PATH+'/'+RUNID+'-'+sample+'_seqtk_trimfq.fastq')
@@ -40,7 +39,6 @@ for sample in SAMPLES:
 
 
 for step in SPEC2:
-    # f.write(step)
     for sample in SAMPLES:
         os.makedirs(CLEAN_PATH + '/'+sample+'/'+step, exist_ok=True)
 
@@ -51,24 +49,30 @@ for step in SPEC2:
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+HOME+'/opt/iflow \
     --cores '+ threads)
 
-    # stats['step'] = step
+
     for sample in SAMPLES:
         if (step != last_step):
             next_step=SPEC2[(SPEC2.index(step)) + 1]
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-pre_'+next_step+'.fastq')
         else:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-cleaned.fastq')
-
-        # copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-no-'+step+'.fastq')
+                # os.system('snakemake \
+                # --snakefile '+scriptPath+'/03.clean.snakefile \
+                # --config step='+step+' \
+                # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+HOME+'/opt/iflow \
+                # --cores '+ threads)
+for sample in SAMPLES:
+    stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+    for step in SPEC2:
         stat_file = open(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt','r')
-        lines = stat_file.readlines() 
-        # print(lines[1].split(' ')[3:8])
-        print((re.sub(',','',lines[1])).split()[3:8])
-        # f = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt','w')
-        # l
-        # f.write()
-        # stats = pd.read_csv(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt', sep='\t')
 
-    # shutil.rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
+        lines = stat_file.readlines()
+        # stats = pd.DataFrame(, data=(re.sub(',','',lines[1])).split()[3:8])
+        stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
+        stats['step'] = step
+    stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt')
+
+
+    shutil.rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
 
 
