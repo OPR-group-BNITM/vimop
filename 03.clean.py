@@ -63,6 +63,7 @@ for step in SPEC2:
         stat_file = open(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt','r')
         lines = stat_file.readlines() 
         print(lines[1].split(' ')[3:8])
+        print((' '.join(lines[1].split()))[3:8])
         # f = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt','w')
         # l
         # f.write()
