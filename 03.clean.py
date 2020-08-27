@@ -51,7 +51,7 @@ for step in SPEC2:
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+HOME+'/opt/iflow \
     --cores '+ threads)
 
-    stats['step'] = step
+    # stats['step'] = step
     for sample in SAMPLES:
         if (step != last_step):
             next_step=SPEC2[(SPEC2.index(step)) + 1]
