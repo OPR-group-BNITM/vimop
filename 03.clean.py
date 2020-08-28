@@ -68,7 +68,7 @@ for sample in SAMPLES:
         lines = stat_file.readlines()
         # stats = pd.DataFrame(, data=(re.sub(',','',lines[1])).split()[3:8])
         stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
-        stats['step'] = SPEC[i
+        stats['step'] = SPEC[i]
         print(i)
         i+=1
     stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt', index=False)
