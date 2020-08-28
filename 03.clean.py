@@ -77,7 +77,7 @@ for sample in SAMPLES:
         # print(SPEC)
         # print(i)
         # i+=1
-    stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt', index=False)
+    # stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt', index=False)
 
 
     rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
