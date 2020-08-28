@@ -76,19 +76,19 @@ rule get_ref_fasta:
     shell: 
         "blastdbcmd -entry {params.ref} -db {params.virus_db} -out {output[0]}"
 
-rule index_fasta:
-    input:
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta'
-    output:
-        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa'),
-        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac'),
-        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt'),
-        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann'),
-        temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb')
-    conda:
-        'envs/general.yaml'
-    shell: 
-        'bwa index {input[0]}'
+# rule index_fasta:
+#     input:
+#         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta'
+#     output:
+#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa'),
+#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac'),
+#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt'),
+#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann'),
+#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb')
+#     conda:
+#         'envs/general.yaml'
+#     shell: 
+#         'bwa index {input[0]}'
 
 
 rule stats_ref_fasta:
@@ -106,11 +106,6 @@ rule mapping:
     input: 
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb'
     output:
         temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.sam')
     conda:
@@ -189,11 +184,6 @@ rule consensus:
         RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam.bai',
-        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta.sa',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann',
-        CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb'
     params:
         ref = '{ref}',
         RUNID = RUNID,
