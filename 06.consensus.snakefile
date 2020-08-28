@@ -181,7 +181,9 @@ rule consensus:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam',
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
-        # RESULTS + '/{sample}/01_trim/02_seqtk_trimfq_stats/'+RUNID+'-{sample}_P2_seqtk_trimfq_stats.txt',
+        ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
+        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt',
         RESULTS + '/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
         RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
@@ -196,9 +198,9 @@ rule consensus:
         RUNID = '{RUNID}',
         sample = '{sample}'
     output:
-        CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-consensus.csv',
-        CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-alignment-file.csv',
-        CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-consensus.fasta'
+        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-consensus.csv',
+        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-alignment-file.csv',
+        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'

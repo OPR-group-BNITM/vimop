@@ -20,7 +20,7 @@ ASSEMBLER = list((config['assembler']).split(","))
 rule all:
     input:
         expand([RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta',
-            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-mapped-assembly-stats.txt',
+            RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt',
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt',
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst',
@@ -52,7 +52,7 @@ rule stats_assembly:
     input: 
         RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta'
     output:
-        touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-mapped-assembly-stats.txt')
+        touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt')
     conda:
         'envs/general.yaml'
     shell:

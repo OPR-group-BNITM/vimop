@@ -61,7 +61,7 @@ for step in SPEC2:
             # os.system('')
 for sample in SAMPLES:
     stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
-    for step in SPEC2:
+    for step in SPEC:
         stat_file = open(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt','r')
 
         lines = stat_file.readlines()
