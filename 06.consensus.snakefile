@@ -17,7 +17,7 @@ DB_DIR = config['db']
 # ASSEMBLER = list((config['assembler']).split(","))
 
 
-df=pd.read_csv(config['list'], names = ['sample','ref'])
+df=pd.read_csv(config['blastlist'], names = ['sample','ref'])
 
 STEPS = config['steps'].split(',')
 # df1=pd.read_csv(config['all_blasted_list'], names=['sample','ref','def','length','target','assembler','bitscore'])

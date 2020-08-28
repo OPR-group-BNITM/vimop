@@ -725,7 +725,7 @@ if (All or inputArgs.consensus):
 
     
   consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensus.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config list='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv --config steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv --config steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
   with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
