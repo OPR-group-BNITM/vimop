@@ -69,9 +69,9 @@ for sample in SAMPLES:
         # stats = pd.DataFrame(, data=(re.sub(',','',lines[1])).split()[3:8])
         stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True
         if (i == 0):
-           stats['step'] = SPEC[i]
-        else:
-            stats['step'].iloc[-1] = SPEC[i]
+            stats['step'] = SPEC[i]
+        # else:
+            # stats['step'].iloc[-1] = SPEC[i]
         print(SPEC)
         print(i)
         i+=1
