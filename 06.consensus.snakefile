@@ -196,7 +196,7 @@ rule consensus:
         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb'
     params:
         ref = '{ref}',
-        RUNID = '{RUNID}',
+        RUNID = RUNID,
         sample = '{sample}'
     output:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-consensus.csv',
