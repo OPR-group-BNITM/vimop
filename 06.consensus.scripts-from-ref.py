@@ -65,43 +65,52 @@ with open(snakemake.input[2], 'r') as f:
     nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
     nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
-df_clean = pd.read_csv(snakemake.input[3])
 
+df_clean = pd.read_csv(snakemake.input[3])
+data = df_clean['step'].array
+
+
+cols = pd.MultiIndex.from_product([data, ['Clean']])
+
+df = pd.DataFrame(data, columns=cols)
+df['num_seqs'] = df_clean['num_seqs']
 # with open(snakemake.input[3], 'r') as f:
 #     lines=f.readlines()
 #     nb_basesP2=((lines[1].split())[4]).replace(",", "")
 #     nb_readsP2=((lines[1].split())[3]).replace(",", "")
 
-with open(snakemake.input[6], 'r') as f:
-    lines=f.readlines()
-    ref_bases=((lines[1].split())[4]).replace(",", "")
+print(df)
 
-with open(snakemake.input[7], 'r') as f:
-    lines=f.readlines()
-    nb_virus_reads=((lines[4].split())[0]).replace(",", "")
+# with open(snakemake.input[6], 'r') as f:
+#     lines=f.readlines()
+#     ref_bases=((lines[1].split())[4]).replace(",", "")
 
-coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
-nb_virus_bases_mapped=coverage['coverage'].sum()
+# with open(snakemake.input[7], 'r') as f:
+#     lines=f.readlines()
+#     nb_virus_reads=((lines[4].split())[0]).replace(",", "")
 
-total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
-fraction_viral_reads=float(nb_virus_reads)/(float(nb_readsP1)+float(nb_readsP2))
-total_sample_bases=float(nb_basesP1)+float(nb_basesP2)
-frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_basesP1)+float(nb_basesP2))
+# coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
+# nb_virus_bases_mapped=coverage['coverage'].sum()
+
+# total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
+# fraction_viral_reads=float(nb_virus_reads)/(float(nb_readsP1)+float(nb_readsP2))
+# total_sample_bases=float(nb_basesP1)+float(nb_basesP2)
+# frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_basesP1)+float(nb_basesP2))
 
 
 
 
-with open(snakemake.output[0], 'w') as f:
-    f.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(gbtitle) + "," + str(percent_ATCG) + "," + str(nb_ATCG) + "," + str(ref_length) + "," + str(nb_virus_reads) + "," + str(int(total_sample_reads)) + "," + str(fraction_viral_reads)+ "," + str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
+# with open(snakemake.output[0], 'w') as f:
+#     f.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(gbtitle) + "," + str(percent_ATCG) + "," + str(nb_ATCG) + "," + str(ref_length) + "," + str(nb_virus_reads) + "," + str(int(total_sample_reads)) + "," + str(fraction_viral_reads)+ "," + str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
 
-header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
-with open(snakemake.output[1], 'w') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(i for i in header)
-    writer.writerows(results)
+# header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
+# with open(snakemake.output[1], 'w') as csvfile:
+#     writer = csv.writer(csvfile, delimiter=',')
+#     writer.writerow(i for i in header)
+#     writer.writerows(results)
 
-with open(snakemake.output[2], 'w') as f:
-    f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(seq))
+# with open(snakemake.output[2], 'w') as f:
+#     f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(seq))
 
 # f.close
 
