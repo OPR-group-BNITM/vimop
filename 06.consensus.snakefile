@@ -9,6 +9,7 @@ TRIM_PATH = config['trim_path']
 CLEAN_PATH = config['clean_path']
 MAP_PATH = config['map_path']
 ASSEMBLE_PATH = config['assemble_path']
+CONSENSUS_PATH = config['consensus_path']
 
 RUNID = config['runid']
 
@@ -182,8 +183,8 @@ rule consensus:
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
         ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
-        RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
-        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt',
+        # RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
+        # RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt',
         RESULTS + '/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
         RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
