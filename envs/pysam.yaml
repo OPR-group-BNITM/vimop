@@ -1,0 +1,7 @@
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.7
+  - pysam=0.15.3
+  - pysamstats=1.1.2
