@@ -65,9 +65,8 @@ with open(snakemake.input[2], 'r') as f:
     nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
     nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
-
 df_clean = pd.read_csv(snakemake.input[3])
-data = df_clean['step'].array
+steps = df_clean['step'].array
 name_cols = []
 for i in range(1,len(steps)+1):
     name_cols.append('Cleaning step '+str(i))
