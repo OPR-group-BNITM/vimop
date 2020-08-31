@@ -308,7 +308,7 @@ if (All or inputArgs.map):
         logger.info(line.rstrip())
 
 
-  if (inputArgs.assembler == 'canu'):
+  if ('canu' in inputArgs.assembler):
     logger.info("Canu environment file:")
 
     with open(scriptPath + '/envs/canu.yaml', 'r') as f:
