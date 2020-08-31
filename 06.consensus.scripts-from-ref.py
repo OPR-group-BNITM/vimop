@@ -157,16 +157,16 @@ df.to_csv(snakemake.output[0])
 
 
 # with open(snakemake.output[0], 'w') as f:
-#     f.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(gbtitle) + "," + str(percent_ATCG) + "," + str(nb_ATCG) + "," + str(ref_length) + "," + str(nb_virus_reads) + "," + str(int(total_sample_reads)) + "," + str(fraction_viral_reads)+ "," + str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
+    # f.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(gbtitle) + "," + str(percent_ATCG) + "," + str(nb_ATCG) + "," + str(ref_length) + "," + str(nb_virus_reads) + "," + str(int(total_sample_reads)) + "," + str(fraction_viral_reads)+ "," + str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
 
-# header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
-# with open(snakemake.output[1], 'w') as csvfile:
-#     writer = csv.writer(csvfile, delimiter=',')
-#     writer.writerow(i for i in header)
-#     writer.writerows(results)
+header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
+with open(snakemake.output[1], 'w') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(i for i in header)
+    writer.writerows(results)
 
-# with open(snakemake.output[2], 'w') as f:
-#     f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(seq))
+with open(snakemake.output[2], 'w') as f:
+    f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(seq))
 
 # f.close
 

@@ -190,8 +190,8 @@ rule consensus:
         sample = '{sample}'
     output:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-consensus.csv',
-        # CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-alignment-file.csv',
-        # CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-consensus.fasta'
+        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-alignment-file.csv',
+        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
