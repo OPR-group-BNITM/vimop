@@ -86,8 +86,9 @@ for col in name_cols:
 df_map = pd.read_csv(snakemake.input[4])
 
 data = ['num_seqs','sum_len','min_len','avg_len','max_len']
-df_map = df_map.set_index('target')
 tgts = df_map['target'].array
+df_map = df_map.set_index('target')
+
 cols = pd.MultiIndex.from_product([['Clean'],tgts,data], sortorder=None)
 df = pd.DataFrame(columns=cols)
 for tgt in tgts:
