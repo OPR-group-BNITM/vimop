@@ -56,7 +56,7 @@ rule kraken_style_report_virus:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge-kreport -x {params.virus_db}h-v-genbank {input[0]} > {output[0]}'
+        'centrifuge-kreport -x {params.virus_db}/h-v-genbank {input[0]} > {output[0]}'
 
 
 rule krona_representation_virus:
@@ -100,7 +100,7 @@ rule kraken_style_report_all:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge-kreport -x {params.virus_db}h-v-genbank {input[0]} > {output[0]}'
+        'centrifuge-kreport -x {params.virus_db}/h-v-genbank {input[0]} > {output[0]}'
 
 
 rule krona_representation_all:

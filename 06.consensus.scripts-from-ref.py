@@ -68,34 +68,90 @@ with open(snakemake.input[2], 'r') as f:
 
 df_clean = pd.read_csv(snakemake.input[3])
 data = df_clean['step'].array
+name_cols = []
+for i in range(1,len(steps)+1):
+    name_cols.append('Cleaning step '+str(i))
+data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+df_clean['col']= name_cols
+df_clean = df_clean.set_index('col')
+
+cols = pd.MultiIndex.from_product([['Clean'],name_cols,data], sortorder=None)
+df = pd.DataFrame(columns=cols)
+for col in name_cols:
+    for dta in data:
+#         print(df_clean.loc[step, dta])
+        df['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
 
 
-cols = pd.MultiIndex.from_product([data, ['Clean']])
 
-df = pd.DataFrame(data, columns=cols)
-df['num_seqs'] = df_clean['num_seqs']
+df_map = pd.read_csv(snakemake.input[4])
+
+data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+df_map = df_map.set_index('target')
+tgts = df_map['target'].array
+cols = pd.MultiIndex.from_product([['Clean'],tgts,data], sortorder=None)
+df = pd.DataFrame(columns=cols)
+for tgt in tgts:
+    for dta in data:
+#         print(df_clean.loc[step, dta])
+        df['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+
+with open(snakemake.input[5], 'r') as f:
+    lines=f.readlines()
+    nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+    nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+    nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+    nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+    nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+
+
+
+
+
+
 # with open(snakemake.input[3], 'r') as f:
 #     lines=f.readlines()
 #     nb_basesP2=((lines[1].split())[4]).replace(",", "")
 #     nb_readsP2=((lines[1].split())[3]).replace(",", "")
 
-print(df)
+# print(df)
 
-# with open(snakemake.input[6], 'r') as f:
-#     lines=f.readlines()
-#     ref_bases=((lines[1].split())[4]).replace(",", "")
+with open(snakemake.input[6], 'r') as f:
+    lines=f.readlines()
+    ref_bases=((lines[1].split())[4]).replace(",", "")
 
-# with open(snakemake.input[7], 'r') as f:
-#     lines=f.readlines()
-#     nb_virus_reads=((lines[4].split())[0]).replace(",", "")
+with open(snakemake.input[7], 'r') as f:
+    lines=f.readlines()
+    nb_virus_reads=((lines[4].split())[0]).replace(",", "")
 
-# coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
-# nb_virus_bases_mapped=coverage['coverage'].sum()
+coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
+nb_virus_bases_mapped=coverage['coverage'].sum()
 
 # total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
-# fraction_viral_reads=float(nb_virus_reads)/(float(nb_readsP1)+float(nb_readsP2))
-# total_sample_bases=float(nb_basesP1)+float(nb_basesP2)
-# frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_basesP1)+float(nb_basesP2))
+fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
+
+frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
+
+
+df['RUNID']=snakemake.params.RUNID
+df['sample'] = snakemake.params.sample
+df['ref']= snakemake.params.ref
+df['gbtitle'] = gbtitle
+df['Percent ATCG'] = percent_ATCG
+df['Nb base called'] = nb_ACTG
+df['ref length'] = ref_length
+df['nb_virus_reads'] = nb_virus_reads
+df['total_sample_reads'] = nb_trim_reads
+df['fraction_viral_reads'] = fraction
+df['nb_virus_bases_mapped'] = nb_virus_bases_mapped
+df['total_sample_bases'] = nb_trim_bases
+df['frac_viral_bases'] = frac_viral_bases
+df['seq'] = seq
+
+df.to_csv(snakemake.output[0])
+
+ # str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
+
 
 
 

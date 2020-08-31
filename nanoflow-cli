@@ -319,6 +319,8 @@ if (All or inputArgs.map):
     
 
     df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
+    stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+
     SAMPLES = df['sample']
     TARGETS = (',').join(inputArgs.targetPathogen).split(',')
     for sample in SAMPLES:
@@ -476,6 +478,14 @@ if (All or inputArgs.map):
         with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
           for line in p.stdout:
               logger.info(line.rstrip())
+
+        stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
+        lines = stat_file.readlines()
+        stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
+        stat['target']= target
+
+    stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
+
 
 
   fileHandler = logging.FileHandler(analysis_log_file)
@@ -672,6 +682,14 @@ if (All or inputArgs.assemble):
       with subprocess.Popen(assemble_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             logger.info(line.rstrip())
+
+    #   stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
+    #   lines = stat_file.readlines()
+    #   stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
+    #   stat['target']= target
+
+    # stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
+
   
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
