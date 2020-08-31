@@ -491,7 +491,7 @@ if (All or inputArgs.map):
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
-  logger.info('Clean finished')
+  logger.info('Mapping finished')
 
 
   ###################################################################################################################################################################
@@ -751,10 +751,7 @@ if (All or inputArgs.consensus):
           logger.info(line.rstrip()) 
 
 
-  fileHandler = logging.FileHandler(analysis_log_file)
-  fileHandler.setFormatter(logFormatter)
-  logger.addHandler(fileHandler)
-  logger.info('Trim finished')
+
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
