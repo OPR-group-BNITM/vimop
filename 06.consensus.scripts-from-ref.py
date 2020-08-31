@@ -131,7 +131,7 @@ nb_virus_bases_mapped=coverage['coverage'].sum()
 fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 
 frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
-
+df = pd.DataFrame()
 
 df['RUNID']=snakemake.params.RUNID
 df['sample'] = snakemake.params.sample
