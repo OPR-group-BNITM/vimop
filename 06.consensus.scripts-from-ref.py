@@ -74,7 +74,7 @@ data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 df_clean['col']= name_cols
 df_clean = df_clean.set_index('col')
 
-cols = pd.MultiIndex.from_product([['Clean'],name_cols,data], sortorder=None)
+cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
 df = pd.DataFrame(columns=cols)
 for col in name_cols:
     for dta in data:
@@ -133,20 +133,20 @@ fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
 df = pd.DataFrame()
 
-df['RUNID']=snakemake.params.RUNID
-df['sample'] = snakemake.params.sample
-df['ref']= snakemake.params.ref
-df['gbtitle'] = gbtitle
-df['Percent ATCG'] = percent_ATCG
-df['Nb base called'] = nb_ATCG
-df['ref length'] = ref_length
-df['nb_virus_reads'] = nb_virus_reads
-df['total_sample_reads'] = nb_trim_reads
-df['fraction_viral_reads'] = fraction_viral_reads
-df['nb_virus_bases_mapped'] = nb_virus_bases_mapped
-df['total_sample_bases'] = nb_trim_bases
-df['frac_viral_bases'] = frac_viral_bases
-df['seq'] = seq
+df['RUNID'].iloc[-1]=snakemake.params.RUNID
+df['sample'].iloc[-1] = snakemake.params.sample
+df['ref'].iloc[-1]= snakemake.params.ref
+df['gbtitle'].iloc[-1] = gbtitle
+df['Percent ATCG'].iloc[-1] = percent_ATCG
+df['Nb base called'].iloc[-1] = nb_ATCG
+df['ref length'].iloc[-1] = ref_length
+df['nb_virus_reads'].iloc[-1] = nb_virus_reads
+df['total_sample_reads'].iloc[-1] = nb_trim_reads
+df['fraction_viral_reads'].iloc[-1] = fraction_viral_reads
+df['nb_virus_bases_mapped'].iloc[-1] = nb_virus_bases_mapped
+df['total_sample_bases'].iloc[-1] = nb_trim_bases
+df['frac_viral_bases'].iloc[-1] = frac_viral_bases
+df['seq'].iloc[-1] = seq
 
 df.to_csv(snakemake.output[0])
 
