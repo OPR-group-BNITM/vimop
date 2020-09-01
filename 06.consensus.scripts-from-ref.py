@@ -133,20 +133,25 @@ fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
 df = pd.DataFrame()
 
-df['RUNID'].iloc[-1]=snakemake.params.RUNID
-df['sample'].iloc[-1] = snakemake.params.sample
-df['ref'].iloc[-1]= snakemake.params.ref
-df['gbtitle'].iloc[-1] = gbtitle
-df['Percent ATCG'].iloc[-1] = percent_ATCG
-df['Nb base called'].iloc[-1] = nb_ATCG
-df['ref length'].iloc[-1] = ref_length
-df['nb_virus_reads'].iloc[-1] = nb_virus_reads
-df['total_sample_reads'].iloc[-1] = nb_trim_reads
-df['fraction_viral_reads'].iloc[-1] = fraction_viral_reads
-df['nb_virus_bases_mapped'].iloc[-1] = nb_virus_bases_mapped
-df['total_sample_bases'].iloc[-1] = nb_trim_bases
-df['frac_viral_bases'].iloc[-1] = frac_viral_bases
-df['seq'].iloc[-1] = seq
+predf = {
+    "RUNID": [snakemake.params.RUNID],
+    "sample": [snakemake.params.sample],
+    "ref": [snakemake.params.ref],
+    "gbtitle": [gbtitle],
+    "Percent ATCG": [percent_ATCG],
+    "Nb base called": [nb_ATCG],
+    "ref length": [ref_length],
+    "nb_virus_reads": [nb_virus_reads],
+    "total_sample_reads": [nb_trim_reads],
+    "fraction_viral_reads": [fraction_viral_reads],
+    "nb_virus_bases_mapped": [nb_virus_bases_mapped],
+    "total_sample_bases": [nb_trim_bases],
+    "frac_viral_bases": [frac_viral_bases],
+    "seq": [seq]
+
+}
+
+df = pd.DataFrame.from_dict(predf)
 
 df.to_csv(snakemake.output[0])
 
