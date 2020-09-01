@@ -58,61 +58,60 @@ predf = {
 
 
 
-for covlimit in snakemake.params.covLimit:
-    consensus = []
-    results = []
-    nb_ATCG = 0
-    for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
-        rec = [record['pos'],record['A'],record['C'],record['G'],record['T'],record['deletions'],record['insertions']]
-        ind = (rec[1:5].index(max(rec[1:5])))+1
+consensus = []
+results = []
+nb_ATCG = 0
+for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
+    rec = [record['pos'],record['A'],record['C'],record['G'],record['T'],record['deletions'],record['insertions']]
+    ind = (rec[1:5].index(max(rec[1:5])))+1
 
-        if rec[1]+rec[2]+rec[3]+rec[4] != 0:
-            percentage = float(rec[ind]) / (rec[1]+rec[2]+rec[3]+rec[4])
-        else:
-            percentage = 0
-        if ind==1:
-            found='A'
-        elif ind==2:
-            found='C'
-        elif ind==3:
-            found='G'
-        elif ind==4:
-            found='T'
-        
-        # else:
-        #     found='N'
-        if (max(rec[1:5]) >= covlimit and percentage >= 0.7):
-            rec.append(found)
-            consensus.append(found)
-            if found != '':
-                nb_ATCG +=1
-            # else:
-            #     g.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(rec[0])+'\n')
-
-        else:
-            consensus.append('N')
-            rec.append('N')
-
-        results.append(rec)
-
-    # seq = ''.join(consensus) # create a string of GTACN
-    # ref_length=len(seq)
-    percent_ATCG=(nb_ATCG/int(ref_bases))
+    if rec[1]+rec[2]+rec[3]+rec[4] != 0:
+        percentage = float(rec[ind]) / (rec[1]+rec[2]+rec[3]+rec[4])
+    else:
+        percentage = 0
+    if ind==1:
+        found='A'
+    elif ind==2:
+        found='C'
+    elif ind==3:
+        found='G'
+    elif ind==4:
+        found='T'
     
-    key_seq = "Seq "+str(covlimit)+"x"
-    key_basecalled = "Nb base called"+str(covlimit)+"x"
-    key_percentconsensuscalled = "% consensus called"+str(covlimit)+"x"
-    predf[key_seq] = [''.join(consensus)]
-    predf[key_basecalled] = [nb_ATCG]
-    predf[key_percentconsensuscalled] = [percent_ATCG]
-    header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
-    with open(snakemake.output[1], 'w') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(i for i in header)
-        writer.writerows(results)
+    # else:
+    #     found='N'
+    if (max(rec[1:5]) >= snakemake.params.covlimit and percentage >= 0.7):
+        rec.append(found)
+        consensus.append(found)
+        if found != '':
+            nb_ATCG +=1
+        # else:
+        #     g.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(rec[0])+'\n')
 
-    with open(snakemake.output[2], 'w') as f:
-        f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + ''.join(consensus) + '\n' + str(seq))
+    else:
+        consensus.append('N')
+        rec.append('N')
+
+    results.append(rec)
+
+# seq = ''.join(consensus) # create a string of GTACN
+# ref_length=len(seq)
+percent_ATCG=(nb_ATCG/int(ref_bases))
+
+key_seq = "Seq "+str(covlimit)+"x"
+key_basecalled = "Nb base called"+str(covlimit)+"x"
+key_percentconsensuscalled = "% consensus called"+str(covlimit)+"x"
+predf[key_seq] = [''.join(consensus)]
+predf[key_basecalled] = [nb_ATCG]
+predf[key_percentconsensuscalled] = [percent_ATCG]
+header = ['Position', 'A', 'C', 'G', 'T', 'Deletions', 'Insertions', 'Consensus']
+with open(snakemake.output[1], 'w') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(i for i in header)
+    writer.writerows(results)
+
+with open(snakemake.output[2], 'w') as f:
+    f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + ''.join(consensus) + '\n' + str(''.join(consensus)))
 
 
 
