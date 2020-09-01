@@ -173,8 +173,8 @@ df2['RUNID'] = snakemake.params.RUNID
 df1['Sample'] = snakemake.params.sample
 df2['Sample'] = snakemake.params.sample
 
-merged = pd.merge(df,df1,on=['RUNID','sample'])
-merged2 = pd.merge(merged,df2,on=['RUNID','sample'])
+merged = pd.merge(df,df1,on=['RUNID','Sample'])
+merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
 
 merged2.to_csv(snakemake.output[0])
 
