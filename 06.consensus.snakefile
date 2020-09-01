@@ -73,7 +73,7 @@ rule get_ref_fasta:
         virus_db = DB_DIR+'/ALL',
         ref = '{sample_and_ref[1]}'
     output:
-        "{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta"
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'
     conda:
         'envs/general.yaml'
     shell: 
@@ -168,7 +168,7 @@ rule coverage:
     input: 
         '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{ref}-coverage.txt'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt'
     conda:
         'envs/general.yaml'
     shell:
