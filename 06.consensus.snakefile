@@ -52,8 +52,8 @@ COV_LIMITSTR = [str(x) for x in COV_LIMIT]
 
 rule all:
   input:
-    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'.format(sample=sample, ref=ref) for sample_and_ref in zip(SAMPLES, REF)],
-    [f'{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt'for sample_and_ref in zip(SAMPLES, REF)],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta' for sample_and_ref in zip(SAMPLES, REF)],
+    [f'{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt' for sample_and_ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.sam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
@@ -61,7 +61,7 @@ rule all:
     [f'{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-bam-stats-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.txt' for sample_and_ref in zip(SAMPLES, REF)],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt' for sample_and_ref in zip(SAMPLES, REF)],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv' for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))],
-    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv'for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv' for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta' for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))]
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_all.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
