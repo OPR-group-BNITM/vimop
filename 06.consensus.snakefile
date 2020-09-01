@@ -59,9 +59,9 @@ rule all:
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv' for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))],
-    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv'for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))],
-    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta' for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))]
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{str(covlimit)}x-consensus.csv' for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{str(covlimit)}x-alignment-file.csv'for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{str(covlimit)}x-consensus.fasta' for sample_and_ref, covlimit in product(COV_LIMIT, zip(SAMPLES, REF))]
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_all.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
 
