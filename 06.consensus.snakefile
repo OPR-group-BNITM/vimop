@@ -59,9 +59,9 @@ rule all:
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [[CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT],
-    [[CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT],
-    [[CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT]
+    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref, covlimit in zip(SAMPLES, REF), COV_LIMIT],
+    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref, covlimit in zip(SAMPLES, REF), COV_LIMIT],
+    [CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref, covlimit in zip(SAMPLES, REF), COV_LIMIT]
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_all.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
 
