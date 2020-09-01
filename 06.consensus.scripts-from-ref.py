@@ -47,10 +47,10 @@ for covlimit in snakemake.params.covLimit:
     # ref_length=len(seq)
     # percent_ATCG=(nb_ATCG/ref_length)
     predf = {
-    "Seq "+covlimit: [''.join(consensus)]
-    "ref_length"+covlimit: [len(seq)]
-    "Nb base called"+covlimit: [nb_ATCG],
-    "% consensus called"+covlimit: [nb_ATCG/ref_length]
+    "Seq "+str(covlimit)+"x": [''.join(consensus)]
+    "ref_length"+str(covlimit)+"x": [len(seq)]
+    "Nb base called"+str(covlimit)+"x": [nb_ATCG],
+    "% consensus called"+str(covlimit)+"x": [nb_ATCG/ref_length]
     }
 
 
