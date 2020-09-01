@@ -189,7 +189,7 @@ rule consensus:
         ref = '{ref}',
         RUNID = RUNID,
         sample = '{sample}',
-        covLimit = '{covlimit}'
+        covlimit = '{covlimit}'
     output:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.csv',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-alignment-file.csv',
