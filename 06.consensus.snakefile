@@ -57,8 +57,8 @@ rule all:
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample, ref in zip(SAMPLES, REF)],
+    [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
+    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH+'/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)]
