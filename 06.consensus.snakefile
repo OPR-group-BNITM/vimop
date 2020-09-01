@@ -71,9 +71,9 @@ rule all:
 rule get_ref_fasta:
     params:
         virus_db = DB_DIR+'/ALL',
-        ref = '{ref}'
+        ref = '{sample_and_ref[1]}'
     output:
-        CONSENSUS_PATH + "/{sample}/refs/{ref}.fasta"
+        CONSENSUS_PATH + "/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta"
     conda:
         'envs/general.yaml'
     shell: 
@@ -96,9 +96,9 @@ rule get_ref_fasta:
 
 rule stats_ref_fasta:
     input: 
-        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'
     output:
-        RESULTS+'/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt'
+        RESULTS+'/{sample_and_ref[0]}/06_consensus/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -120,9 +120,9 @@ rule mapping:
 
 rule sam_to_bam:
     input: 
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.sam'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.sam'
     output:
-        temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.bam')
+        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.bam')
     conda:
         'envs/general.yaml'
     threads: 1
