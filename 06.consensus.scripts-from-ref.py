@@ -3,57 +3,59 @@ import pysamstats
 import pandas as pd
 import csv
 
-# print(snakemake.input[0])
-# print(snakemake.input[1])
-# print(snakemake.input[2])
-
-
-# g = open(snakemake.output[3], 'a+')
-
 bamfile = pysam.AlignmentFile(snakemake.input[0])
 fastafile = snakemake.input[1]
-consensus = []
-results = []
-# indices_to_loop_through = [1, 2, 3, 4, 6]
 
-nb_ATCG = 0
-for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
-    rec = [record['pos'],record['A'],record['C'],record['G'],record['T'],record['deletions'],record['insertions']]
-    ind = (rec[1:5].index(max(rec[1:5])))+1
+for covlimit in snakemake.params.covLimit:
+    consensus = []
+    results = []
+    nb_ATCG = 0
+    for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
+        rec = [record['pos'],record['A'],record['C'],record['G'],record['T'],record['deletions'],record['insertions']]
+        ind = (rec[1:5].index(max(rec[1:5])))+1
 
-    if rec[1]+rec[2]+rec[3]+rec[4] != 0:
-        percentage = float(rec[ind]) / (rec[1]+rec[2]+rec[3]+rec[4])
-    else:
-        percentage = 0
-    if ind==1:
-        found='A'
-    elif ind==2:
-        found='C'
-    elif ind==3:
-        found='G'
-    elif ind==4:
-        found='T'
-    
-    # else:
-    #     found='N'
-    if (max(rec[1:5]) > 19 and percentage >= 0.7):
-        rec.append(found)
-        consensus.append(found)
-        if found != '':
-            nb_ATCG +=1
+        if rec[1]+rec[2]+rec[3]+rec[4] != 0:
+            percentage = float(rec[ind]) / (rec[1]+rec[2]+rec[3]+rec[4])
+        else:
+            percentage = 0
+        if ind==1:
+            found='A'
+        elif ind==2:
+            found='C'
+        elif ind==3:
+            found='G'
+        elif ind==4:
+            found='T'
+        
         # else:
-        #     g.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(rec[0])+'\n')
+        #     found='N'
+        if (max(rec[1:5]) >= covlimit and percentage >= 0.7):
+            rec.append(found)
+            consensus.append(found)
+            if found != '':
+                nb_ATCG +=1
+            # else:
+            #     g.write(str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + "," + str(rec[0])+'\n')
 
-    else:
-        consensus.append('N')
-        rec.append('N')
+        else:
+            consensus.append('N')
+            rec.append('N')
 
-    results.append(rec)
+        results.append(rec)
+
+    # seq = ''.join(consensus) # create a string of GTACN
+    # ref_length=len(seq)
+    # percent_ATCG=(nb_ATCG/ref_length)
+    predf = {
+    "Seq "+covlimit: [''.join(consensus)]
+    "ref_length"+covlimit: [len(seq)]
+    "Nb base called"+covlimit: [nb_ATCG],
+    "% consensus called"+covlimit: [nb_ATCG/ref_length]
+    }
 
 
-seq = ''.join(consensus) # create a string of GTACN
-ref_length=len(seq)
-percent_ATCG=(nb_ATCG/ref_length)
+
+
 with open(fastafile, 'r') as f:
     gbtitle = ((f.readline().split(maxsplit=1))[1]).replace("$", "").replace(",", "").replace(";", "").rstrip("\n")   #.rstrip("$")
 
@@ -75,11 +77,11 @@ df_clean['col']= name_cols
 df_clean = df_clean.set_index('col')
 
 cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
-df = pd.DataFrame(columns=cols)
+df1 = pd.DataFrame(columns=cols)
 for col in name_cols:
     for dta in data:
 #         print(df_clean.loc[step, dta])
-        df['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
+        df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
 
 
 
@@ -90,11 +92,11 @@ tgts = df_map['target'].array
 df_map = df_map.set_index('target')
 
 cols = pd.MultiIndex.from_product([['Clean'],tgts,data], sortorder=None)
-df = pd.DataFrame(columns=cols)
+df2 = pd.DataFrame(columns=cols)
 for tgt in tgts:
     for dta in data:
 #         print(df_clean.loc[step, dta])
-        df['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+        df2['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
 with open(snakemake.input[5], 'r') as f:
     lines=f.readlines()
@@ -135,30 +137,33 @@ df = pd.DataFrame()
 
 predf = {
     "RUNID": [snakemake.params.RUNID],
-    "sample": [snakemake.params.sample],
+    "Sample": [snakemake.params.sample],
     "ref": [snakemake.params.ref],
     "gbtitle": [gbtitle],
-    "Percent ATCG": [percent_ATCG],
-    "Nb base called": [nb_ATCG],
-    "ref length": [ref_length],
+    # "Percent ATCG": [percent_ATCG],
+    # "Nb base called": [nb_ATCG],
+    # "ref length": [ref_length],
     "nb_virus_reads": [nb_virus_reads],
     "total_sample_reads": [nb_trim_reads],
     "fraction_viral_reads": [fraction_viral_reads],
     "nb_virus_bases_mapped": [nb_virus_bases_mapped],
     "total_sample_bases": [nb_trim_bases],
     "frac_viral_bases": [frac_viral_bases],
-    "seq": [seq]
-
+    # "seq": [seq]
 }
 
 df = pd.DataFrame.from_dict(predf)
+df1['RUNID'] = snakemake.params.RUNID
+df2['RUNID'] = snakemake.params.RUNID
+df1['Sample'] = snakemake.params.sample
+df2['Sample'] = snakemake.params.sample
 
-df.to_csv(snakemake.output[0])
+merged = pd.merge(df,df1,on=['RUNID','sample'])
+merged2 = pd.merge(merged,df2,on=['RUNID','sample'])
+
+merged2.to_csv(snakemake.output[0])
 
  # str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
-
-
-
 
 
 # with open(snakemake.output[0], 'w') as f:

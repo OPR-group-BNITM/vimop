@@ -92,6 +92,7 @@ optionalArgs.add_argument('-6', '--consensus', action='store_true', help='Genera
 optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs='*', type=str, metavar='STR', help='Assembler: canu, flye or wtdbg2', default=['canu'])
 optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
 optionalArgs.add_argument('-size','-genomeSize', action='store', dest='genomeSize', type=str, metavar='INT', help='Best guess for genome size, default=10000', default=10000)
+optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
 
 
 
@@ -145,7 +146,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('script_path: ' + scriptPath + '\n')
   f.write('assembler: ' + (',').join(inputArgs.assembler) + '\n')
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
-
+  f.write('covLimit: '+ str(input.Args.covLimit)+ '\n')
   if (inputArgs.manualRef):
     f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
 

@@ -11,6 +11,8 @@ MAP_PATH = config['map_path']
 ASSEMBLE_PATH = config['assemble_path']
 CONSENSUS_PATH = config['consensus_path']
 
+COV_LIMIT = config['covLimit']
+
 RUNID = config['runid']
 
 # TARGET = list((config['target']).split(","))
@@ -187,7 +189,8 @@ rule consensus:
     params:
         ref = '{ref}',
         RUNID = RUNID,
-        sample = '{sample}'
+        sample = '{sample}',
+        covLimit = COV_LIMIT
     output:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-consensus.csv',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-alignment-file.csv',
