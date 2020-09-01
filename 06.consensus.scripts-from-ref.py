@@ -112,7 +112,7 @@ for covlimit in snakemake.params.covLimit:
         writer.writerows(results)
 
     with open(snakemake.output[2], 'w') as f:
-        f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(seq))
+        f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + ''.join(consensus) + '\n' + str(seq))
 
 
 

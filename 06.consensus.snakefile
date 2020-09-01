@@ -59,9 +59,9 @@ rule all:
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-alignment-file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    # [CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-consensus.fasta'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
+    [[CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT],
+    [[CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT],
+    [[CONSENSUS_PATH +'/{sample}/fasta/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)].format(covlimit=covlimit) for covlimit in COV_LIMIT]
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_all.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
 
@@ -192,9 +192,9 @@ rule consensus:
         sample = '{sample}',
         covLimit = COV_LIMIT
     output:
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-consensus.csv',
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-alignment-file.csv',
-        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-consensus.fasta'
+        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.csv',
+        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-alignment-file.csv',
+        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
