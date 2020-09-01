@@ -52,14 +52,14 @@ COV_LIMITSTR = [str(x) for x in COV_LIMIT]
 
 rule all:
   input:
-    [CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'.format(sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/06_consensus/{RUNID}-{sample}-{ref}-stats.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'.format(sample=sample, ref=ref) for sample_and_ref in zip(SAMPLES, REF)],
+    [f'{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt'for sample_and_ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.sam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
+    [f'{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-bam-stats-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.txt' for sample_and_ref in zip(SAMPLES, REF)],
+    [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt' for sample_and_ref in zip(SAMPLES, REF)],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv' for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv'for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))],
     [f'{CONSENSUS_PATH}/{sample_and_ref[0]}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta' for sample_and_ref, covlimit in product(COV_LIMITSTR, zip(SAMPLES, REF))]
@@ -132,9 +132,9 @@ rule sam_to_bam:
 
 rule sort_bam:
     input: 
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.bam'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{ref}.bam'
     output:
-        temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam')
+        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam')
     conda:
         'envs/general.yaml'
     threads: 1
@@ -144,9 +144,9 @@ rule sort_bam:
 
 rule index_sorted_bam:
     input: 
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam.bai')
+        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam.bai')
     conda:
         'envs/general.yaml'
     shell:
@@ -155,9 +155,9 @@ rule index_sorted_bam:
 
 rule bam_flagstat:
     input: 
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        RESULTS+'/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt'
+        RESULTS+'/{sample_and_ref[0]}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample_and_ref[0]}-{ref}.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -166,9 +166,9 @@ rule bam_flagstat:
 
 rule coverage:
     input: 
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{ref}-coverage.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -177,25 +177,25 @@ rule coverage:
 
 rule consensus:
     input:
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam',
-        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
-        RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
-        RESULTS+'/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
-        RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-mapped-assembly-stats.txt',
-        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt',
-        RESULTS + '/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
-        RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam.bai'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
+        RESULTS+'/{sample_and_ref[0]}/01_trim/'+RUNID+'-{sample_and_ref[0]}-seqtk-trimfq-stats.txt',
+        RESULTS+'/{sample_and_ref[0]}/02_clean/' + RUNID+'-{sample_and_ref[0]}-clean-stats.txt',
+        RESULTS+'/{sample_and_ref[0]}/03_map-'+RUNID+'-{sample_and_ref[0]}-mapped-assembly-stats.txt',
+        RESULTS+'/{sample_and_ref[0]}/04_assemble/'+RUNID+'-{sample_and_ref[0]}-canu-assembly-stats.txt',
+        RESULTS + '/{sample_and_ref[0]}/06_consensus/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt',
+        RESULTS + '/{sample_and_ref[0]}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.txt',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam.bai'
     params:
-        ref = '{ref}',
+        ref = '{sample_and_ref[1]}',
         RUNID = RUNID,
-        sample = '{sample}',
+        sample = '{sample_and_ref[0]}',
         covLimit = COV_LIMIT
     output:
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.csv',
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-alignment-file.csv',
-        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.fasta'
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/fasta/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
