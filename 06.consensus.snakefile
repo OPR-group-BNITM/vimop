@@ -1,5 +1,5 @@
 import pandas as pd
-
+from itertools import *
 # df=pd.read_csv(config['table'], names = ['sample'])
 
 # SAMPLES = df['sample']
