@@ -107,10 +107,10 @@ rule stats_ref_fasta:
 
 rule mapping:
     input: 
-        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
-        TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq',
+        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
+        TRIM_PATH+'/'+RUNID+'-{sample_and_ref[0]}-seqtk-trimfq.fastq',
     output:
-        temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.sam')
+        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.sam')
     conda:
         'envs/general.yaml'
     threads: 8 #workflow.cores
