@@ -6,6 +6,58 @@ import csv
 bamfile = pysam.AlignmentFile(snakemake.input[0])
 fastafile = snakemake.input[1]
 
+
+
+with open(fastafile, 'r') as f:
+    gbtitle = ((f.readline().split(maxsplit=1))[1]).replace("$", "").replace(",", "").replace(";", "").rstrip("\n")   #.rstrip("$")
+
+with open(snakemake.input[2], 'r') as f:
+    lines=f.readlines()
+    nb_trim_bases=((lines[1].split())[4]).replace(",", "")
+    nb_trim_reads=((lines[1].split())[3]).replace(",", "")
+    nb_trim_minlen=((lines[1].split())[5]).replace(",", "")
+    nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
+    nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
+
+
+with open(snakemake.input[6], 'r') as f:
+    lines=f.readlines()
+    ref_bases=((lines[1].split())[4]).replace(",", "")
+
+with open(snakemake.input[7], 'r') as f:
+    lines=f.readlines()
+    nb_virus_reads=((lines[4].split())[0]).replace(",", "")
+
+coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
+nb_virus_bases_mapped=coverage['coverage'].sum()
+
+# total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
+fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
+
+frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
+
+
+
+predf = {
+    "RUNID": [snakemake.params.RUNID],
+    "Sample": [snakemake.params.sample],
+    "ref": [snakemake.params.ref],
+    "gbtitle": [gbtitle],
+    # "Percent ATCG": [percent_ATCG],
+    # "Nb base called": [nb_ATCG],
+    "ref length": [ref_bases],
+    "nb_virus_reads": [nb_virus_reads],
+    "total_sample_reads": [nb_trim_reads],
+    "fraction_viral_reads": [fraction_viral_reads],
+    "nb_virus_bases_mapped": [nb_virus_bases_mapped],
+    "total_sample_bases": [nb_trim_bases],
+    "frac_viral_bases": [frac_viral_bases],
+    # "seq": [seq]
+}
+
+
+
+
 for covlimit in snakemake.params.covLimit:
     consensus = []
     results = []
@@ -46,26 +98,18 @@ for covlimit in snakemake.params.covLimit:
     # seq = ''.join(consensus) # create a string of GTACN
     # ref_length=len(seq)
     # percent_ATCG=(nb_ATCG/ref_length)
-    predf = {
-    "Seq "+str(covlimit)+"x": [''.join(consensus)]
-    "ref_length"+str(covlimit)+"x": [len(seq)]
-    "Nb base called"+str(covlimit)+"x": [nb_ATCG],
-    "% consensus called"+str(covlimit)+"x": [nb_ATCG/ref_length]
-    }
+    
+    key_seq = "Seq "+str(covlimit)+"x"
+    key_basecalled = "Nb base called"+str(covlimit)+"x"
+    key_percentconsensuscalled = "% consensus called"+str(covlimit)+"x"
+    predf[key_seq] = [''.join(consensus)]
+    predf[key_basecalled] = [nb_ATCG]
+    predf[key_percentconsensuscalled] = [nb_ATCG/ref_bases]
 
 
 
 
-with open(fastafile, 'r') as f:
-    gbtitle = ((f.readline().split(maxsplit=1))[1]).replace("$", "").replace(",", "").replace(";", "").rstrip("\n")   #.rstrip("$")
 
-with open(snakemake.input[2], 'r') as f:
-    lines=f.readlines()
-    nb_trim_bases=((lines[1].split())[4]).replace(",", "")
-    nb_trim_reads=((lines[1].split())[3]).replace(",", "")
-    nb_trim_minlen=((lines[1].split())[5]).replace(",", "")
-    nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
-    nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
 df_clean = pd.read_csv(snakemake.input[3])
 steps = df_clean['step'].array
@@ -118,39 +162,10 @@ with open(snakemake.input[5], 'r') as f:
 
 # print(df)
 
-with open(snakemake.input[6], 'r') as f:
-    lines=f.readlines()
-    ref_bases=((lines[1].split())[4]).replace(",", "")
 
-with open(snakemake.input[7], 'r') as f:
-    lines=f.readlines()
-    nb_virus_reads=((lines[4].split())[0]).replace(",", "")
-
-coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
-nb_virus_bases_mapped=coverage['coverage'].sum()
-
-# total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
-fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
-
-frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
 df = pd.DataFrame()
 
-predf = {
-    "RUNID": [snakemake.params.RUNID],
-    "Sample": [snakemake.params.sample],
-    "ref": [snakemake.params.ref],
-    "gbtitle": [gbtitle],
-    # "Percent ATCG": [percent_ATCG],
-    # "Nb base called": [nb_ATCG],
-    # "ref length": [ref_length],
-    "nb_virus_reads": [nb_virus_reads],
-    "total_sample_reads": [nb_trim_reads],
-    "fraction_viral_reads": [fraction_viral_reads],
-    "nb_virus_bases_mapped": [nb_virus_bases_mapped],
-    "total_sample_bases": [nb_trim_bases],
-    "frac_viral_bases": [frac_viral_bases],
-    # "seq": [seq]
-}
+
 
 df = pd.DataFrame.from_dict(predf)
 df1['RUNID'] = snakemake.params.RUNID
