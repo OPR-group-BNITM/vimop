@@ -97,14 +97,14 @@ for covlimit in snakemake.params.covLimit:
 
     # seq = ''.join(consensus) # create a string of GTACN
     # ref_length=len(seq)
-    # percent_ATCG=(nb_ATCG/ref_length)
+    percent_ATCG=(nb_ATCG/ref_length)
     
     key_seq = "Seq "+str(covlimit)+"x"
     key_basecalled = "Nb base called"+str(covlimit)+"x"
     key_percentconsensuscalled = "% consensus called"+str(covlimit)+"x"
     predf[key_seq] = [''.join(consensus)]
     predf[key_basecalled] = [nb_ATCG]
-    predf[key_percentconsensuscalled] = [nb_ATCG/ref_bases]
+    predf[key_percentconsensuscalled] = [percent_ATCG]
 
 
 
