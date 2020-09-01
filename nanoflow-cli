@@ -146,7 +146,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('script_path: ' + scriptPath + '\n')
   f.write('assembler: ' + (',').join(inputArgs.assembler) + '\n')
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
-  f.write('covLimit: '+ str(input.Args.covLimit)+ '\n')
+  f.write('covLimit: '+ str(inputArgs.covLimit)+ '\n')
   if (inputArgs.manualRef):
     f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
 
