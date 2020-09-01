@@ -96,9 +96,9 @@ rule get_ref_fasta:
 
 rule stats_ref_fasta:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta'
     output:
-        RESULTS+'/{sample_and_ref[0]}/06_consensus/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt'
+        '{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -107,10 +107,10 @@ rule stats_ref_fasta:
 
 rule mapping:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
-        TRIM_PATH+'/'+RUNID+'-{sample_and_ref[0]}-seqtk-trimfq.fastq',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
+        '{TRIM_PATH}/{RUNID}-{sample_and_ref[0]}-seqtk-trimfq.fastq',
     output:
-        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.sam')
+        temp('{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}.sam')
     conda:
         'envs/general.yaml'
     threads: 8 #workflow.cores
@@ -120,9 +120,9 @@ rule mapping:
 
 rule sam_to_bam:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.sam'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}.sam'
     output:
-        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}.bam')
+        temp('{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}.bam')
     conda:
         'envs/general.yaml'
     threads: 1
@@ -132,9 +132,9 @@ rule sam_to_bam:
 
 rule sort_bam:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{ref}.bam'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{ref}.bam'
     output:
-        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam')
+        temp('{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam')
     conda:
         'envs/general.yaml'
     threads: 1
@@ -144,9 +144,9 @@ rule sort_bam:
 
 rule index_sorted_bam:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        temp(CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam.bai')
+        temp('{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam.bai')
     conda:
         'envs/general.yaml'
     shell:
@@ -155,9 +155,9 @@ rule index_sorted_bam:
 
 rule bam_flagstat:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        RESULTS+'/{sample_and_ref[0]}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample_and_ref[0]}-{ref}.txt'
+        '{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-bam-stats-sorted-{sample_and_ref[0]}-{ref}.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -166,9 +166,9 @@ rule bam_flagstat:
 
 rule coverage:
     input: 
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{ref}.bam'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{ref}.bam'
     output:
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{ref}-coverage.txt'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{ref}-coverage.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -177,25 +177,25 @@ rule coverage:
 
 rule consensus:
     input:
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam',
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
-        RESULTS+'/{sample_and_ref[0]}/01_trim/'+RUNID+'-{sample_and_ref[0]}-seqtk-trimfq-stats.txt',
-        RESULTS+'/{sample_and_ref[0]}/02_clean/' + RUNID+'-{sample_and_ref[0]}-clean-stats.txt',
-        RESULTS+'/{sample_and_ref[0]}/03_map-'+RUNID+'-{sample_and_ref[0]}-mapped-assembly-stats.txt',
-        RESULTS+'/{sample_and_ref[0]}/04_assemble/'+RUNID+'-{sample_and_ref[0]}-canu-assembly-stats.txt',
-        RESULTS + '/{sample_and_ref[0]}/06_consensus/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt',
-        RESULTS + '/{sample_and_ref[0]}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.txt',
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt',
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam.bai'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/refs/{sample_and_ref[1]}.fasta',
+        '{RESULTS}/{sample_and_ref[0]}/01_trim/{RUNID}-{sample_and_ref[0]}-seqtk-trimfq-stats.txt',
+        '{RESULTS}/{sample_and_ref[0]}/02_clean/{RUNID}-{sample_and_ref[0]}-clean-stats.txt',
+        '{RESULTS}/{sample_and_ref[0]}/03_map-{RUNID}-{sample_and_ref[0]}-mapped-assembly-stats.txt',
+        '{RESULTS}/{sample_and_ref[0]}/04_assemble/{RUNID}-{sample_and_ref[0]}-canu-assembly-stats.txt',
+        '{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-stats.txt',
+        '{RESULTS}/{sample_and_ref[0]}/06_consensus/{RUNID}-bam-stats-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.txt',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-coverage.txt',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-sorted-{sample_and_ref[0]}-{sample_and_ref[1]}.bam.bai'
     params:
         ref = '{sample_and_ref[1]}',
-        RUNID = RUNID,
+        RUNID = '{RUNID}',
         sample = '{sample_and_ref[0]}',
-        covLimit = COV_LIMIT
+        covLimit = '{covlimit}'
     output:
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv',
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv',
-        CONSENSUS_PATH +'/{sample_and_ref[0]}/fasta/'+RUNID+'-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta'
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.csv',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-alignment-file.csv',
+        '{CONSENSUS_PATH}/{sample_and_ref[0]}/fasta/{RUNID}-{sample_and_ref[0]}-{sample_and_ref[1]}-{covlimit}x-consensus.fasta'
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
