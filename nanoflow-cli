@@ -261,8 +261,8 @@ if (All or inputArgs.trim):
 
 
   trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{{sample}}-seqtk-trimfq.fastq \
-  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{{sample}}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
+  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
   with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
