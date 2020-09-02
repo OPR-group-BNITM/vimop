@@ -310,8 +310,6 @@ if (All or inputArgs.clean):
   outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
-  ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/'
-
   with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip()) 
