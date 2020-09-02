@@ -52,6 +52,7 @@ predf = {
     "nb_virus_bases_mapped": [nb_virus_bases_mapped],
     "total_sample_bases": [nb_trim_bases],
     "frac_viral_bases": [frac_viral_bases],
+    "Cleaning options": [snakemake.params.cleanopts]
     # "seq": [seq]
 }
 

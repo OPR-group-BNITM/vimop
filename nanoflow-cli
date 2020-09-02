@@ -84,7 +84,7 @@ optionalArgs.add_argument('-db', action='store', dest='db', nargs='*', type=str,
 optionalArgs.add_argument('-1', '--demultiplex', action='store_true', help='Demultiplex')
 optionalArgs.add_argument('-2', '--trim', action='store_true', help='Trim')
 optionalArgs.add_argument('-3', '--clean', action ='store_true', help='Remove contaminant reads, default: reagents,human RNA, human DNA use --clean_option to change options  default reagents,human')
-optionalArgs.add_argument('--clean_option', dest='cleanOptions', nargs='*',type=str, default=['reagents', 'human'], help='Specify order and which contaminant reads to remove among: reagents,human,mouse,mastomys | default: reagent, human')
+optionalArgs.add_argument('--clean_option', dest='cleanOptions', nargs='*',type=str, default=['reagents', 'human'], help='Specify order and which contaminant reads to remove among: reagents,human,mouse,mastomys,bacteria,arachnea | default: reagent, human')
 
 optionalArgs.add_argument('-4', '--map', action='store_true', help='Map against target pathogen library')
 optionalArgs.add_argument('-5', '--assemble', action='store_true', help='De Novo assembly of a 100000 reads subset')
@@ -258,6 +258,16 @@ if (All or inputArgs.trim):
   with subprocess.Popen(trim_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip()) 
+
+
+  trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{{sample}}-seqtk-trimfq.fastq outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{{sample}}/01_trim --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
+
 
 
   fileHandler = logging.FileHandler(analysis_log_file)
