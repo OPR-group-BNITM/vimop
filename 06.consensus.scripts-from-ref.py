@@ -142,7 +142,7 @@ data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 tgts = df_map['target'].array
 df_map = df_map.set_index('target')
 
-cols = pd.MultiIndex.from_product([['Clean'],tgts,data], sortorder=None)
+cols = pd.MultiIndex.from_product([['Map'],tgts,data], sortorder=None)
 df2 = pd.DataFrame(columns=cols)
 for tgt in tgts:
     for dta in data:
