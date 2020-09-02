@@ -34,7 +34,7 @@ rule classify_virus:
     input:
         INPUT
     output:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-virus.tsv'
+        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-virus.tsv',
         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-virus.txt'
     params:
         virus_db=DB_DIR
@@ -78,7 +78,7 @@ rule classify_all:
     input:
         INPUT
     output:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv'
+        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt'
     params:
         virus_db=DB_DIR
