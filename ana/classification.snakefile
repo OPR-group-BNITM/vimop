@@ -1,6 +1,7 @@
 import pandas as pd
 
-df=pd.read_csv(config['table'])
+df=pd.read_csv(config['table'], names = ['sample'])
+
 
 SAMPLES = df['sample']
 # RESULTS = config['results']
