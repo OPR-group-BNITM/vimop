@@ -43,7 +43,7 @@ rule classify_virus:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge -x {params.virus_db}/viral -1 {input[0]} -2 {input[1]} --report-file {output[0]} -S {output[1]}'
+        'centrifuge -x {params.virus_db}/viral -U {input[0]} --report-file {output[0]} -S {output[1]}'
 
 
 rule kraken_style_report_virus:
@@ -87,7 +87,7 @@ rule classify_all:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge -x {params.virus_db}/hpvc -1 {input[0]} -2 {input[1]} --report-file {output[0]} -S {output[1]}'
+        'centrifuge -x {params.virus_db}/hpvc -U {input[0]} --report-file {output[0]} -S {output[1]}'
 
 
 rule kraken_style_report_all:

@@ -260,6 +260,11 @@ if (All or inputArgs.trim):
           logger.info(line.rstrip()) 
 
 
+  logger.info("Centrifuge environment file:")
+  with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(''.join(line.split()))  
   trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
   outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
