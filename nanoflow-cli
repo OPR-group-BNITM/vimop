@@ -299,6 +299,26 @@ if (All or inputArgs.clean):
       for line in p.stdout:
           logger.info(line.rstrip())
 
+
+  logger.info("Centrifuge environment file:")
+  with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(''.join(line.split()))  
+  trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
+  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/'
+
+  with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
+
+
+
+
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
