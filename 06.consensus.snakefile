@@ -11,6 +11,7 @@ MAP_PATH = config['map_path']
 ASSEMBLE_PATH = config['assemble_path']
 CONSENSUS_PATH = config['consensus_path']
 
+CLEAN_OPTS = config['clean_option']
 COV_LIMIT = config['covLimit']
 
 RUNID = config['runid']

@@ -99,8 +99,8 @@ for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
 percent_ATCG=(nb_ATCG/int(ref_bases))
 
 key_seq = "Seq "+snakemake.params.covlimit+"x"
-key_basecalled = "Nb base called"+snakemake.params.covlimit+"x"
-key_percentconsensuscalled = "% consensus called"+snakemake.params.covlimit+"x"
+key_basecalled = "Nb base called "+snakemake.params.covlimit+"x"
+key_percentconsensuscalled = "% consensus called "+snakemake.params.covlimit+"x"
 predf[key_seq] = [''.join(consensus)]
 predf[key_basecalled] = [nb_ATCG]
 predf[key_percentconsensuscalled] = [percent_ATCG]
@@ -183,7 +183,7 @@ df2['Sample'] = snakemake.params.sample
 merged = pd.merge(df,df1,on=['RUNID','Sample'])
 merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
 
-merged2.to_csv(snakemake.output[0])
+merged2.to_csv(snakemake.output[0], index = False)
 
  # str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
 
