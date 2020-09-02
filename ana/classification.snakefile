@@ -62,9 +62,9 @@ rule kraken_style_report_virus:
 
 rule krona_representation_virus:
     input:
-        RESULTS+'/{sample}/ana/classification/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-virus.tsv'
+        OUTDIR+'/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-virus.tsv'
     output:
-        RESULTS+'/{sample}/ana/classification/'+RUNID+'-{sample}-centrifuge-classification-virus.html'
+        OUTDIR+'/'+RUNID+'-{sample}-centrifuge-classification-virus.html'
     params:
         virus_db=DB_DIR
     conda:
@@ -106,9 +106,9 @@ rule kraken_style_report_all:
 
 rule krona_representation_all:
     input:
-        RESULTS+'/{sample}/ana/classification/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-all.tsv'
+        OUTDIR+'/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-all.tsv'
     output:
-        RESULTS+'/{sample}/ana/classification/'+RUNID+'-{sample}-centrifuge-classification-all.html'
+        OUTDIR+'/'+RUNID+'-{sample}-centrifuge-classification-all.html'
     params:
         virus_db=DB_DIR
     conda:
