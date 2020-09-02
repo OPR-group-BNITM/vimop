@@ -306,7 +306,7 @@ if (All or inputArgs.clean):
     for line in lines:
       logger.info(''.join(line.split()))  
   trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
   outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
