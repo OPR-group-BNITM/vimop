@@ -53,12 +53,12 @@ REF=df['ref'].tolist()
 rule all:
   input:
     [CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'.format(sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/06_consensus/{RUNID}-{sample}-{ref}-stats.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
+    [RESULTS +'/{sample}/05_consensus/{RUNID}-{sample}-{ref}-stats.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.sam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-sorted-{sample}-{ref}.bam.bai'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)],
-    [RESULTS +'/{sample}/06_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
+    [RESULTS +'/{sample}/05_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
@@ -78,26 +78,12 @@ rule get_ref_fasta:
     shell: 
         "blastdbcmd -entry {params.ref} -db {params.virus_db} -out {output[0]}"
 
-# rule index_fasta:
-#     input:
-#         CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta'
-#     output:
-#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.sa'),
-#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.pac'),
-#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.bwt'),
-#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.ann'),
-#         temp(CONSENSUS_PATH + '/{sample}/refs/{ref}.fasta.amb')
-#     conda:
-#         'envs/general.yaml'
-#     shell: 
-#         'bwa index {input[0]}'
-
 
 rule stats_ref_fasta:
     input: 
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'
     output:
-        RESULTS+'/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt'
+        RESULTS+'/{sample}/05_consensus/'+RUNID+'-{sample}-{ref}-stats.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -156,7 +142,7 @@ rule bam_flagstat:
     input: 
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam'
     output:
-        RESULTS+'/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt'
+        RESULTS+'/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt'
     conda:
         'envs/general.yaml'
     shell:
@@ -182,8 +168,8 @@ rule consensus:
         RESULTS+'/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
         RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-mapped-assembly-stats.txt',
         RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt',
-        RESULTS + '/{sample}/06_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
-        RESULTS + '/{sample}/06_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
+        RESULTS + '/{sample}/05_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
+        RESULTS + '/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam.bai'
     params:
@@ -201,7 +187,7 @@ rule consensus:
     conda:
         'envs/pysam.yaml'
     script:
-        '06.consensusB.scripts-from-ref.py'
+        '06.consensus.scripts-from-ref.py'
 
 
 
