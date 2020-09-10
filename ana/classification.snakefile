@@ -68,7 +68,7 @@ rule krona_representation_virus:
     params:
         virus_db=DB_DIR
     conda:
-        '../envs/centrifuge.yaml'
+        '../envs/general.yaml'
     threads: 1 #workflow.cores
     shell:
         'ktImportTaxonomy -tax $HOME/anaconda3/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
@@ -112,7 +112,7 @@ rule krona_representation_all:
     params:
         virus_db=DB_DIR
     conda:
-        '../envs/centrifuge.yaml'
+        '../envs/general.yaml'
     threads: 1 #workflow.cores
     shell:
         'ktImportTaxonomy -tax $HOME/anaconda3/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
