@@ -777,7 +777,7 @@ if (All or inputArgs.consensus):
         logger.info(''.join(line.split()))
 
     
-  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensus.snakefile \
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
@@ -786,40 +786,23 @@ if (All or inputArgs.consensus):
           logger.info(line.rstrip()) 
 
 
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+      logger.info(line.rstrip()) 
+
+
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
   logger.info('Consensus generation finished')
+logger.info('Analysis finished')
 
   ###################################################################################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-  # map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads) 
-
-  # with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #   for line in p.stdout:
-  #       logger.info(line.rstrip())
-
-
-###################################################################################################################################################################
-
-# if (All or inputArgs.assemble):
-
-
-
 
 
 
@@ -829,35 +812,6 @@ exit()
 
 
 
-
-
-
-
-
-
-
-
-
-  # logger.info('Trimming: Environment setup')
-  # subprocess.Popen('snakemake --snakefile '+scriptPath+'/01.trim.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores 1 --create-envs-only --quiet', shell = True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-
-# samplesToRun = inputArgs.selectedSamples
-# if (not inputArgs.selectedSamples):
-#   listAllFiles = os.listdir(inputArgs.fastqDir)
-#   listR1 = [s for s in listAllFiles if 'R1' in s]
-#   samplesToRun = [i.split('_R1')[0] for i in listR1] 
-
-# with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
-#   for item in samplesToRun:
-#     f.write('%s\n' % item)
-
-
-  # subprocess.run('snakemake --snakefile '+scriptPath+'/01.trim.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ inputArgs.threads, shell = True)
 
 
 

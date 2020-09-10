@@ -1,0 +1,7 @@
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - medaka=1.0.3
+
+# medaka_consensus -i ../../../irr-2020-run02_ANALYSIS/irr-2020-run02-02-trim/irr-2020-run02-barcode14-seqtk-trimfq.fastq -d fasta/irr-2020-run02-barcode14-MH887867-20x-consensus.fasta OUTDIR=~/Desktop/NGS-data/irr-2020-run02_ANALYSIS/irr-2020-run02-06-consensus/barcode14/test-medaka -t 8 -m r941_min_high_g360
