@@ -34,10 +34,10 @@ TARGET.append('spades')
 
 
 consensusdf = pd.DataFrame()
-blastList=pd.read_csv(config['all_blasted_list'])
+blastList=pd.read_csv(config['all_blasted_list'], names=['sample', 'ref'])
 for index, rows in blastList.iterrows():
     for covlimit in COV_LIMIT:
-        tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['sample'] +'/'+RUNID + '-'+ row['sample']+'-'+row['ref']+ '-'+ covlimit +'x-consensus.csv')
+        tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['sample'] +'/'+RUNID + '-'+ row['sample']+'-'+row['ref']+ '-'+ str(covlimit) +'x-consensus.csv')
         consensusdf.append(tmp)
 for sample in SAMPLES:
     if (sample not in consensusdf['Sample'].tolist()):
