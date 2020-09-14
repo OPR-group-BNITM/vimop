@@ -527,7 +527,7 @@ if (All or inputArgs.map):
             tmp['target']= target
             stats = stats.append(tmp, ignore_index=True)
 
-          stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
+          stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats.txt', index=False)
     # logger.info('Write file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt')
 
 
