@@ -166,7 +166,7 @@ rule consensus:
         CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta',
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
         RESULTS+'/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
-        RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-mapped-assembly-stats.txt',
+        RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-canu-mapped-assembly-stats.txt',
         RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt',
         RESULTS + '/{sample}/05_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
         RESULTS + '/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',

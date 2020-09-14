@@ -514,12 +514,20 @@ if (All or inputArgs.map):
           for line in p.stdout:
               logger.info(line.rstrip())
         # logger.info('Open file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt')
-        stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
-        lines = stat_file.readlines()
-        stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
-        stats['target']= target
 
-    stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
+        df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
+        stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+        SAMPLES = df['sample']
+        TARGETS = (',').join(inputArgs.targetPathogen).split(',')
+        for sample in SAMPLES:
+          for target in TARGETS:
+            stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
+            lines = stat_file.readlines()
+            tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+            tmp['target']= target
+            stats = stats.append(tmp, ignore_index=True)
+
+          stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
     # logger.info('Write file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt')
 
 
