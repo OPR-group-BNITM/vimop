@@ -187,7 +187,7 @@ rule consensus:
     conda:
         'envs/pysam.yaml'
     script:
-        '06.consensus.scripts-from-ref.py'
+        '06.consensusC.scripts-from-ref.py'
 
 
 
