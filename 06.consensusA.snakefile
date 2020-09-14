@@ -21,9 +21,9 @@ DB_DIR = config['db']
 # ASSEMBLER = list((config['assembler']).split(","))
 
 
-df=pd.read_csv(config['blastlist'])
+df=pd.read_csv(config['blastlist'], names = ['sample','ref','target'])
 
-STEPS = config['steps'].split(',')
+#STEPS = config['steps'].split(',')
 # df1=pd.read_csv(config['all_blasted_list'], names=['sample','ref','def','length','target','assembler','bitscore'])
 # df_new=pd.merge(df, df1)
 
