@@ -768,7 +768,7 @@ if (All or inputArgs.consensus):
           tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
           blastedList = blastedList.append(tmp,ignore_index=True)  
     blastedList.drop_duplicates(inplace = True) 
-    blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', index=False)
+    blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
 
     logger.info('Blasted list considered:')
     with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
