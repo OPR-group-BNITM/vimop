@@ -724,18 +724,18 @@ if (All or inputArgs.assemble):
             canufile.close()
             break
 
-        logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
+        # logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
       
 
 
-      logger.info('Assemble: post-assembly')
-      assemble_scriptC_command = 'snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
-      --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
-      --cores '+ str(inputArgs.threads) 
+    logger.info('Assemble: post-assembly')
+    assemble_scriptC_command = 'snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
+    --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
+    --cores '+ str(inputArgs.threads) 
 
-      with subprocess.Popen(assemble_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            logger.info(line.rstrip())
+    with subprocess.Popen(assemble_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip())
 
     #   stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
     #   lines = stat_file.readlines()
