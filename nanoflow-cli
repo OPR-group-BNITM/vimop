@@ -506,7 +506,7 @@ if (All or inputArgs.map):
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
-              break
+              # break
 
           logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
         
