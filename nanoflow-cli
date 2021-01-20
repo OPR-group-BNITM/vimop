@@ -168,6 +168,11 @@ logger.setLevel(logging.DEBUG)
 ###################################################################################################################################################################
 
 logger.info("Starting nanoflow")
+logger.info('nanoflow version: '+analysis_log_file)
+get_git_tag = 'git -C '+scriptPath+'describe HEAD --always'
+with subprocess.Popen(get_git_tag, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+        logger.info(line.rstrip())
 logger.info('Analysis log: '+analysis_log_file)
 logger.info("Arguments given:")
 logger.info(inputArgs)
@@ -361,6 +366,8 @@ if (All or inputArgs.map):
     for sample in SAMPLES:
       for target in TARGETS:
         logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
+        map_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target
+        os.mkdir(map_dir)
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
           canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
@@ -573,6 +580,8 @@ if (All or inputArgs.assemble):
     TARGETS = (',').join(inputArgs.targetPathogen).split(',')
     for sample in SAMPLES:
       logger.info(sample+ ': Assembly with canu')
+      assemble_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble'
+      os.mkdir(assemble_dir)
       canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/canu-attempts.tsv'
       if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
         canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
