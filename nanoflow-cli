@@ -513,6 +513,8 @@ if (All or inputArgs.map):
 
 
     logger.info('Map: post-assembly')
+
+
     map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
     --cores '+ str(inputArgs.threads) 

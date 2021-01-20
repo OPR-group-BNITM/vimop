@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 df=pd.read_csv(config['table'], names = ['sample'])
 
@@ -15,6 +16,11 @@ TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
 ASSEMBLER = list((config['assembler']).split(","))
 
+for sample in SAMPLES:
+    for target in TARGET:
+        file=RESULTS +'/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-'+assembler+'-'+'contigs.fasta'
+        if (os.path.exists(file) and os.path.getsize(file) > 0):
+            SAMPLES.remove(sample)
 
 rule all:
     input:
