@@ -16,7 +16,7 @@ TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
 ASSEMBLER = list((config['assembler']).split(","))
 
-SAMPLES2 = SAMPLES
+SAMPLES2 = SAMPLES.tolist()
 for sample in SAMPLES:
     for target in TARGET:
         for assembler in ASSEMBLER:
