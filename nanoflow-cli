@@ -376,7 +376,7 @@ if (All or inputArgs.map):
           canuAttempts = pd.DataFrame(data)
 
         # logger.info('Starting with: '+str(canuAttempts['Attempt number'].iloc[-1]))
-        while (canuAttempts['Status'].iloc[-1] != 'success'):
+        while (canuAttempts['Status'].iloc[-1] != 'success' and not canuAttempts['Attempt number'].iloc[-1] == 4):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
           lastAttempt += 1
@@ -508,7 +508,7 @@ if (All or inputArgs.map):
               canufile.close()
               print(canuAttempts['Status'].iloc[-1])
               # break
-        break
+        # break
       logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
         
 
