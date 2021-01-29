@@ -506,7 +506,6 @@ if (All or inputArgs.map):
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
-              print(canuAttempts['Status'].iloc[-1])
               Path('contigsFile').touch()
               Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
               
@@ -618,6 +617,7 @@ if (All or inputArgs.assemble):
 
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
+                        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
             copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
@@ -728,7 +728,9 @@ if (All or inputArgs.assemble):
             canufile = open(canuAttemps_file, 'w+')
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
-            break
+            Path('contigsFile').touch()
+            Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
+ 
 
         # logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
       
