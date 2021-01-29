@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys 
+from pathlib import Path
+
 
 curated_columns=[]
 with open(snakemake.input[0]) as f:
@@ -37,3 +39,6 @@ if curated_columns:
     ax.set_title('Run: '+str(snakemake.params.RUNID)+" sample: "+str(snakemake.params.sample)+'\n'+str(snakemake.params.label), fontdict={'fontsize': 14, 'fontweight': 'bold'})
     ax.title.set_position((0.5,1.03))
     plt.savefig(snakemake.output[0])
+
+else: 
+    Path(snakemake.output[0]).touch()
