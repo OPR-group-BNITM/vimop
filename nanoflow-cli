@@ -728,8 +728,8 @@ if (All or inputArgs.assemble):
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
             Path('contigsFile').touch()
-            Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
- 
+            Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta').touch()
+
 
         # logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
       
