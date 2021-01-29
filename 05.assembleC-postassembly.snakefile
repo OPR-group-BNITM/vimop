@@ -12,7 +12,7 @@ ASSEMBLE_PATH = config['assemble_path']
 
 RUNID = config['runid']
 
-TARGET = list((config['target']).split(","))
+# TARGET = list((config['target']).split(","))
 DB_DIR = config['db']
 ASSEMBLER = list((config['assembler']).split(","))
 
@@ -25,7 +25,7 @@ rule all:
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'], 
-            sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
+            sample=SAMPLES, assembler= ASSEMBLER)
 
 
 
@@ -195,7 +195,6 @@ rule merge_id_bitscore:
         touch(RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv')
     params:
         sample = '{sample}',
-        target = 'trimmed',
         assembler = '{assembler}'
     run:
         ref = pd.read_csv(input[0],names=['ref'])
@@ -203,15 +202,15 @@ rule merge_id_bitscore:
         length = pd.read_csv(input[2], names=['length'])
         bitscore = pd.read_csv(input[3], names=['bitscore'])
         sam = params.sample
-        target = params.target
+        # target = params.target
         assembler = params.assembler
         merged = pd.concat([ref, description, length, bitscore], axis=1)
         merged['sample']=sam
-        merged['target']=target
+        # merged['target']=target
         merged['assembler']=assembler
-        merged = merged[['sample','ref','def','length','target','assembler','bitscore']]
+        merged = merged[['sample','ref','def','length','assembler','bitscore']]
         aggregation_functions = {'bitscore': 'sum'}
-        merged = merged.groupby(['sample','ref','def','length','target','assembler']).aggregate(aggregation_functions).reset_index()
+        merged = merged.groupby(['sample','ref','def','length','assembler']).aggregate(aggregation_functions).reset_index()
         merged.to_csv(output[0], header=False, index=False)
 
 
