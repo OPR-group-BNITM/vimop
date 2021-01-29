@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys 
-
+import os
 
 curated_columns=[]
 if os.path.exists(snakemake.input[0]) and os.path.getsize(snakemake.input[0]) > 0:
