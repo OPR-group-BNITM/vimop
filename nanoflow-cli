@@ -507,6 +507,9 @@ if (All or inputArgs.map):
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
               print(canuAttempts['Status'].iloc[-1])
+              Path('contigsFile').touch()
+              Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
+              
               # break
         # break
       logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
