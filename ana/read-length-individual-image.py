@@ -2,17 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys 
-import os
 
 curated_columns=[]
-if os.path.exists(snakemake.input[0]) and os.path.getsize(snakemake.input[0]) > 0:
-    with open(snakemake.input[0]) as f:
-        lines=f.readlines()
-        for line in lines:
-            if not line.startswith("#"):
-                curated_columns.append(line.split('\t')[0:2])
-        
-
+with open(snakemake.input[0]) as f:
+    lines=f.readlines()
+    for line in lines:
+        if not line.startswith("#"):
+            curated_columns.append(line.split('\t')[0:2])
+    
+if curated_columns:
 
     rl = pd.DataFrame(curated_columns, columns=['Length','Count'])
 
