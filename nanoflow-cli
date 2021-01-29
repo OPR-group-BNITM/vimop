@@ -347,7 +347,7 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-  print(inputArgs.assembler)
+
   if ('canu' in inputArgs.assembler):
     logger.info("Canu environment file:")
 
@@ -572,7 +572,7 @@ if (All or inputArgs.assemble):
         logger.info(line.rstrip())
 
 
-  if (inputArgs.assembler == 'canu'):
+  if ('canu' in inputArgs.assembler):
     logger.info("Canu environment file:")
 
     with open(scriptPath + '/envs/canu.yaml', 'r') as f:
