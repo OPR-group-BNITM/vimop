@@ -347,7 +347,7 @@ if (All or inputArgs.map):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-
+  print(inputArgs.assembler)
   if ('canu' in inputArgs.assembler):
     logger.info("Canu environment file:")
 
