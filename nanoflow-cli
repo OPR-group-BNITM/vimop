@@ -789,18 +789,18 @@ if (All or inputArgs.consensus):
         tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','assembler','bitscore'])
         blastedList = blastedList.append(tmp[['sample','ref','target']])
   
-      if (inputArgs.manualRef):
-        for manRef in inputArgs.manualRef:
-          tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
-          blastedList = blastedList.append(tmp,ignore_index=True)  
-    blastedList.drop_duplicates(inplace = True) 
-    blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
+    if (inputArgs.manualRef):
+      for manRef in inputArgs.manualRef:
+        tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
+        blastedList = blastedList.append(tmp,ignore_index=True)  
+  blastedList.drop_duplicates(inplace = True) 
+  blastedList.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
 
-    logger.info('Blasted list considered:')
-    with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
-      lines = f.readlines() 
-      for line in lines:
-        logger.info(''.join(line.split()))
+  logger.info('Blasted list considered:')
+  with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(''.join(line.split()))
 
     
   consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
