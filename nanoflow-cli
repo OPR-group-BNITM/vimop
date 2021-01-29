@@ -649,7 +649,7 @@ if (All or inputArgs.assemble):
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
             tmp = pd.DataFrame(data)
             canuAttempts = canuAttempts.append(tmp)
@@ -681,7 +681,7 @@ if (All or inputArgs.assemble):
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
             tmp = pd.DataFrame(data)
             canuAttempts = canuAttempts.append(tmp)
@@ -713,7 +713,7 @@ if (All or inputArgs.assemble):
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
             tmp = pd.DataFrame(data)
             canuAttempts = canuAttempts.append(tmp)
@@ -728,7 +728,7 @@ if (All or inputArgs.assemble):
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
             Path('contigsFile').touch()
-            Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta').touch()
+            Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta').touch()
 
 
         # logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
