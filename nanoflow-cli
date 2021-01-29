@@ -596,7 +596,8 @@ if (All or inputArgs.assemble):
         data = {'Attempt number':[0], 'Status':['failed']}
         canuAttempts = pd.DataFrame(data)
 
-      while (canuAttempts['Status'].iloc[-1] != 'success'):
+      while (canuAttempts['Status'].iloc[-1] != 'success' and not canuAttempts['Attempt number'].iloc[-1] == 4):
+
         lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
         lastAttemptStatus = canuAttempts['Status'].iloc[-1]
         lastAttempt += 1
@@ -618,7 +619,7 @@ if (All or inputArgs.assemble):
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
-            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+inputArgs.assembler +'-contigs.fasta')
+            copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta')
             data = {'Attempt number':lastAttempt, 'Status':['success']}
             tmp = pd.DataFrame(data)
             canuAttempts = canuAttempts.append(tmp)
