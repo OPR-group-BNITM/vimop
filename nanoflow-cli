@@ -169,7 +169,7 @@ logger.setLevel(logging.DEBUG)
 
 logger.info("Starting nanoflow")
 logger.info('nanoflow version: '+analysis_log_file)
-get_git_tag = 'git -C '+scriptPath+'describe HEAD --always'
+get_git_tag = 'git -C '+scriptPath+' describe HEAD --always'
 with subprocess.Popen(get_git_tag, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
     for line in p.stdout:
         logger.info(line.rstrip())
