@@ -180,9 +180,9 @@ rule consensus:
         cleanopts = CLEAN_OPTS
 
     output:
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.csv',
-        CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-alignment-file.csv',
-        CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.fasta'
+        touch(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.csv'),
+        touch(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-{covlimit}x-alignment-file.csv'),
+        touch(CONSENSUS_PATH +'/{sample}/fasta/'+RUNID+'-{sample}-{ref}-{covlimit}x-consensus.fasta')
         # RESULTS + '/{sample}/{RUNID}-{sample}-{ref}-deletions-positions.csv'
     conda:
         'envs/pysam.yaml'
