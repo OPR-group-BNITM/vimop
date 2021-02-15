@@ -28,13 +28,13 @@ for index, row in blastList.iterrows():
     for covlimit in COV_LIMIT:
         tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['Sample'] +'/'+RUNID + '-'+ row['Sample']+'-'+row['ref']+ '-'+ str(covlimit) +'x-consensus.csv')
         tmp['Target'] = row['target']
-        consensusdf = consensusdf.append(tmp,sort=True)
+        consensusdf = consensusdf.append(tmp,ignore_index=True)
 
 samplesWithConsensus = consensusdf['Sample'].tolist()
 for sample in SAMPLES:
     if (sample not in samplesWithConsensus):
-        predf = {"RUNID": [RUNID],
-        "Sample": [sample]} 
+        predf = {"RUNID": RUNID,
+        "Sample": sample} 
         tmp = pd.DataFrame.from_dict(predf)
         consensusdf = consensusdf.append(predf,ignore_index=True)
 
