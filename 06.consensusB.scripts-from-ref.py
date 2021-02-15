@@ -153,14 +153,14 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
             df2['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
 
-    if os.path.getsize(snakemake.input[5]) > 0:
-        with open(snakemake.input[5], 'r') as f:
-            lines=f.readlines()
-            nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
-            nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
-            nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
-            nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
-            nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+if os.path.getsize(snakemake.input[5]) > 0:
+    with open(snakemake.input[5], 'r') as f:
+        lines=f.readlines()
+        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
 
 
 
