@@ -35,7 +35,7 @@ for sample in SAMPLES:
     if (sample not in samplesWithConsensus):
         predf = {"RUNID": [RUNID],
         "Sample": [sample]} 
-        tmp = pd.DataFrame.from_dict(predf, )
+        tmp = pd.DataFrame.from_dict(predf)
         consensusdf = consensusdf.append(predf,sort=True)
 
 
