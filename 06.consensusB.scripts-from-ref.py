@@ -117,45 +117,49 @@ with open(snakemake.output[2], 'w') as f:
 
 
 
+if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 0:
 
-df_clean = pd.read_csv(snakemake.input[3])
-steps = df_clean['step'].array
-name_cols = []
-for i in range(1,len(steps)+1):
-    name_cols.append('Cleaning step '+str(i))
-data = ['num_seqs','sum_len','min_len','avg_len','max_len']
-df_clean['col']= name_cols
-df_clean = df_clean.set_index('col')
+    df_clean = pd.read_csv(snakemake.input[3])
+    steps = df_clean['step'].array
+    name_cols = []
+    for i in range(1,len(steps)+1):
+        name_cols.append('Cleaning step '+str(i))
+    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+    df_clean['col']= name_cols
+    df_clean = df_clean.set_index('col')
 
-cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
-df1 = pd.DataFrame(columns=cols)
-for col in name_cols:
-    for dta in data:
-#         print(df_clean.loc[step, dta])
-        df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
+    cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
+    df1 = pd.DataFrame(columns=cols)
+    for col in name_cols:
+        for dta in data:
+    #         print(df_clean.loc[step, dta])
+            df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
 
 
+if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
 
-df_map = pd.read_csv(snakemake.input[4])
+    df_map = pd.read_csv(snakemake.input[4])
 
-data = ['num_seqs','sum_len','min_len','avg_len','max_len']
-tgts = df_map['target'].array
-df_map = df_map.set_index('target')
+    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+    tgts = df_map['target'].array
+    df_map = df_map.set_index('target')
 
-cols = pd.MultiIndex.from_product([['Map'],tgts,data], sortorder=None)
-df2 = pd.DataFrame(columns=cols)
-for tgt in tgts:
-    for dta in data:
-#         print(df_clean.loc[step, dta])
-        df2['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+    cols = pd.MultiIndex.from_product([['Map'],tgts,data], sortorder=None)
+    df2 = pd.DataFrame(columns=cols)
+    for tgt in tgts:
+        for dta in data:
+    #         print(df_clean.loc[step, dta])
+            df2['Map',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
-with open(snakemake.input[5], 'r') as f:
-    lines=f.readlines()
-    nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
-    nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
-    nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
-    nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
-    nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+
+    if os.path.getsize(snakemake.input[5]) > 0:
+        with open(snakemake.input[5], 'r') as f:
+            lines=f.readlines()
+            nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+            nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+            nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+            nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+            nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
 
 
 
