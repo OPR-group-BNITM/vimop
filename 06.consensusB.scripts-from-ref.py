@@ -2,6 +2,7 @@ import pysam
 import pysamstats
 import pandas as pd
 import csv
+import os
 
 bamfile = pysam.AlignmentFile(snakemake.input[0])
 fastafile = snakemake.input[1]
