@@ -36,7 +36,7 @@ for sample in SAMPLES:
         predf = {"RUNID": [RUNID],
         "Sample": [sample]} 
         tmp = pd.DataFrame.from_dict(predf)
-        consensusdf = consensusdf.append(predf,sort=True)
+        consensusdf = consensusdf.append(predf,ignore_index=True)
 
 
 merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
