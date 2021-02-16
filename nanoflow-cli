@@ -155,7 +155,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('label: ' + inputArgs.label + '\n')
   f.write('runidwolabel: ' + inputArgs.runid + '\n')
   f.write('CompletionDay: '+ str(nowTimeDay)+ '\n')
-  f.write('CommonViruses: '+ scriptPath +'common-viruses.txt'+ '\n')
+  f.write('CommonViruses: '+ scriptPath +'/common-viruses.txt'+ '\n')
 
 
 logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')
