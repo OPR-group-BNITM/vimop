@@ -118,6 +118,18 @@ with open(COMMONVIRUSES, 'r') as f:
             df['Fraction consensus called S'] = df['% consensus called S'].div(100)
             df['Fraction consensus called L'] = df['% consensus called L'].div(100)
             df.drop(['index','Fraction viral bases L', 'Fraction viral bases S'], axis=1,inplace = True)
+            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
+        'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+        'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S','Target S','Reference S','NCBI definition S','Partial reference? S',
+        'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
+        'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
+        'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
+
+        else:
+            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
+        'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+        'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
+        'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
 
         samplesWithConsensus = df['Sample'].tolist()
         for sample in SAMPLES:
@@ -132,12 +144,6 @@ with open(COMMONVIRUSES, 'r') as f:
         df.reset_index(drop=True, inplace=True)
 
 
-        cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
-        'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
-        'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S','Target S','Reference S','NCBI definition S','Partial reference? S',
-        'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
-        'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
-        'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
 
         cols2 = df.columns.drop(cols1).tolist()
         cols = cols1 + cols2
