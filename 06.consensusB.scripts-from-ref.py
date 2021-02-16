@@ -144,7 +144,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
-    tgts = df_map_tmp['target'].array
+    tgts = df_map['target'].array
     df_map = df_map.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Map'],tgts,data], sortorder=None)
