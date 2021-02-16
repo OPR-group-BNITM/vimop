@@ -48,47 +48,35 @@ merged2 = consensusdf.sort_values(by=['RUNID','Sample','Consensus depth requirem
 merged2['Version'] = config['version']
 merged2['Completion date'] = DATE
 merged2['Label'] = label
+merged2['RUNID+label'] = merged2['RUNID']
+        # df['Version'] = config['version']
+        # df['Completion date'] = DATE
+        # df['Label'] = label
+        
+merged2['RUNID'] = RUNID_wo_label
+merged2['Released?'] = ''
+merged2['Analysis comments'] = ''
+        # df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+        # df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+        # df.drop(['index','Fraction viral bases L', 'Fraction viral bases S'], axis=1,inplace = True)
+merged2.reset_index(drop=True, inplace=True)
+# merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
 
-merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
 
-
-
-samplesWithConsensus = consensusdf['Sample'].tolist()
-for sample in SAMPLES:
-    if (sample not in samplesWithConsensus):
-        predf = {"RUNID": [RUNID],
-        "Sample": [sample]} 
-        tmp = pd.DataFrame.from_dict(predf)
-        # tmp = tmp.reset_index()
-        consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
 
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
 
-
-
-# ### Separate the targets
-# for i in TARGET:
-#     tmp = merged2[merged2['Target'] == i]
-#     tmp.to_excel(RESULTS+'/'+RUNID+'-all-consensus-'+i+'.xlsx',index=False)
-
-
-
 df_new = merged2.copy()
 
-### Select the best S and L segments
 
-# aggregation_functions = {'Target': lambda x: ' '.join(x)}
-# df_new = merged2.groupby(['RUNID','Sample','Reference','NCBI definition','% consensus called','Nb of bases called','Nb bases in reference','Nb of viral reads','Sample total reads','Fraction viral reads','Nb of virus bases','Sample total bases','Fraction viral bases','Sequence']).aggregate(aggregation_functions).reset_index()
-# df_new = merged2
 df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
 
 with open(COMMONVIRUSES, 'r') as f:
-    # lines = f.readlines()
     lines = f.read().splitlines() 
 
     for line in lines:
@@ -96,97 +84,102 @@ with open(COMMONVIRUSES, 'r') as f:
             continue
         line = line.replace(': ', ':')
         virus = line.split(':')[0]
-        keywords = line.split(':')[1] #.split(',')
+        keywords = line.split(':')[1] 
 
         keywords = keywords.replace(' ,', ',')
         keywords = keywords.replace(', ', ',')
         keywords = keywords.replace(',', '|')
-        print(keywords)
+        df = virus + 'df'
 
-exit(0)
-  # logger.info(''.join(line.split()))  
-
-
-
-# commonViruses = 
-df_new_LASV=df_new[df_new['NCBI definition'].str.contains("Lassa|mammarena")]
-df_new_DENV=df_new[df_new['NCBI definition'].str.contains("Dengue")]
-df_new_DENV= df_new_DENV.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x','Partial reference?'],ascending=[True,True,False,True])
-df_new_DENV = df_new_DENV.groupby(['RUNID','Sample']).first()
-df_new_DENV = df_new_DENV.sort_values(by=['RUNID','Sample'],ascending=[True,True]) #.reset_index()
-df_new_DENV.to_excel(RESULTS+'/'+RUNID+'-dengue-selected.xlsx',index=False)
+        df = df_new[df_new['NCBI definition'].str.contains(keywords)]
+        df = df.sort_values(by=['RUNID','Sample','Nb of bases called ','Partial reference?'],ascending=[True,True,False,True])
 
 
-df_short = df_new_LASV[df_new_LASV['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
-df_long = df_new_LASV[df_new_LASV['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
+        if 'lassa' in virus:
+            ### Select the best S and L segments
 
-# df_short=df_end[df_end['Segment'].values=='S']
-# dfL=df_end[df_end['Segment'].values=='L']
+            df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
+            df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
 
-
-df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
-
-df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
-
-colS = []
-colL = []
-seqS = []
-seqL = []
-for covlimit in COV_LIMIT:
-    df_short=df_short.rename(columns={"% consensus called "+str(covlimit)+"x":"% consensus called S "+str(covlimit)+"x","Nb of bases called "+str(covlimit)+"x": "Nb of bases called S "+str(covlimit)+"x", "Sequence "+str(covlimit)+"x":"Sequence S "+str(covlimit)+"x"})
-
-    df_long=df_long.rename(columns={"% consensus called "+str(covlimit)+"x":"% consensus called L "+str(covlimit)+"x","Nb of bases called "+str(covlimit)+"x": "Nb of bases called L "+str(covlimit)+"x", "Sequence "+str(covlimit)+"x":"Sequence L "+str(covlimit)+"x"})
-
-    colS += ['% consensus called S '+str(covlimit)+'x','Nb of bases called S '+str(covlimit)+'x']
-    colL += ['% consensus called L '+str(covlimit)+'x','Nb of bases called L '+str(covlimit)+'x']
-
-    seqS += ['Sequence S '+str(covlimit)+'x']
-    seqL += ['Sequence L '+str(covlimit)+'x']
-
-cols_to_order0 = ['RUNID','Sample','Sample total reads','Sample total bases']
-cols_to_order1 = ['Nb bases in reference S', 'Nb of viral reads S','Fraction viral reads S', 'Nb of virus bases S','Fraction viral bases S', 'Reference S', 'Partial reference? S', 'NCBI definition S', 'Target S']
-cols_to_order2 = ['Nb bases in reference L', 'Nb of viral reads L','Fraction viral reads L', 'Nb of virus bases L','Fraction viral bases L', 'Reference L', 'Partial reference? L', 'NCBI definition L', 'Target L']
+            df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
+            df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
 
 
-cols_to_order_all_but_statsS = cols_to_order0 + colS + cols_to_order1 + seqS 
-cols_to_order_all_but_stats = cols_to_order0 + colS + colL + cols_to_order1 + seqS + cols_to_order2 + seqL
-mergeOn = cols_to_order0  + (df_short.columns.drop(cols_to_order_all_but_statsS).tolist())
-all_cols = cols_to_order_all_but_stats + (df_short.columns.drop(cols_to_order_all_but_statsS).tolist())
+            df_short=df_short.rename(columns={"% consensus called":"% consensus called S","Nb of bases called": "Nb of bases called S", "Sequence":"Sequence S"})
+            df_long=df_long.rename(columns={"% consensus called":"% consensus called L","Nb of bases called": "Nb of bases called L", "Sequence":"Sequence L"})
+            df_short = df_short.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called S','Partial reference? S'],ascending=[True,True,False,False,True])
+            df_long = df_long.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called L','Partial reference? L'],ascending=[True,True,False,False,True])
 
-df_short = df_short.sort_values(by=['RUNID','Sample','Nb of bases called S '+str(max(COV_LIMIT))+'x','Partial reference? S'],ascending=[True,True,False,True])
-df_long = df_long.sort_values(by=['RUNID','Sample','Nb of bases called L '+str(max(COV_LIMIT))+'x','Partial reference? L'],ascending=[True,True,False,True])
-
-
-for covlimit in COV_LIMIT:
-    df_short_new = df_short[df_short['% consensus called S '+str(covlimit)+'x'] >= 0.7]
-    for sample in SAMPLES:
-        fastaname = RUNID+'-'+sample+'-S-refs_above_0.7-'+str(covlimit)+'x.fasta'
-        with open(RESULTS+'/'+fastaname, 'w') as f:
-        # for index, row in islice(df_short[df_short['Sample']==sample].iterrows(), 1, None):
-            for index, row in df_short_new[df_short_new['Sample']==sample].iterrows():
-                f.write('>'+RUNID+'-'+sample+'-S-'+str(row['Reference S'])+'\n')
-                f.write(row['Sequence S '+str(covlimit)+'x']+'\n')
-            f.close()
-    df_short_new.to_excel(RESULTS+'/'+RUNID+'-lassa-S-consensus-comparison-above0.7-'+str(covlimit)+'x.xlsx',index=False)
+            df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
+            df_short = df_short.reset_index()
+            df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
+            df_long = df_long.reset_index()
+            df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
 
 
-for covlimit in COV_LIMIT:
-    df_long_new = df_long[df_long['% consensus called L '+str(covlimit)+'x'] >= 0.7]
-    for sample in SAMPLES:
-        fastaname = RUNID+'-'+sample+'-L-refs_above_0.7-'+str(covlimit)+'x.fasta'
-        with open(RESULTS+'/'+fastaname, 'w') as f:
-        # for index, row in islice(df_long[df_long['Sample']==sample].iterrows(), 1, None):
-            for index, row in df_long_new[df_long_new['Sample']==sample].iterrows():
-                f.write('>'+RUNID+'-'+sample+'-L-'+str(row['Reference L'])+'\n')
-                f.write(row['Sequence L '+str(covlimit)+'x']+'\n')
-            f.close()
-    df_long_new.to_excel(RESULTS+'/'+RUNID+'-lassa-L-consensus-comparison-above0.7-'+str(covlimit)+'x.xlsx',index=False)
+        samplesWithConsensus = df['Sample'].tolist()
+        for sample in SAMPLES:
+            if (sample not in samplesWithConsensus):
+                predf = {"RUNID": [RUNID],
+                "Sample": [sample]} 
+                tmp = pd.DataFrame.from_dict(predf)
+                df = df.append(tmp, sort = False)
 
 
-df_short = df_short.groupby(['RUNID','Sample']).first()
-df_short = df_short.reset_index()
-df_long = df_long.groupby(['RUNID','Sample']).first().reset_index()
-df_long = df_long.reset_index()
+        df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+        df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+        df.drop(['index','Fraction viral bases L', 'Fraction viral bases S'], axis=1,inplace = True)
+        df.reset_index(drop=True, inplace=True)
+
+
+        cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Release','Version','Completion date','Analysis comments',
+        'Cleaning options','Sample total reads after trim step (R1 + R2)','Sample total bases after trim step (R1 + R2)',
+        'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S','Target S','Reference S','NCBI definition S','Partial reference? S',
+        'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
+        'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
+        'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
+
+        cols2 = df.columns.drop(cols1).tolist()
+        cols = cols1 + cols2
+
+
+        df = df[cols]
+
+
+        df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
+
+#######################
+
+# for covlimit in COV_LIMIT:
+#     df_short_new = df_short[df_short['% consensus called S '+str(covlimit)+'x'] >= 0.7]
+#     for sample in SAMPLES:
+#         fastaname = RUNID+'-'+sample+'-S-refs_above_0.7-'+str(covlimit)+'x.fasta'
+#         with open(RESULTS+'/'+fastaname, 'w') as f:
+#         # for index, row in islice(df_short[df_short['Sample']==sample].iterrows(), 1, None):
+#             for index, row in df_short_new[df_short_new['Sample']==sample].iterrows():
+#                 f.write('>'+RUNID+'-'+sample+'-S-'+str(row['Reference S'])+'\n')
+#                 f.write(row['Sequence S '+str(covlimit)+'x']+'\n')
+#             f.close()
+#     df_short_new.to_excel(RESULTS+'/'+RUNID+'-lassa-S-consensus-comparison-above0.7-'+str(covlimit)+'x.xlsx',index=False)
+
+
+# for covlimit in COV_LIMIT:
+#     df_long_new = df_long[df_long['% consensus called L '+str(covlimit)+'x'] >= 0.7]
+#     for sample in SAMPLES:
+#         fastaname = RUNID+'-'+sample+'-L-refs_above_0.7-'+str(covlimit)+'x.fasta'
+#         with open(RESULTS+'/'+fastaname, 'w') as f:
+#         # for index, row in islice(df_long[df_long['Sample']==sample].iterrows(), 1, None):
+#             for index, row in df_long_new[df_long_new['Sample']==sample].iterrows():
+#                 f.write('>'+RUNID+'-'+sample+'-L-'+str(row['Reference L'])+'\n')
+#                 f.write(row['Sequence L '+str(covlimit)+'x']+'\n')
+#             f.close()
+#     df_long_new.to_excel(RESULTS+'/'+RUNID+'-lassa-L-consensus-comparison-above0.7-'+str(covlimit)+'x.xlsx',index=False)
+
+
+# df_short = df_short.groupby(['RUNID','Sample']).first()
+# df_short = df_short.reset_index()
+# df_long = df_long.groupby(['RUNID','Sample']).first().reset_index()
+# df_long = df_long.reset_index()
 
 
 # df_end = pd.concat([df_short, df_long], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]) #.reset_index()
@@ -194,9 +187,9 @@ df_long = df_long.reset_index()
 # col = []
 
 
-df_end=pd.merge(df_long,df_short, on=mergeOn).sort_values(by=['RUNID','Sample'],ascending=[True,True])
+# df_end=pd.merge(df_long,df_short, on=mergeOn).sort_values(by=['RUNID','Sample'],ascending=[True,True])
 # df.shape()
-df_end[all_cols].to_excel(RESULTS+'/'+RUNID+'-lassa-selected.xlsx',index=False)
+# df_end[all_cols].to_excel(RESULTS+'/'+RUNID+'-lassa-selected.xlsx',index=False)
 
 # for index, row in df_end.iterrows():
 #     for covlimit in COV_LIMIT: 
