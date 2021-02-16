@@ -91,7 +91,7 @@ with open(COMMONVIRUSES, 'r') as f:
     lines = f.readlines() 
     for line in lines:
         virus = line.split(':')[0]
-        keywords = line.split(':')[1].split(',')
+        keywords = line[1].split(',')
         print(virus)
         print(keywords)
 
