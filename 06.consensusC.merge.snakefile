@@ -92,7 +92,7 @@ with open(COMMONVIRUSES, 'r') as f:
         df = virus + 'df'
 
         df = df_new[df_new['NCBI definition'].str.contains(keywords)]
-        df = df.sort_values(by=['RUNID','Sample','Nb of bases called ','Partial reference?'],ascending=[True,True,False,True])
+        df = df.sort_values(by=['RUNID','Sample','Nb of bases called','Partial reference?'],ascending=[True,True,False,True])
 
 
         if 'lassa' in virus:
