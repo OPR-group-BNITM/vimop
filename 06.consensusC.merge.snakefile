@@ -115,7 +115,9 @@ with open(COMMONVIRUSES, 'r') as f:
             df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
             df_long = df_long.reset_index()
             df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
-
+            df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+            df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+            df.drop(['index','Fraction viral bases L', 'Fraction viral bases S'], axis=1,inplace = True)
 
         samplesWithConsensus = df['Sample'].tolist()
         for sample in SAMPLES:
@@ -126,9 +128,7 @@ with open(COMMONVIRUSES, 'r') as f:
                 df = df.append(tmp, sort = False)
 
 
-        df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-        df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-        df.drop(['index','Fraction viral bases L', 'Fraction viral bases S'], axis=1,inplace = True)
+
         df.reset_index(drop=True, inplace=True)
 
 
