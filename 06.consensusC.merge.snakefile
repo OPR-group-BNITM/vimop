@@ -37,9 +37,9 @@ for sample in SAMPLES:
         "Sample": [sample]} 
         tmp = pd.DataFrame.from_dict(predf)
         # tmp = tmp.reset_index()
-        consensusdf = consensusdf.append(predf,sort=False,ignore_index=True)
+        consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
 
-consensusdf.to_csv('/home/ngs/test.csv')
+# consensusdf.to_csv('/home/ngs/test.csv')
 merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
