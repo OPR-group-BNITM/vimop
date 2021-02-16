@@ -64,26 +64,20 @@ for sample in SAMPLES:
         # tmp = tmp.reset_index()
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
 
-# consensusdf.to_csv('/home/ngs/test.csv')
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
 
 
-# quicklook40 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.4
-# quicklook50 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.5
 
-# quicklook40.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-40percent-recovered.xlsx',index=False)
-# quicklook50.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-50percent-recovered.xlsx',index=False)
-
-### Separate the targets
-for i in TARGET:
-    tmp = merged2[merged2['Target'] == i]
-    tmp.to_excel(RESULTS+'/'+RUNID+'-all-consensus-'+i+'.xlsx',index=False)
+# ### Separate the targets
+# for i in TARGET:
+#     tmp = merged2[merged2['Target'] == i]
+#     tmp.to_excel(RESULTS+'/'+RUNID+'-all-consensus-'+i+'.xlsx',index=False)
 
 
 
-df_new = merged2.copy()
+# df_new = merged2.copy()
 
 ### Select the best S and L segments
 
@@ -100,6 +94,8 @@ with open(COMMONVIRUSES, 'r') as f:
         keywords = line.split(':')[1].split(',')
         print(virus)
         print(keywords)
+
+exit(0)
   # logger.info(''.join(line.split()))  
 
 
@@ -205,6 +201,11 @@ df_end[all_cols].to_excel(RESULTS+'/'+RUNID+'-lassa-selected.xlsx',index=False)
 
 
 
+# quicklook40 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.4
+# quicklook50 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.5
+
+# quicklook40.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-40percent-recovered.xlsx',index=False)
+# quicklook50.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-50percent-recovered.xlsx',index=False)
 
 
 
