@@ -95,7 +95,6 @@ optionalArgs.add_argument('-size','-genomeSize', action='store', dest='genomeSiz
 optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
 
 
-
 # optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
 # optionalArgs.add_argument('--mac', action='store_true', help='Run on a mac')
 
@@ -121,6 +120,9 @@ else:
 ANALYSIS_FOLDER = inputArgs.outputFolder + '/' + RUNID + '_ANALYSIS'
 os.makedirs(ANALYSIS_FOLDER,exist_ok=True)
 
+
+# root_directory = Path(inputArgs.outputFolder)
+# sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
 
 # print(cleanOpts)
 
@@ -148,7 +150,11 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
   f.write('covLimit: '+ str(inputArgs.covLimit)+ '\n')
   if (inputArgs.manualRef):
-    f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
+  f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
+  f.write('label: ' + inputArgs.label + '\n')
+  f.write('runidwolabel: ' + inputArgs.runid + '\n')
+  f.write('CompletionDay: '+ str(nowTimeDay)+ '\n')
+  f.write('CommonViruses: '+ scriptPath +'common-viruses.txt'+ '\n')
 
 
 logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')

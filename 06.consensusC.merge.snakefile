@@ -18,9 +18,16 @@ ASSEMBLE_PATH = config['assemble_path']
 CONSENSUS_PATH = config['consensus_path']
 RESULTS = config['results']
 COV_LIMIT = config['covLimit']
+label = config['label']
+RUNID_wo_label = config['runidwolabel']
+DATE = config['CompletionDay']
+COMMONVIRUSES = config['CommonViruses']
 
-TARGET = list((config['target']).split(","))
-TARGET.append('spades')
+# TARGET = list((config['target']).split(","))
+# TARGET.append('spades')
+
+
+
 
 consensusdf = pd.DataFrame()
 blastList=pd.read_csv(config['blastlist'], names=['Sample', 'ref','target'])
@@ -28,7 +35,25 @@ for index, row in blastList.iterrows():
     for covlimit in COV_LIMIT:
         tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['Sample'] +'/'+RUNID + '-'+ row['Sample']+'-'+row['ref']+ '-'+ str(covlimit) +'x-consensus.csv')
         tmp['Target'] = row['target']
+        tmp['Consensus depth requirement'] = str(covlimit)+'x'
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
+        consensusdf = consensusdf.append(tmp, sort = False)
+
+consensusdf['Sample'] = consensusdf['Sample'].astype(str)
+
+
+# merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
+merged2 = consensusdf.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called',],ascending=[True,True,False,False]) #.reset_index()
+
+merged2['Version'] = config['version']
+merged2['Completion date'] = DATE
+merged2['Label'] = label
+
+
+merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
+
+
+
 
 samplesWithConsensus = consensusdf['Sample'].tolist()
 for sample in SAMPLES:
@@ -40,17 +65,16 @@ for sample in SAMPLES:
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
 
 # consensusdf.to_csv('/home/ngs/test.csv')
-merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
 
 
-quicklook40 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.4
-quicklook50 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.5
+# quicklook40 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.4
+# quicklook50 = merged2['% consensus called '+str(min(COV_LIMIT))+'x'] >= 0.5
 
-quicklook40.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-40percent-recovered.xlsx',index=False)
-quicklook50.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-50percent-recovered.xlsx',index=False)
+# quicklook40.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-40percent-recovered.xlsx',index=False)
+# quicklook50.to_excel(RESULTS+'/'+RUNID+'-QUICKLOOK-all-consensus-above-50percent-recovered.xlsx',index=False)
 
 ### Separate the targets
 for i in TARGET:
@@ -58,14 +82,29 @@ for i in TARGET:
     tmp.to_excel(RESULTS+'/'+RUNID+'-all-consensus-'+i+'.xlsx',index=False)
 
 
+
+df_new = merged2.copy()
+
 ### Select the best S and L segments
 
 # aggregation_functions = {'Target': lambda x: ' '.join(x)}
 # df_new = merged2.groupby(['RUNID','Sample','Reference','NCBI definition','% consensus called','Nb of bases called','Nb bases in reference','Nb of viral reads','Sample total reads','Fraction viral reads','Nb of virus bases','Sample total bases','Fraction viral bases','Sequence']).aggregate(aggregation_functions).reset_index()
-df_new = merged2
+# df_new = merged2
 df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
 
+with open(COMMONVIRUSES, 'r') as f:
+lines = f.readlines() 
+for line in lines:
+    virus = line.split(':')[0]
+    keywords = line.split(':')[1].split(',')
+    print(virus)
+    print(keywords)
+  # logger.info(''.join(line.split()))  
+
+
+
+commonViruses = 
 df_new_LASV=df_new[df_new['NCBI definition'].str.contains("Lassa|mammarena")]
 df_new_DENV=df_new[df_new['NCBI definition'].str.contains("Dengue")]
 df_new_DENV= df_new_DENV.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x','Partial reference?'],ascending=[True,True,False,True])
