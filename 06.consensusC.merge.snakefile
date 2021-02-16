@@ -133,7 +133,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
         cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Release','Version','Completion date','Analysis comments',
-        'Cleaning options','Sample total reads after trim step (R1 + R2)','Sample total bases after trim step (R1 + R2)',
+        'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
         'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S','Target S','Reference S','NCBI definition S','Partial reference? S',
         'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
         'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
