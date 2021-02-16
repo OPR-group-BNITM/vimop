@@ -48,10 +48,11 @@ predf = {
     # "Nb base called": [nb_ATCG],
     "Nb bases in reference": [ref_bases],
     "Nb of viral reads": [nb_virus_reads],
-    "Sample total reads": [nb_trim_reads],
+    "Sample total bases after trim step": [nb_trim_bases],
+    "Sample total reads after trim step": [nb_trim_reads],
     "Fraction viral reads": [fraction_viral_reads],
     "Nb of virus bases": [nb_virus_bases_mapped],
-    "Sample total bases": [nb_trim_bases],
+    # "Sample total bases": [nb_trim_bases],
     "Fraction viral bases": [frac_viral_bases],
     "Cleaning options": [snakemake.params.cleanopts]
     # "seq": [seq]
