@@ -99,9 +99,9 @@ for record in pysamstats.stat_variation(bamfile,fastafile,pad=True):
 # ref_length=len(seq)
 percent_ATCG=(nb_ATCG/int(ref_bases)*100)
 
-key_seq = "Sequence "
-key_basecalled = "Nb of bases called "
-key_percentconsensuscalled = "% consensus called "
+key_seq = "Sequence"
+key_basecalled = "Nb of bases called"
+key_percentconsensuscalled = "% consensus called"
 predf[key_seq] = [''.join(consensus)]
 predf[key_basecalled] = [nb_ATCG]
 predf[key_percentconsensuscalled] = [percent_ATCG]
@@ -144,7 +144,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
-
+    tgts = df_map_tmp['target'].array
     df_map = df_map.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Map'],tgts,data], sortorder=None)
