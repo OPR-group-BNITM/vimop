@@ -104,7 +104,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
 
-commonViruses = 
+# commonViruses = 
 df_new_LASV=df_new[df_new['NCBI definition'].str.contains("Lassa|mammarena")]
 df_new_DENV=df_new[df_new['NCBI definition'].str.contains("Dengue")]
 df_new_DENV= df_new_DENV.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x','Partial reference?'],ascending=[True,True,False,True])
