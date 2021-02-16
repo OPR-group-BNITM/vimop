@@ -132,7 +132,7 @@ with open(COMMONVIRUSES, 'r') as f:
         df.reset_index(drop=True, inplace=True)
 
 
-        cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Release','Version','Completion date','Analysis comments',
+        cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
         'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
         'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S','Target S','Reference S','NCBI definition S','Partial reference? S',
         'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
