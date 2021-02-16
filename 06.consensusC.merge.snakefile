@@ -77,7 +77,7 @@ merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False
 
 
 
-# df_new = merged2.copy()
+df_new = merged2.copy()
 
 ### Select the best S and L segments
 
