@@ -150,7 +150,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
   f.write('covLimit: '+ str(inputArgs.covLimit)+ '\n')
   if (inputArgs.manualRef):
-  f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
+    f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
   f.write('label: ' + inputArgs.label + '\n')
   f.write('runidwolabel: ' + inputArgs.runid + '\n')
   f.write('CompletionDay: '+ str(nowTimeDay)+ '\n')
