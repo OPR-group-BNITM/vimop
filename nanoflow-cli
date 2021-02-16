@@ -52,6 +52,7 @@ home = str(Path.home())
 All = False
 
 nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
+nowTimeDay = datetime.datetime.now().strftime('%Y.%m.%d')
 
 myPlatform = platform.system()
 GPU = GPUtil.getGPUs()
