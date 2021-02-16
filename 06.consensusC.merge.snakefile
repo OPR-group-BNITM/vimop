@@ -97,7 +97,7 @@ with open(COMMONVIRUSES, 'r') as f:
         virus = line.split(':')[0]
         keywords = line.split(':')[1] #.split(',')
         keywords = keywords.replace(' ', '')
-        keywords = keywords.split(',')
+        keywords = keywords.replace(',', '|')
         print(keywords)
 
 exit(0)
