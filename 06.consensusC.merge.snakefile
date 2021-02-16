@@ -33,11 +33,11 @@ for index, row in blastList.iterrows():
 samplesWithConsensus = consensusdf['Sample'].tolist()
 for sample in SAMPLES:
     if (sample not in samplesWithConsensus):
-        predf = {"RUNID": RUNID,
-        "Sample": sample} 
-        tmp = pd.DataFrame.from_records(predf, index='RUNID')
+        predf = {"RUNID": [RUNID],
+        "Sample": [sample]} 
+        tmp = pd.DataFrame.from_dict(predf)
         # tmp = tmp.reset_index()
-        consensusdf = consensusdf.append(predf,sort=True,ignore_index=True)
+        consensusdf = consensusdf.append(predf,sort=False)
 
 
 merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
