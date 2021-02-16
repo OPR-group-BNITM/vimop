@@ -94,8 +94,8 @@ with open(COMMONVIRUSES, 'r') as f:
         if '#' in line:
             continue
         virus = line.split(':')[0]
-        keywords = line[1] #.split(',')
-        print(virus)
+        keywords = line.split(':')[1] #.split(',')
+        keywords = keywords.split(',')
         print(keywords)
 
 exit(0)
