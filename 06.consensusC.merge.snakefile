@@ -126,6 +126,7 @@ with open(COMMONVIRUSES, 'r') as f:
         'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
 
         else:
+            df['Fraction consensus called'] = df['% consensus called'].div(100)
             cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
         'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
         'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
