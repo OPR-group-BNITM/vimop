@@ -180,6 +180,8 @@ get_git_tag = 'git -C '+scriptPath+' describe HEAD --always'
 with subprocess.Popen(get_git_tag, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
     for line in p.stdout:
         logger.info(line.rstrip())
+        with open(ANALYSIS_FOLDER+'/config.yaml', 'a+') as f:
+            f.write('version: '+ line.split('-')[0] + '\n')
 logger.info('Analysis log: '+analysis_log_file)
 logger.info("Arguments given:")
 logger.info(inputArgs)
