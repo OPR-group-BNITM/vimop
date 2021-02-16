@@ -63,6 +63,7 @@ for i in TARGET:
 # aggregation_functions = {'Target': lambda x: ' '.join(x)}
 # df_new = merged2.groupby(['RUNID','Sample','Reference','NCBI definition','% consensus called','Nb of bases called','Nb bases in reference','Nb of viral reads','Sample total reads','Fraction viral reads','Nb of virus bases','Sample total bases','Fraction viral bases','Sequence']).aggregate(aggregation_functions).reset_index()
 df_new = merged2
+df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
 
 df_new_LASV=df_new[df_new['NCBI definition'].str.contains("Lassa|mammarena")]
