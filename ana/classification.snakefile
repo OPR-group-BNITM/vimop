@@ -24,10 +24,11 @@ rule all:
             OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-virus.tsv',
             OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-virus.tsv',
             OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-virus.html',
-            OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt',
-            OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
-            OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv',
-            OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.html'],
+            # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt',
+            # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
+            # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv',
+            # sOUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.html'
+            ],
             sample=SAMPLES)
 
 
@@ -71,7 +72,7 @@ rule krona_representation_virus:
         '../envs/general.yaml'
     threads: 1 #workflow.cores
     shell:
-        'ktImportTaxonomy -tax $HOME/anaconda3/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
+        'ktImportTaxonomy -tax $HOME/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
 
 
 
