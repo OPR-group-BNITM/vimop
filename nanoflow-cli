@@ -153,7 +153,7 @@ with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('genomeSize: ' + str(inputArgs.genomeSize) + '\n')
   f.write('covLimit: '+ str(inputArgs.covLimit)+ '\n')
   if (inputArgs.manualRef):
-    f.write('manual_ref: ' + (',').join(inputArgs.manualRef))
+    f.write('manual_ref: ' + (',').join(inputArgs.manualRef)+ '\n')
   f.write('label: ' + inputArgs.label + '\n')
   f.write('runidwolabel: ' + inputArgs.runid + '\n')
   f.write('CompletionDay: '+ str(nowTimeDay)+ '\n')
@@ -185,14 +185,14 @@ with subprocess.Popen(get_git_tag, stdout=subprocess.PIPE, stderr=subprocess.STD
         with open(ANALYSIS_FOLDER+'/config.yaml', 'a+') as f:
             f.write('version: '+ line.split('-')[0] + '\n')
 logger.info('Analysis log: '+analysis_log_file)
-logger.info("Arguments given:")
+logger.info('Arguments given:')
 logger.info(inputArgs)
-logger.info("Parameter file:")
+logger.info('Parameter file:')
 with open(ANALYSIS_FOLDER+'/config.yaml', 'r') as f:
   lines = f.readlines() 
   for line in lines:
     logger.info(''.join(line.split()))
-logger.info("General environment file:")
+logger.info('General environment file:')
 with open(scriptPath + '/envs/general.yaml', 'r') as f:
   lines = f.readlines() 
   for line in lines:
@@ -204,7 +204,7 @@ with open(scriptPath + '/envs/general.yaml', 'r') as f:
 if (not inputArgs.demultiplex and not inputArgs.trim and not inputArgs.clean 
   and not inputArgs.map and not inputArgs.assemble 
   and not inputArgs.consensus):
-  logger.info("Running complete pipeline")
+  logger.info('Running complete pipeline')
   All = True
 
 ###################################################################################################################################################################
@@ -250,7 +250,7 @@ filenamesBC = glob.glob(inputArgs.fastqDir+'/**/barcode*')
 for BC in filenamesBC:
   barcodetmp = BC.split('/')[-1]
   with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'w') as outfile:
-      for fname in glob.glob(BC+'/*.fastq*'):
+      for fname in glob.glob(BC+'/**/*.fastq*'):
           with open(fname) as infile:
               for line in infile:
                   outfile.write(line)
