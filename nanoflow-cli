@@ -400,6 +400,7 @@ if (All or inputArgs.map):
         # map_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target
         # os.mkdir(map_dir)
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
+        Path(canuAttemps_file).touch()
         if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
           canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
         else:
