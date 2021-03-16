@@ -249,7 +249,7 @@ logger.info('Samples to run:')
 filenamesBC = glob.glob(inputArgs.fastqDir+'/*barcode*')
 for BC in filenamesBC:
   barcodetmp = BC.split('/')[-1]
-  print(barcodetmp)
+  # print(barcodetmp)
   os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
   with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'w') as outfile:
       for fname in glob.glob(BC+'/**/*.fastq*'):
@@ -263,8 +263,8 @@ for BC in filenamesBC:
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
 else:
-  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq*')]
-  print(listFullDir)
+  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq')]
+  # print(listFullDir)
   samplesToRun = [i.split('-')[3] for i in listFullDir]
   # samplesToRun = [i.split('.')[0] for i in samplesToRun]
 
@@ -296,19 +296,19 @@ if (All or inputArgs.trim):
           logger.info(line.rstrip()) 
 
 
-  logger.info("Centrifuge environment file:")
-  with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
-    lines = f.readlines() 
-    for line in lines:
-      logger.info(''.join(line.split()))  
-  trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
-  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
-  --cores '+ str(inputArgs.threads) 
+  # logger.info("Centrifuge environment file:")
+  # with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
+  #   lines = f.readlines() 
+  #   for line in lines:
+  #     logger.info(''.join(line.split()))  
+  # trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
+  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
+  # outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
+  # --cores '+ str(inputArgs.threads) 
 
-  with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-      for line in p.stdout:
-          logger.info(line.rstrip()) 
+  # with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+  #     for line in p.stdout:
+  #         logger.info(line.rstrip()) 
 
 
 
@@ -336,19 +336,19 @@ if (All or inputArgs.clean):
           logger.info(line.rstrip())
 
 
-  logger.info("Centrifuge environment file:")
-  with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
-    lines = f.readlines() 
-    for line in lines:
-      logger.info(''.join(line.split()))  
-  trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
-  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
-  --cores '+ str(inputArgs.threads) 
+  # logger.info("Centrifuge environment file:")
+  # with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
+  #   lines = f.readlines() 
+  #   for line in lines:
+  #     logger.info(''.join(line.split()))  
+  # trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
+  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
+  # outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
+  # --cores '+ str(inputArgs.threads) 
 
-  with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-      for line in p.stdout:
-          logger.info(line.rstrip()) 
+  # with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+  #     for line in p.stdout:
+  #         logger.info(line.rstrip()) 
 
 
 
