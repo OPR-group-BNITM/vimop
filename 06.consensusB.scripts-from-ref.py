@@ -54,7 +54,7 @@ predf = {
     "Nb of virus bases": [nb_virus_bases_mapped],
     # "Sample total bases": [nb_trim_bases],
     "Fraction viral bases": [frac_viral_bases],
-    "Cleaning options": [snakemake.params.cleanopts]
+    "Cleaning options": [snakemake.params.cleanopts],
     'Trim stats, num_seqs': [nb_trim_reads],
     'Trim stats, sum_len': [nb_trim_bases],
     'Trim stats, min_len': [nb_trim_minlen],
