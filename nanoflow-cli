@@ -82,7 +82,7 @@ optionalArgs.add_argument('-t', '--threads', action='store', dest='threads', typ
 optionalArgs.add_argument('-s', '--sample', action='store', dest='selectedSamples', type=str, metavar='barcodeXX', help='Space separated selected barcodes', nargs='*')
 optionalArgs.add_argument('-p', '--target', action='store', dest='targetPathogen', nargs='*', type=str, metavar='STR', help='Space separated selected target pathogen. Supported: LASV, ALL | default: LASV', default=['LASV'])
 optionalArgs.add_argument('-m', '--ref','--manualRef', action='store', type=str, dest='manualRef', nargs='*', help='Manual mapping to custom reference')
-optionalArgs.add_argument('-db', action='store', dest='db', nargs='*', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/nanoflow/db', default=home+'/Desktop/NGS-scripts/DB')
+optionalArgs.add_argument('-db', '--db', action='store', dest='db', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/nanoflow/db', default=home+'/Desktop/NGS-scripts/DB')
 
 optionalArgs.add_argument('-1', '--demultiplex', action='store_true', help='Demultiplex')
 optionalArgs.add_argument('-2', '--trim', action='store_true', help='Trim')
