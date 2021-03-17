@@ -400,6 +400,7 @@ if (All or inputArgs.map):
         logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
         # map_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target
         # os.mkdir(map_dir)
+        os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target,exist_ok=True)
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         Path(canuAttemps_file).touch()
         if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
@@ -624,7 +625,9 @@ if (All or inputArgs.assemble):
       logger.info(sample+ ': Assembly with canu')
       # assemble_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble'
       # os.mkdir(assemble_dir)
+      os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble',exist_ok=True)
       canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/canu-attempts.tsv'
+      Path(canuAttemps_file).touch()
       if (os.path.exists(canuAttemps_file) and os.path.getsize(canuAttemps_file) > 0):
         canuAttempts = pd.read_csv(canuAttemps_file, names = ['Attempt number','Status'],sep="\t")
       else:
