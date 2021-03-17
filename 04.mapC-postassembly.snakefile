@@ -29,7 +29,7 @@ rule all:
     input:
         expand([RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-mapped-assembly-stats.txt',
             RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt',
-            RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png',
+            # RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png',
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blast-results.lst',
             RESULTS+'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-blasted-list.csv'], 
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
@@ -81,19 +81,19 @@ rule calc_read_length:
         'readlength.sh in={input[0]} bin=1 out={output[0]}'
 
 
-rule read_length_png:
-    input:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
-    conda:
-        'envs/general.yaml'
-    params:
-        RUNID = RUNID,
-        sample = '{sample}',
-        label = 'mapped-{target}-{assembler}'
-    output:
-        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
-    script:
-        'ana/read-length-individual-image.py'
+# rule read_length_png:
+#     input:
+#         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.txt'
+#     conda:
+#         'envs/general.yaml'
+#     params:
+#         RUNID = RUNID,
+#         sample = '{sample}',
+#         label = 'mapped-{target}-{assembler}'
+#     output:
+#         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-read-length.png'
+#     script:
+#         'ana/read-length-individual-image.py'
 
 
 

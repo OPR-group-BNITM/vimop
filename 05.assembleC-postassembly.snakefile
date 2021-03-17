@@ -22,7 +22,7 @@ rule all:
         expand([RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-contigs-sorted.fasta',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-assembly-stats.txt',
             RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt',
-            RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
+            # RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blast-results.lst',
             RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-blasted-list.csv'], 
             sample=SAMPLES, assembler= ASSEMBLER)
@@ -81,19 +81,19 @@ rule calc_read_length:
         'readlength.sh in={input[0]} bin=1 out={output[0]}'
 
 
-rule read_length_png:
-    input:
-        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt'
-    conda:
-        'envs/general.yaml'
-    params:
-        RUNID = RUNID,
-        sample = '{sample}',
-        label = 'assembly-{assembler}'
-    output:
-        RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png'
-    script:
-        'ana/read-length-individual-image.py'
+# rule read_length_png:
+#     input:
+#         RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.txt'
+#     conda:
+#         'envs/general.yaml'
+#     params:
+#         RUNID = RUNID,
+#         sample = '{sample}',
+#         label = 'assembly-{assembler}'
+#     output:
+#         RESULTS +'/{sample}/04_assemble/'+RUNID+'-{sample}-{assembler}-read-length.png'
+#     script:
+#         'ana/read-length-individual-image.py'
 
 
 
