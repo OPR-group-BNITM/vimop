@@ -59,7 +59,7 @@ predf = {
     'Trim stats, sum_len': [nb_trim_bases],
     'Trim stats, min_len': [nb_trim_minlen],
     'Trim stats, avg_len': [nb_trim_avglen],
-    'Trim stats,, max_len': [nb_trim_maxlen]
+    'Trim stats,, max_len': [nb_trim_maxlen],
 }
 
 
