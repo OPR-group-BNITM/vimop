@@ -62,13 +62,14 @@ for step in SPEC2:
 for sample in SAMPLES:
     stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
     i = 0
+
     # print(i)
     for step in SPEC2:
         stat_file = open(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt','r')
-
         lines = stat_file.readlines()
         # stats = pd.DataFrame(, data=(re.sub(',','',lines[1])).split()[3:8])
-        stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
+        if "FAST" in lines[1]:
+            stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
         # print(i)
         if i == 0:
             stats['step'] = SPEC[i]
