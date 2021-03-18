@@ -4,7 +4,7 @@ import pathlib
 from itertools import islice  
 from pathlib import Path
 from shutil import copyfile
-import path
+# import path
 import os
 
 RUNID = config['runid']
