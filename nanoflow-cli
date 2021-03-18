@@ -842,7 +842,7 @@ if (All or inputArgs.consensus):
       logger.info(''.join(line.split()))
 
     
-  consensus_command = 'source activate root; snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
+  consensus_command = 'bash -c source /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow; snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
@@ -854,7 +854,7 @@ if (All or inputArgs.consensus):
   # consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   # --cores '+ str(inputArgs.threads) 
-  consensus_command = 'source activate root ; snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
+  consensus_command = 'bash -c source /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ; snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' \
   --cores '+ str(inputArgs.threads) 
 
