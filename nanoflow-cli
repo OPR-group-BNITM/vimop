@@ -244,30 +244,33 @@ if (inputArgs.demultiplex):
 ###################################################################################################################################################################
 
 logger.info('Samples to run:')
-
-#Make sure all files are merged per barcode
-if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz'):
-  filenamesBC = glob.glob(inputArgs.fastqDir+'/*barcode*')
-else:
-  filenamesBC = glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz')
-for BC in filenamesBC:
-  barcodetmp = BC.split('/')[-1]
-  # print(barcodetmp)
-  os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
-  with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'w') as outfile:
-      for fname in glob.glob(BC+'/*.fastq*'):
-          # print(fname)
-          with open(fname) as infile:
-              for line in infile:
-                  outfile.write(line)
-      # with gzip.open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq','w') as f_out:
-      #   shutil.copyfile(outfile, f_out)
-
-
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
-else:
-  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq')]
+else
+  #Make sure all files are merged per barcode
+  if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz'):
+    filenamesBC = glob.glob(inputArgs.fastqDir+'/*barcode*')
+    for BC in filenamesBC:
+      barcodetmp = BC.split('/')[-1]
+      # print(barcodetmp)
+      os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
+      with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'w') as outfile:
+          for fname in glob.glob(BC+'/*.fastq*'):
+              # print(fname)
+              with open(fname) as infile:
+                  for line in infile:
+                      outfile.write(line)
+
+  # else:
+  #   filenamesBC = glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz')
+  
+  # listFullDir = i.split('/')[-1]for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq*')
+        # with gzip.open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq','w') as f_out:
+        #   shutil.copyfile(outfile, f_out)
+
+
+
+  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq*')]
   # print(listFullDir)
   samplesToRun = [i.split('-')[3] for i in listFullDir]
   # samplesToRun = [i.split('.')[0] for i in samplesToRun]
