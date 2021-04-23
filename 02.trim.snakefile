@@ -39,7 +39,7 @@ rule all:
 
 rule stats_post_demultiplex:
     input:
-        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq'
+        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq.gz'
     output:
         RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-initial-stats.txt'
     conda:
