@@ -272,8 +272,9 @@ else:
 
   listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq*')]
   # print(listFullDir)
-  samplesToRun = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
-  print(samplesToRun)
+  samplesToRunTmp = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
+  samplesToRun = [j.group(1) for j in samplesToRunTmp]
+  # print(samplesToRun)
    # = [i.split('-')[3] ]
   # samplesToRun = [i.split('.')[0] for i in samplesToRun]
 
