@@ -246,7 +246,7 @@ if (inputArgs.demultiplex):
 logger.info('Samples to run:')
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
-else
+else:
   #Make sure all files are merged per barcode
   if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz'):
     filenamesBC = glob.glob(inputArgs.fastqDir+'/*barcode*')
