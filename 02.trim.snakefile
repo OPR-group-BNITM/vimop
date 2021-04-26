@@ -50,7 +50,7 @@ rule stats_post_demultiplex:
 
 rule fastqc_stats_post_demultiplex:
     input:
-        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq'
+        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq.gz'
     output:
         RESULTS+'/{sample}/00_initial_stats/'+RUNID+'-{sample}-demultiplexed_fastqc.html'
     conda:
@@ -64,7 +64,7 @@ rule fastqc_stats_post_demultiplex:
     
 rule seqtk_trimfq:
     input:
-        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq'
+        DEMULTIPLEX_PATH +'/'+RUNID+'-{sample}-demultiplexed.fastq.gz'
     output:
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     conda:
