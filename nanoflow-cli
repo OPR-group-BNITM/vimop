@@ -380,7 +380,7 @@ if (All or inputArgs.map):
   logger.addHandler(fileHandler)
 
   logger.info('Map: pre-assembly')
-  map_scriptA_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
+  map_scriptA_command = 'snakemake --snakefile '+scriptPath+'/04.mapA-preassembly.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
@@ -431,7 +431,7 @@ if (All or inputArgs.map):
             minOverlapLength = 200
             subsampleLevel = 75000
             logger.info('First canu attempt')
-            canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ; snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
             --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -462,7 +462,7 @@ if (All or inputArgs.map):
             minOverlapLength = 50
             subsampleLevel = 75000
             logger.info('Second canu attempt')
-            canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
             --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -494,7 +494,7 @@ if (All or inputArgs.map):
             minOverlapLength = 200
             subsampleLevel = 50000
             logger.info('Third canu attempt')
-            canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
             --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -526,7 +526,7 @@ if (All or inputArgs.map):
             minOverlapLength = 200
             subsampleLevel = 50000
             logger.info('Forth canu attempt')
-            canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
+            canu_command = 'snakemake --snakefile '+scriptPath+'/04.mapB-assembly-canu.snakefile \
             --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' currentTarget='+target+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
             --cores '+ str(inputArgs.threads)
             with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -561,7 +561,7 @@ if (All or inputArgs.map):
     logger.info('Map: post-assembly')
 
 
-    map_scriptC_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
+    map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
     --cores '+ str(inputArgs.threads) 
 
@@ -608,7 +608,7 @@ if (All or inputArgs.assemble):
   logger.addHandler(fileHandler)
 
   logger.info('Assemble: pre-assembly')
-  assemble_scriptA_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleA-preassembly.snakefile \
+  assemble_scriptA_command = 'snakemake --snakefile '+scriptPath+'/05.assembleA-preassembly.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
@@ -656,7 +656,7 @@ if (All or inputArgs.assemble):
           minOverlapLength = 200
           subsampleLevel = 75000
           logger.info('First canu attempt')
-          canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
           --cores '+ str(inputArgs.threads)
           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -688,7 +688,7 @@ if (All or inputArgs.assemble):
           minOverlapLength = 50
           subsampleLevel = 75000
           logger.info('Second canu attempt')
-          canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
           --cores '+ str(inputArgs.threads)
           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -720,7 +720,7 @@ if (All or inputArgs.assemble):
           minOverlapLength = 200
           subsampleLevel = 50000
           logger.info('Third canu attempt')
-          canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
           --cores '+ str(inputArgs.threads)
           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -752,7 +752,7 @@ if (All or inputArgs.assemble):
           minOverlapLength = 200
           subsampleLevel = 50000
           logger.info('Forth canu attempt')
-          canu_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
+          canu_command = 'snakemake --snakefile '+scriptPath+'/05.assembleB-assembly-canu.snakefile \
           --configfile '+ANALYSIS_FOLDER+'/config.yaml --config currentSample='+sample+' attemptNumber='+str(lastAttempt)+' minReadLength='+str(minReadLength)+' minOverlapLength='+str(minOverlapLength)+' subsampleLevel='+str(subsampleLevel)+' --use-conda --conda-prefix '+home+'/opt/iflow \
           --cores '+ str(inputArgs.threads)
           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
@@ -784,7 +784,7 @@ if (All or inputArgs.assemble):
 
 
     logger.info('Assemble: post-assembly')
-    assemble_scriptC_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ;snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
+    assemble_scriptC_command = 'snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
     --cores '+ str(inputArgs.threads) 
 
@@ -851,7 +851,7 @@ if (All or inputArgs.consensus):
       logger.info(''.join(line.split()))
 
     
-  consensus_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ; snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusA.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
 
@@ -863,7 +863,7 @@ if (All or inputArgs.consensus):
   # consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
   # --cores '+ str(inputArgs.threads) 
-  consensus_command = '. /home/ngs/miniconda3/bin/activate /home/ngs/miniconda3/envs/nanoflow ; snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' \
   --cores '+ str(inputArgs.threads) 
 
