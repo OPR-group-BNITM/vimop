@@ -52,7 +52,7 @@ scriptPath = os.path.dirname(os.path.abspath(__file__))
 print(scriptPath)
 home = str(Path.home())
 All = False
-
+# currentPath = 
 nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
 nowTimeDay = datetime.datetime.now().strftime('%Y.%m.%d')
 
@@ -76,7 +76,7 @@ parser = argparse.ArgumentParser(prog='nanoflow',
 requiredArgs = parser.add_argument_group('Required arguments')
 requiredArgs.add_argument('-r', '--runid', action='store', dest='runid', type=str, required=True, metavar='RUNID')
 optionalArgs = parser.add_argument_group('Optional arguments')
-optionalArgs.add_argument('-i', '--input', action='store', dest='fastqDir', type=str, metavar='DIR', help='Input directory with basecalled fastq files | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
+optionalArgs.add_argument('-i', '--input', action='store', dest='fastqDir', nargs='*',type=str, metavar='DIR', help='Input directory with basecalled fastq files | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
 optionalArgs.add_argument('-o', '--output', action='store', dest='outputFolder', type=str, metavar='DIR', help='Output directory | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
 optionalArgs.add_argument('-t', '--threads', action='store', dest='threads', type=int, metavar='INT', help='Number of threads | default: 4', default=4)
 optionalArgs.add_argument('-s', '--sample', action='store', dest='selectedSamples', type=str, metavar='barcodeXX', help='Space separated selected barcodes', nargs='*')
@@ -135,7 +135,7 @@ cleanOpts = re.sub('reagents','reagent',cleanOpts)
 with open(ANALYSIS_FOLDER+'/config.yaml', 'w') as f:
   f.write('runid: ' + RUNID + '\n')
   f.write('table: ' + ANALYSIS_FOLDER + '/table.csv\n')
-  f.write('data: ' + inputArgs.fastqDir + '\n')
+  f.write('data: ' + str(inputArgs.fastqDir) + '\n')
   f.write('demultiplex_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex\n')
   f.write('trim_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-02-trim\n')
   f.write('clean_path: ' + ANALYSIS_FOLDER + '/' + RUNID + '-03-clean\n')
@@ -217,19 +217,28 @@ if (inputArgs.demultiplex):
   fileHandler = logging.FileHandler(demultiplex_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
+  # print(inputArgs.fastqDir)
+  fastqdirs = []
+  for directory in inputArgs.fastqDir:
+    # print(fastqdir)
+    fastqdirs.append(list(set(glob.glob(directory +'/*/*/fastq_*', recursive=True)) - set(glob.glob(directory +'/*/*/fastq_fail'))))
+    # fastqpassdir = glob.glob(fastqdir+'/*/*/fastq_[!fail]*', recursive=True)
+  fastqdirs = [item for sublist in fastqdirs for item in sublist]
+  for fastqdir in fastqdirs:
 
-  if (not GPU):
-    guppy_command = 'guppy_barcoder -r -i ' + inputArgs.fastqDir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
-    with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            logger.info(line.rstrip()) 
-  else:
-    guppy_command = 'guppy_barcoder -r -i ' + inputArgs.fastqDir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114" -q 0'
-    with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            logger.info(line.rstrip()) 
+    if (not GPU):
+      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --progress_stats_frequency 300 --barcode_kits "EXP-NBD114"'
+      
+      with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+          for line in p.stdout:
+              logger.info(line.rstrip()) 
+    else:
+      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --progress_stats_frequency 300 --barcode_kits "EXP-NBD114"'
+      with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+          for line in p.stdout:
+              logger.info(line.rstrip()) 
 
-
+  exit()
   listFullDir = next(os.walk(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex'))[1]
   for i in listFullDir:
     mv_command = 'mv '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i+'/*fastq.gz '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+i+'-demultiplexed.fastq.gz && rm -r '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i
