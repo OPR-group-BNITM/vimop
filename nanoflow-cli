@@ -217,12 +217,9 @@ if (inputArgs.demultiplex):
   fileHandler = logging.FileHandler(demultiplex_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
-  # print(inputArgs.fastqDir)
   fastqdirs = []
   for directory in inputArgs.fastqDir:
-    # print(fastqdir)
     fastqdirs.append(list(set(glob.glob(directory +'/*/*/fastq_*', recursive=True)) - set(glob.glob(directory +'/*/*/fastq_fail'))))
-    # fastqpassdir = glob.glob(fastqdir+'/*/*/fastq_[!fail]*', recursive=True)
   fastqdirs = [item for sublist in fastqdirs for item in sublist]
   for fastqdir in fastqdirs:
     print(fastqdir)
@@ -238,11 +235,20 @@ if (inputArgs.demultiplex):
           for line in p.stdout:
               logger.info(line.rstrip()) 
 
-  exit()
-  listFullDir = next(os.walk(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex'))[1]
-  for i in listFullDir:
-    mv_command = 'mv '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i+'/*fastq.gz '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+i+'-demultiplexed.fastq.gz && rm -r '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i
-    subprocess.run(mv_command, shell = True)
+  for fastqdir in fastqdirs:
+    filenamesBC = glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) +'/*barcode*')
+    for BC in filenamesBC:
+      barcodetmp = BC.split('/')[-1]
+
+      with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
+        for fname in glob.glob(BC+'/*.fastq*'):
+            with open(fname) as infile:
+                for line in infile:
+                    outfile.write(line)
+      # rm_command = 'mv '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i+'/*fastq.gz '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+i+'-demultiplexed.fastq.gz && rm -r '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i
+      # subprocess.run(mv_command, shell = True)
+
+
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
@@ -256,36 +262,26 @@ logger.info('Samples to run:')
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
 else:
-  #Make sure all files are merged per barcode
+
   if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz'):
-    filenamesBC = glob.glob(inputArgs.fastqDir+'/*barcode*')
-    for BC in filenamesBC:
-      barcodetmp = BC.split('/')[-1]
-      # print(barcodetmp)
-      os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
-      with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'w') as outfile:
+    fastqdirs = []
+    for directory in inputArgs.fastqDir:
+      fastqdirs.append(list(set(glob.glob(directory +'/*/*/fastq_*/barcode*', recursive=True)) - set(glob.glob(directory +'/*/*/fastq_fail/*barcode*'))))
+    fastqdirs = [item for sublist in fastqdirs for item in sublist]
+    for fastqdir in fastqdirs:
+      for BC in fastqdirs:
+        barcodetmp = BC.split('/')[-1]
+
+        os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
+        with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
           for fname in glob.glob(BC+'/*.fastq*'):
-              # print(fname)
               with open(fname) as infile:
                   for line in infile:
                       outfile.write(line)
 
-  # else:
-  #   filenamesBC = glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz')
-  
-  # listFullDir = i.split('/')[-1]for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/*barcode*.fastq*')
-        # with gzip.open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq','w') as f_out:
-        #   shutil.copyfile(outfile, f_out)
-
-
-
   listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz')]
-  # print(listFullDir)
   samplesToRunTmp = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
   samplesToRun = [j.group(1) for j in samplesToRunTmp]
-  # print(samplesToRun)
-   # = [i.split('-')[3] ]
-  # samplesToRun = [i.split('.')[0] for i in samplesToRun]
 
 with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
   for item in sorted(samplesToRun):
