@@ -225,7 +225,7 @@ if (inputArgs.demultiplex):
     # fastqpassdir = glob.glob(fastqdir+'/*/*/fastq_[!fail]*', recursive=True)
   fastqdirs = [item for sublist in fastqdirs for item in sublist]
   for fastqdir in fastqdirs:
-
+    print(fastqdir)
     if (not GPU):
       guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "EXP-NBD114"' #--progress_stats_frequency 300
       
