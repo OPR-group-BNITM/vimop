@@ -226,13 +226,13 @@ if (inputArgs.demultiplex):
   for fastqdir in fastqdirs:
     print(fastqdir)
     if (not GPU):
-      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits '+ barcodeKit'
+      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits '+ barcodeKit
       
       with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
           for line in p.stdout:
               logger.info(line.rstrip()) 
     else:
-      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --barcode_kits '+ barcodeKit'
+      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --barcode_kits '+ barcodeKit
       with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
           for line in p.stdout:
               logger.info(line.rstrip()) 
