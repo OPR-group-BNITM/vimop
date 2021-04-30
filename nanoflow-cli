@@ -246,7 +246,7 @@ if (inputArgs.demultiplex):
 
       with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
         for fname in glob.glob(BC+'/*.fastq*'):
-            if fname.contains('.fastq.gz'):
+            if '.fastq.gz' in fname:
               with gzip.open(fname) as infile:
                 for line in infile:
                   outfile.write(line)
