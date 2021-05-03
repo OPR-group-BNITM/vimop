@@ -16,5 +16,6 @@ dependencies:
   - bcftools=1.10.2
   - krona=2.7.1
   - pandas=1.2.3
+  - fastqc=0.11.9
   # - racon=1.4.13
   # - medaka=1.0.3
