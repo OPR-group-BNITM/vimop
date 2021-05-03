@@ -273,7 +273,7 @@ if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
 else:
 
-  if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz'):
+  if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*'):
     fastqdirs = []
     for directory in inputArgs.fastqDir:
       fastqdirs.append(list(set(glob.glob(directory +'/*/*/fastq_*/barcode*', recursive=True)) - set(glob.glob(directory +'/*/*/fastq_fail/*barcode*'))))
@@ -289,7 +289,7 @@ else:
                   for line in infile:
                       outfile.write(line)
 
-  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq.gz')]
+  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*')]
   samplesToRunTmp = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
   samplesToRun = [j.group(1) for j in samplesToRunTmp]
 
