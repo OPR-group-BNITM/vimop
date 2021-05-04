@@ -81,9 +81,9 @@ def main():
   logger.setLevel(logging.DEBUG)
 
   refs = getref(inputArgs.refs, inputArgs.db, inputArgs.outdir)
-  # print(refs)
+  print(inputArgs.threads)
 
-  # exit()
+  exit()
   consensus_command = 'snakemake --snakefile '+scriptPath+'/map-to-ref.snakefile \
   --config fastq=' + inputArgs.fastq + 'refs=' + refs + 'db=' + inputArgs.db + ' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
