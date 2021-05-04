@@ -20,8 +20,8 @@ rule all:
         expand([TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq',
             RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt',
             RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq_fastqc.html',
-            RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.txt',
-            # RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.png'
+            #RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.txt',
+            #RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-trimmed-read-length.png'
             ],
             sample=SAMPLES)
 
