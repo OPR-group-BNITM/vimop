@@ -66,6 +66,7 @@ def main():
   logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')
   logger = logging.getLogger()
 
+  print(inputArgs.refs)
   analysis_log_file = inputArgs.outdir + '/map-to-ref-' +inputArgs.fastq+ '-'+('-').join(inputArgs.refs)+'.log'
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
