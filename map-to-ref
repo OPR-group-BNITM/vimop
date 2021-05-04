@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
-import pandas as pd
-import subprocess
-from pathlib import Path
 import os
+os.environ['ANSIBLE_FORCE_COLOR'] = "TRUE"
+import sys
+import platform
+import argparse
+import logging
+import subprocess
+import re
+from pathlib import Path
+import datetime
 import glob
-
+import time
+import GPUtil
+import pandas as pd
+import shutil
+import gzip
 
 
 # def make_stats(fast_file):
