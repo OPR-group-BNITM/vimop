@@ -54,9 +54,6 @@ def main():
 
   # requiredArgs.add_argument('-r', '--runid', action='store', dest='runid', type=str, required=True, metavar='RUNID')
   optionalArgs = parser.add_argument_group('Optional arguments')
-  requiredArgs.add_argument('-i', '--input', action='store', dest='fastqDir', nargs='*',type=str, metavar='DIR', help='Input directory with basecalled fastq files | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
-  requiredArgs.add_argument('-o', '--output', action='store', dest='outputFolder', type=str, metavar='DIR', help='Output directory | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
-  requiredArgs.add_argument('-m', '--ref','--manualRef', action='store', type=str, dest='refs', nargs='*', help='Manual mapping to custom reference')
   optionalArgs.add_argument('-db', '--db', action='store', dest='db', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/DB', default=home+'/Desktop/NGS-scripts/DB/ALL.fasta')
   optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
   optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
