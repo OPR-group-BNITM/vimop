@@ -85,9 +85,9 @@ def main():
 
   # exit()
   consensus_command = 'snakemake --snakefile '+scriptPath+'/map-to-ref.snakefile \
-  --config fastq=["' + ('","').join(inputArgs.fastq) + '"] refs=["' + ('","').join(refs)+ '"] db=' + inputArgs.db + ' --use-conda --conda-prefix '+home+'/opt/iflow '
-  # --cores '+ str(inputArgs.threads)
-  print(consensus_command)
+  --config fastq=["' + ('","').join(inputArgs.fastq) + '"] refs=["' + ('","').join(refs)+ '"] db=' + inputArgs.db + ' --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads)
+  # print(consensus_command)
   with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip()) 
