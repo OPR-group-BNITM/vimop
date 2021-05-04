@@ -67,6 +67,9 @@ def main():
   logger = logging.getLogger()
 
   print(inputArgs.refs)
+  print(inputArgs.outdir)
+  print(inputArgs.fastq)
+  
   analysis_log_file = inputArgs.outdir + '/map-to-ref-' +inputArgs.fastq+ '-'+('-').join(inputArgs.refs)+'.log'
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
