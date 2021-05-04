@@ -26,7 +26,7 @@ import gzip
 #     return stat_file
 
 
-def getref(inRef, db):
+def getref(inRef, db, outdir):
   files = []
   for ref in inRef:
     file = glob.glob(ref+'*')
@@ -80,7 +80,7 @@ def main():
   logger.addHandler(consoleHandler)
   logger.setLevel(logging.DEBUG)
 
-  refs = getref(inputArgs.refs, inputArgs.db)
+  refs = getref(inputArgs.refs, inputArgs.db, inputArgs.outdir)
   print(refs)
 
   exit()
