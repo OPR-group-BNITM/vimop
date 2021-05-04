@@ -42,7 +42,7 @@ def getref(inRef, db):
 
 
 def main():
-
+  home = str(Path.home())
 
   parser = argparse.ArgumentParser(prog='maptoref', 
     description='Generates stats for a map to reference', 
