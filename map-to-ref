@@ -66,9 +66,9 @@ def main():
   logFormatter = logging.Formatter('%(levelname)s\t%(asctime)s\t%(message)s', datefmt='%I:%M:%S %d.%m.%Y')
   logger = logging.getLogger()
 
-  print(inputArgs.refs)
-  print(inputArgs.outdir)
-  print(inputArgs.fastq)
+  # print(inputArgs.refs)
+  # print(inputArgs.outdir)
+  # print(inputArgs.fastq)
 
   analysis_log_file = inputArgs.outdir + '/map-to-ref-' +('-').join(inputArgs.fastq)+ '-'+('-').join(inputArgs.refs)+'.log'
   fileHandler = logging.FileHandler(analysis_log_file)
@@ -81,9 +81,9 @@ def main():
   logger.setLevel(logging.DEBUG)
 
   refs = getref(inputArgs.refs, inputArgs.db, inputArgs.outdir)
-  print(refs)
+  # print(refs)
 
-  exit()
+  # exit()
   consensus_command = 'snakemake --snakefile '+scriptPath+'/map-to-ref.snakefile \
   --config fastq=' + inputArgs.fastq + 'refs=' + refs + 'db=' + inputArgs.db + ' --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores '+ str(inputArgs.threads) 
