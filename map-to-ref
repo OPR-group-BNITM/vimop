@@ -54,7 +54,7 @@ def main():
 
   # requiredArgs.add_argument('-r', '--runid', action='store', dest='runid', type=str, required=True, metavar='RUNID')
   optionalArgs = parser.add_argument_group('Optional arguments')
-  optionalArgs.add_argument('-db', '--db', action='store', dest='db', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/DB', default=home+'/Desktop/NGS-scripts/DB/ALL.fasta')
+  optionalArgs.add_argument('-db', '--db', action='store', dest='db', type=str, metavar='DIR', help='Database directory | default: '+home+'/Desktop/NGS-scripts/DB', default=home+'/Desktop/NGS-scripts/DB/ALL')
   optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
   optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
   optionalArgs.add_argument('-t', '--threads', action='store', dest='threads', type=int, metavar='INT', help='Number of threads | default: 4', default=4)
