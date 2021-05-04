@@ -6,7 +6,7 @@ FASTQ = config['fastq']
 REFS = config['refs']
 OUTDIR = config['outdir']
 DB_DIR = config['db']
-
+print(REFS)
 # df=pd.read_csv(config['blastlist'], names = ['sample','ref','target'])
 
 
