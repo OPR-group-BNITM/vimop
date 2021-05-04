@@ -24,7 +24,7 @@ def getref(inRef, db):
       cmd = 'blastdbcmd -entry '+ ref +' -db '+ db +' -out '+ outdir + '/'+ref+'.fasta'
       subprocess.run(cmd, shell=True)
       files.append(outdir + '/'+ref+'.fasta')
-    else
+    else:
       files.append(file)
   return files
 
