@@ -15,7 +15,7 @@ print(REFS)
 
 rule all:
   input:
-    [OUTDIR +'/'+FASTQ +'-{ref}-stats.txt'.format(ref=ref) for ref in REFS],
+    [OUTDIR +'/{fastq}-{ref}-stats.txt'.format(ref=ref) for fastq, ref in product(zip(FASTQ,REFS))]
     # [RESULTS +'/{sample}/05_consensus/{RUNID}-bam-stats-sorted-{sample}-{ref}.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH +'/{sample}/{RUNID}-{sample}-{ref}-coverage.txt'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1]) for sample_and_ref in zip(SAMPLES, REF)],
     # [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
@@ -25,9 +25,9 @@ rule all:
 
 rule stats_ref_fasta:
     input: 
-        OUTDIR +'/'+ FASTQ
+        OUTDIR +'/{fastq}'
     output:
-        OUTDIR +'/'+FASTQ +'-{ref}-stats.txt'
+        OUTDIR +'/{fastq}-{ref}-stats.txt'
     conda:
         'envs/general.yaml'
     shell:
