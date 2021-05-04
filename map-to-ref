@@ -50,7 +50,7 @@ def main():
   requiredArgs = parser.add_argument_group('Required arguments')
   requiredArgs.add_argument('-i', '--input', action='store', dest='fastq', nargs='*',type=str, metavar='DIR', help='Input fastq files')
   requiredArgs.add_argument('-o', '--output', action='store', dest='outdir', type=str, metavar='DIR', help='Output directory | default: '+home+'/Desktop/NGS-data', default=home+'/Desktop/NGS-data')
-  requiredArgs.add_argument('-m', '--ref','--manualRef', action='store', type=str, dest='manualRef', nargs='*', help='Manual mapping to custom reference')
+  requiredArgs.add_argument('-r', '--ref','--manualRef', action='store', type=str, dest='refs', nargs='*', help='Manual mapping to custom reference')
 
   # requiredArgs.add_argument('-r', '--runid', action='store', dest='runid', type=str, required=True, metavar='RUNID')
   optionalArgs = parser.add_argument_group('Optional arguments')
