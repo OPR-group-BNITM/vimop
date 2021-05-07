@@ -8,7 +8,7 @@ dependencies:
   - ncurses
   - blast=2.9.0
   - fastqc=0.11.9
-  - samtools=1.11
+  - samtools=1.10
   - bedtools=2.29.2
   - seqkit=0.12.1
   - seqtk=1.3
