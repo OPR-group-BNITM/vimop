@@ -8,7 +8,7 @@ dependencies:
   - ncurses
   - blast=2.9.0
   - fastqc=0.11.9
-  - samtools=1.10
+  - samtools=1.11
   - bedtools=2.29.2
   - seqkit=0.12.1
   - seqtk=1.3
@@ -16,6 +16,5 @@ dependencies:
   - bcftools=1.10.2
   - krona=2.7.1
   - pandas=1.2.3
-  - fastqc=0.11.9
   # - racon=1.4.13
   # - medaka=1.0.3

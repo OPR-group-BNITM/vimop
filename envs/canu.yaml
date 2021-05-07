@@ -4,4 +4,4 @@ channels:
   - defaults
 dependencies:
   - gnuplot=5.2
-  - canu=2.0
+  - canu=1.9
