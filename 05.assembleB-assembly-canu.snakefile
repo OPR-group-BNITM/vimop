@@ -48,7 +48,7 @@ rule canu:
     shell:
         """
         canu \
-        -nanopore {input[0]}\
+        -nanopore-raw {input[0]}\
         -fast -d {params.outdir}/ \
         -p {params.prefix} \
         genomeSize={params.genomeSize} \
