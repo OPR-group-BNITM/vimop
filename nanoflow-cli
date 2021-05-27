@@ -279,6 +279,7 @@ else:
       fastqdirs.append(list(set(glob.glob(directory +'/**/fastq_pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/fastq_fail/barcode*'))))
     fastqdirs = [item for sublist in fastqdirs for item in sublist]
     for fastqdir in fastqdirs:
+      print(fastqdir)
       # if not 'fail' in fastqdir:
       for BC in fastqdirs:
         barcodetmp = BC.split('/')[-1]
