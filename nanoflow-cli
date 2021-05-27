@@ -276,11 +276,12 @@ else:
   if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*'):
     fastqdirs = []
     for directory in inputArgs.fastqDir:
-      fastqdirs.append(list(set(glob.glob(directory +'/*/*/fastq_*/barcode*', recursive=True)) - set(glob.glob(directory +'/*/*/fastq_fail/*barcode*'))))
+      fastqdirs.append(list(set(glob.glob(directory +'/**/fastq_pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/fastq_fail/barcode*'))))
     fastqdirs = [item for sublist in fastqdirs for item in sublist]
     for fastqdir in fastqdirs:
-      for BC in fastqdirs:
-        barcodetmp = BC.split('/')[-1]
+      if not 'fail' in fastqdir:
+        for BC in fastqdirs:
+          barcodetmp = BC.split('/')[-1]
 
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
         with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
@@ -881,8 +882,6 @@ if (All or inputArgs.consensus):
   consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' \
   --cores '+ str(inputArgs.threads) 
-
-
 
   with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
     for line in p.stdout:
