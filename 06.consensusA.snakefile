@@ -110,7 +110,7 @@ rule sam_to_bam:
         temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}.bam')
     conda:
         'envs/general.yaml'
-    threads: 1
+    threads: 4
     shell:
         'samtools view --threads {threads} -b -o {output[0]} {input[0]}'
 
@@ -122,7 +122,7 @@ rule sort_bam:
         temp(CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam')
     conda:
         'envs/general.yaml'
-    threads: 1
+    threads: 4
     shell:
         'samtools sort --threads {threads} -o {output[0]} {input[0]}'
 
