@@ -44,6 +44,8 @@ for index, row in blastList.iterrows():
         tmp['Consensus depth requirement'] = str(covlimit)+'x'
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
         consensusdf = consensusdf.append(tmp, sort = False)
+        print(tmp.to_string())
+
 # df_all = [ pd.read_csv(config['table'], names = ['sample']) 
 for samples_nb in samples_no_blast:
         tmp = pd.read_csv(CONSENSUS_PATH + '/'+ samples_nb +'/'+RUNID + '-'+ samples_nb+'-noblast-consensus.csv')
@@ -54,8 +56,6 @@ for samples_nb in samples_no_blast:
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
 
 
-
-print(consensusdf.to_string())
 
 
 
