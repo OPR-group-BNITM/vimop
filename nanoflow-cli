@@ -602,7 +602,7 @@ if (All or inputArgs.map):
           tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
           tmp['target']= target
           stats_mapped = stats_mapped.append(tmp, ignore_index=True)
-          close(stat_file)
+          stat_file.close()
         #Statistics on the mapped contigs
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
@@ -610,7 +610,7 @@ if (All or inputArgs.map):
           tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
           tmp['target']= target
           stats_mapped_contigs = stats_mapped_contigs.append(tmp, ignore_index=True)
-          close(stat_file)
+          stat_file.close()
 
 
 
