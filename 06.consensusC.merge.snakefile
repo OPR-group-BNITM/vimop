@@ -11,8 +11,8 @@ RUNID = config['runid']
 
 df=pd.read_csv(config['table'], names = ['Sample'])
 
-SAMPLES = df['Sample'].tolist()
 
+SAMPLES = df['Sample'].tolist()
 MAP_PATH = config['map_path']
 ASSEMBLE_PATH = config['assemble_path']
 CONSENSUS_PATH = config['consensus_path']
@@ -36,6 +36,8 @@ print(samples_no_blast)
 # df_no_blast = df[df['Sample'] in samples_no_blast]
 
 for index, row in blastList.iterrows():
+    print(row['Sample'])
+    print(row['ref'])
     for covlimit in COV_LIMIT:
         tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['Sample'] +'/'+RUNID + '-'+ row['Sample']+'-'+row['ref']+ '-'+ str(covlimit) +'x-consensus.csv')
         tmp['Target'] = row['target']
