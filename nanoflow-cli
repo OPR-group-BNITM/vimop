@@ -596,7 +596,7 @@ if (All or inputArgs.map):
 
       for target in TARGETS:
         #Statistics on the mapped reads
-        print(sample)
+        # print(sample)
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt','r')
           lines = stat_file.readlines()
@@ -617,7 +617,7 @@ if (All or inputArgs.map):
 
       if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt'):
         os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt')
-      stats_mapped.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats-all-targets.txt', index=False)
+      stats_mapped.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt', index=False)
       if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt'):
         os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt')
       stats_mapped_contigs.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt', index=False)
