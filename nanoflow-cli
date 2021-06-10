@@ -591,18 +591,35 @@ if (All or inputArgs.map):
     SAMPLES = df['sample']
     TARGETS = (',').join(inputArgs.targetPathogen).split(',')
     for sample in SAMPLES:
-      stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len','target'])
+      stats_mapped = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len','target'])
+      stats_mapped_contigs = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len','target'])
+
       for target in TARGETS:
+        #Statistics on the mapped reads
+        if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') > 0:
+          stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt','r')
+          lines = stat_file.readlines()
+          tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+          tmp['target']= target
+          stats_mapped = stats_mapped.append(tmp, ignore_index=True)
+          close(stat_file)
+        #Statistics on the mapped contigs
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
           lines = stat_file.readlines()
           tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
           tmp['target']= target
-          stats = stats.append(tmp, ignore_index=True)
+          stats_mapped_contigs = stats_mapped_contigs.append(tmp, ignore_index=True)
+          close(stat_file)
 
+
+
+      if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt'):
+        os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt')
+      stats_mapped.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats-all-targets.txt', index=False)
       if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt'):
         os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt')
-      stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt', index=False)
+      stats_mapped_contigs.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt', index=False)
 # logger.info('Write file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt')
 
 

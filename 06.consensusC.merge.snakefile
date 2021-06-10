@@ -27,7 +27,8 @@ COMMONVIRUSES = config['CommonViruses']
 # TARGET.append('spades')
 
 
-
+samples_no_blast = list(set(SAMPLES) - set(blastList['Sample'].tolist()))
+df_no_blast = df[df['Sample'] in samples_no_blast]
 
 consensusdf = pd.DataFrame()
 blastList=pd.read_csv(config['blastlist'], names=['Sample', 'ref','target'])
@@ -38,8 +39,18 @@ for index, row in blastList.iterrows():
         tmp['Consensus depth requirement'] = str(covlimit)+'x'
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
         consensusdf = consensusdf.append(tmp, sort = False)
-
+# df_all = [ pd.read_csv(config['table'], names = ['sample']) 
+for index, row in df_no_blast.iterrows():
+        tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['Sample'] +'/'+RUNID + '-'+ row['Sample']+'-noblast-consensus.csv')
+        tmp['Target'] = ''
+        tmp['Consensus depth requirement'] = str(covlimit)+'x'
+        consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
+        consensusdf = consensusdf.append(tmp, sort = False)
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
+
+
+
+
 
 
 # merged2 = consensusdf.sort_values(by=['RUNID','Sample','Nb of bases called '+str(max(COV_LIMIT))+'x'],ascending=[True,True,False]) #.reset_index()
@@ -66,6 +77,12 @@ merged2.reset_index(drop=True, inplace=True)
 
 
 
+
+
+
+
+
+
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
@@ -75,6 +92,10 @@ df_new = merged2.copy()
 
 df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
+
+
+
+
 
 with open(COMMONVIRUSES, 'r') as f:
     lines = f.read().splitlines() 
