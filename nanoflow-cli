@@ -596,6 +596,7 @@ if (All or inputArgs.map):
 
       for target in TARGETS:
         #Statistics on the mapped reads
+        print(sample)
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt','r')
           lines = stat_file.readlines()
