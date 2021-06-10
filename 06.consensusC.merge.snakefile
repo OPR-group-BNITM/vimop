@@ -27,11 +27,13 @@ COMMONVIRUSES = config['CommonViruses']
 # TARGET.append('spades')
 
 
-samples_no_blast = list(set(SAMPLES) - set(blastList['Sample'].tolist()))
-df_no_blast = df[df['Sample'] in samples_no_blast]
 
 consensusdf = pd.DataFrame()
 blastList=pd.read_csv(config['blastlist'], names=['Sample', 'ref','target'])
+
+samples_no_blast = list(set(SAMPLES) - set(blastList['Sample'].tolist()))
+df_no_blast = df[df['Sample'] in samples_no_blast]
+
 for index, row in blastList.iterrows():
     for covlimit in COV_LIMIT:
         tmp = pd.read_csv(CONSENSUS_PATH + '/'+ row['Sample'] +'/'+RUNID + '-'+ row['Sample']+'-'+row['ref']+ '-'+ str(covlimit) +'x-consensus.csv')
