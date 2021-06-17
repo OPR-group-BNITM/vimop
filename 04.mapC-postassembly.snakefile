@@ -35,9 +35,31 @@ rule all:
             sample=SAMPLES, target=TARGET, assembler= ASSEMBLER)
 
 
+
+
 rule sort:
     input: 
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
+    output:
+        touch(RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-renamed.fasta')
+    conda:
+        'envs/general.yaml'
+    shell:
+        """
+        set +o pipefail;
+        if [ -f "{input[0]}" ] && [ -s "{input[0]}" ]; then
+            seqkit rename {input[0]} > {output[0]}
+        fi
+        exit 0
+        """
+
+
+
+
+
+rule sort:
+    input: 
+        RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-renamed.fasta'
     output:
         touch(RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs-sorted.fasta')
     conda:
