@@ -566,7 +566,10 @@ if (All or inputArgs.map):
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
-              Path('contigsFile').touch()
+              # Path('contigsFile').touch()
+              shutil.copyfile(ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/' + sample + '-' + target + '/' + '01_map/' + RUNID+ '-' + sample + '-' + target + '-' + 'mapped.fastq',contigsFile)
+              shutil.copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta')
+
               Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
               
               # break
@@ -810,7 +813,7 @@ if (All or inputArgs.assemble):
             canufile = open(canuAttemps_file, 'w+')
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
-            Path('contigsFile').touch()
+            # Path('contigsFile').touch()
             Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta').touch()
 
 
