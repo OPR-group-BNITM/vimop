@@ -26,7 +26,7 @@ COMMONVIRUSES = config['CommonViruses']
 # TARGET = list((config['target']).split(","))
 # TARGET.append('spades')
 
-
+predf = dict()
 
 consensusdf = pd.DataFrame()
 blastList=pd.read_csv(config['blastlist'], names=['Sample', 'ref','target'])

@@ -220,6 +220,7 @@ rule merge_id_bitscore:
         target = '{target}',
         assembler = '{assembler}'
     run:
+        
         ref = pd.read_csv(input[0],names=['ref'])
         description = pd.read_csv(input[1],names=['def'])
         length = pd.read_csv(input[2], names=['length'])
