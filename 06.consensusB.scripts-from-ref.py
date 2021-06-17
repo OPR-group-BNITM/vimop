@@ -38,7 +38,53 @@ fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
 
 
-predf = dict()
+if os.path.getsize(snakemake.input[5]) > 0:
+    with open(snakemake.input[5], 'r') as f:
+        lines=f.readlines()
+        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+else:
+        nb_assemble_bases=0
+        nb_assemble_reads=0
+        nb_assemble_minlen=0
+        nb_assemble_avglen=0
+        nb_assemble_maxlen=0
+
+
+
+
+predf = {
+    "RUNID": [snakemake.params.RUNID],
+    "Sample": [snakemake.params.sample],
+    "Reference": [snakemake.params.ref],
+    "NCBI definition": [gbtitle],
+    # "Percent ATCG": [percent_ATCG],
+    # "Nb base called": [nb_ATCG],
+    "Nb bases in reference": [ref_bases],
+    "Nb of viral reads": [nb_virus_reads],
+    "Sample total bases after trim step": [nb_trim_bases],
+    "Sample total reads after trim step": [nb_trim_reads],
+    "Fraction viral reads": [fraction_viral_reads],
+    "Nb of virus bases": [nb_virus_bases_mapped],
+    # "Sample total bases": [nb_trim_bases],
+    "Fraction viral bases": [frac_viral_bases],
+    "Cleaning options": [snakemake.params.cleanopts],
+    'Trim stats, num_seqs': [nb_trim_reads],
+    'Trim stats, sum_len': [nb_trim_bases],
+    'Trim stats, min_len': [nb_trim_minlen],
+    'Trim stats, avg_len': [nb_trim_avglen],
+    'Trim stats, max_len': [nb_trim_maxlen],
+    'Assembly stats, num_seqs': [nb_assemble_reads],
+    'Assembly stats, sum_len': [nb_assemble_bases],
+    'Assembly stats, min_len': [nb_assemble_minlen],
+    'Assembly stats, avg_len': [nb_assemble_avglen],
+    'Assembly stats, max_len': [nb_assemble_maxlen]
+}
+
+# predf = dict()
 # predf = {
 #     "RUNID": [snakemake.params.RUNID],
 #     "Sample": [snakemake.params.sample],
@@ -177,46 +223,6 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     #         print(df_clean.loc[step, dta])
             df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
-
-if os.path.getsize(snakemake.input[5]) > 0:
-    with open(snakemake.input[5], 'r') as f:
-        lines=f.readlines()
-        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
-        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
-        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
-        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
-        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
-
-
-
-
-predf = {
-    "RUNID": [snakemake.params.RUNID],
-    "Sample": [snakemake.params.sample],
-    "Reference": [snakemake.params.ref],
-    "NCBI definition": [gbtitle],
-    # "Percent ATCG": [percent_ATCG],
-    # "Nb base called": [nb_ATCG],
-    "Nb bases in reference": [ref_bases],
-    "Nb of viral reads": [nb_virus_reads],
-    "Sample total bases after trim step": [nb_trim_bases],
-    "Sample total reads after trim step": [nb_trim_reads],
-    "Fraction viral reads": [fraction_viral_reads],
-    "Nb of virus bases": [nb_virus_bases_mapped],
-    # "Sample total bases": [nb_trim_bases],
-    "Fraction viral bases": [frac_viral_bases],
-    "Cleaning options": [snakemake.params.cleanopts],
-    'Trim stats, num_seqs': [nb_trim_reads],
-    'Trim stats, sum_len': [nb_trim_bases],
-    'Trim stats, min_len': [nb_trim_minlen],
-    'Trim stats, avg_len': [nb_trim_avglen],
-    'Trim stats, max_len': [nb_trim_maxlen],
-    'Assembly stats, num_seqs': [nb_assemble_reads],
-    'Assembly stats, sum_len': [nb_assemble_bases],
-    'Assembly stats, min_len': [nb_assemble_minlen],
-    'Assembly stats, avg_len': [nb_assemble_avglen],
-    'Assembly stats, max_len': [nb_assemble_maxlen]
-}
 
 
 # with open(snakemake.input[3], 'r') as f:
