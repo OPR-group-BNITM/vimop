@@ -37,7 +37,7 @@ rule all:
 
 
 
-rule sort:
+rule rename:
     input: 
         RESULTS +'/{sample}/03_map-{target}/'+RUNID+'-{sample}-{target}-{assembler}-contigs.fasta'
     output:
