@@ -38,7 +38,7 @@ fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
 
 
-
+predf = dict()
 # predf = {
 #     "RUNID": [snakemake.params.RUNID],
 #     "Sample": [snakemake.params.sample],
