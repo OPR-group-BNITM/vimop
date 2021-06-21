@@ -566,7 +566,7 @@ if (All or inputArgs.map):
               canufile = open(canuAttemps_file, 'w+')
               canufile.write(str(lastAttempt)+'\tfailed')
               canufile.close()
-              # Path('contigsFile').touch()
+              Path('contigsFile').touch()
               shutil.copyfile(ANALYSIS_FOLDER + '/' + RUNID + '-04-map' + '/' + sample + '-' + target + '/' + '01_map/' + RUNID+ '-' + sample + '-' + target + '-' + 'mapped.fastq',contigsFile)
               shutil.copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta')
 
@@ -580,7 +580,7 @@ if (All or inputArgs.map):
 
     logger.info('Map: post-assembly')
 
-
+    ## Execute only if mapped file is
     map_scriptC_command = 'snakemake --snakefile '+scriptPath+'/04.mapC-postassembly.snakefile \
     --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
     --cores '+ str(inputArgs.threads) 
@@ -603,7 +603,7 @@ if (All or inputArgs.map):
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt','r')
           lines = stat_file.readlines()
-          tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+          tmp = pd.Series((re.sub(',','',lines[1])).split()[-5], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
           tmp['target']= target
           stats_mapped = stats_mapped.append(tmp, ignore_index=True)
           stat_file.close()
@@ -611,7 +611,7 @@ if (All or inputArgs.map):
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
           lines = stat_file.readlines()
-          tmp = pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
+          tmp = pd.Series((re.sub(',','',lines[1])).split()[-5], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
           tmp['target']= target
           stats_mapped_contigs = stats_mapped_contigs.append(tmp, ignore_index=True)
           stat_file.close()

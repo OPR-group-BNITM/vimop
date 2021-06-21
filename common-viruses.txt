@@ -1,8 +1,9 @@
 #Here list on one line all keyword used to search for a virus
-lassa: Lassa, mammarena, LASV
+lassa: Lassa mammarena, Lassa, LASV
 ebola: Ebola, EBOV
 dengue: Dengue, DENV
 zika: Zika
 covid: COVID, SARS, SARS-CoV-2
 yellowfever: Yellow fever, YFV, Yellow
 westnile: West Nile, WNV
+lcmv: Lymphocytic choriomeningitis, LCMV
