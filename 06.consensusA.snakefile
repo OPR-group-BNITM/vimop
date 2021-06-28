@@ -50,7 +50,7 @@ REF=df['ref'].tolist()
 df_all = pd.read_csv(config['table'], names = ['sample'])
 SAMPLES_NOBLAST = list(set(df_all['sample'].tolist()) - set(SAMPLES))
 
-
+print(SAMPLES_NOBLAST)
 
 
 rule all:
@@ -66,7 +66,7 @@ rule all:
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/fasta/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
-    [CONSENSUS_PATH +'/{sample_no_blast}/'+RUNID+'-{sample_no_blast}-noblast-consensus.csv'.format(RUNID=RUNID, sample_no_blast=sample_no_blast) for sample_no_blast in SAMPLES_NOBLAST]
+    [CONSENSUS_PATH +'/{sample_no_blast}/{RUNID}-{sample_no_blast}-noblast-consensus.csv'.format(RUNID=RUNID, sample_no_blast=sample_no_blast) for sample_no_blast in SAMPLES_NOBLAST]
 
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
 
