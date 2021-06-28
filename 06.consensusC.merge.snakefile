@@ -35,6 +35,8 @@ samples_no_blast = list(set(SAMPLES) - set(blastList['Sample'].tolist()))
 # print(samples_no_blast)
 # df_no_blast = df[df['Sample'] in samples_no_blast]
 
+
+
 for index, row in blastList.iterrows():
     # print(row['Sample'])
     # print(row['ref'])
