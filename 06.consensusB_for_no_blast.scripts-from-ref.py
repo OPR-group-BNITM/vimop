@@ -13,81 +13,81 @@ with open(snakemake.input[0], 'r') as f:
     nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
     nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
-predf = {
-    "RUNID": [snakemake.params.RUNID],
-    "Sample": [snakemake.params.sample],
-    "Sample total bases after trim step": [nb_trim_bases],
-    "Sample total reads after trim step": [nb_trim_reads],
-    "Cleaning options": [snakemake.params.cleanopts],
-    'Trim stats, num_seqs': [nb_trim_reads],
-    'Trim stats, sum_len': [nb_trim_bases],
-    'Trim stats, min_len': [nb_trim_minlen],
-    'Trim stats, avg_len': [nb_trim_avglen],
-    'Trim stats, max_len': [nb_trim_maxlen],
-}
+# predf = {
+#     "RUNID": [snakemake.params.RUNID],
+#     "Sample": [snakemake.params.sample],
+#     "Sample total bases after trim step": [nb_trim_bases],
+#     "Sample total reads after trim step": [nb_trim_reads],
+#     "Cleaning options": [snakemake.params.cleanopts],
+#     'Trim stats, num_seqs': [nb_trim_reads],
+#     'Trim stats, sum_len': [nb_trim_bases],
+#     'Trim stats, min_len': [nb_trim_minlen],
+#     'Trim stats, avg_len': [nb_trim_avglen],
+#     'Trim stats, max_len': [nb_trim_maxlen],
+# }
 
-if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 0:
+# if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 0:
 
-    df_clean = pd.read_csv(snakemake.input[1])
-    steps = df_clean['step'].array
-    name_cols = []
-    for i in range(1,len(steps)+1):
-        name_cols.append('Cleaning step '+str(i))
-    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
-    df_clean['col']= name_cols
-    df_clean = df_clean.set_index('col')
+#     df_clean = pd.read_csv(snakemake.input[1])
+#     steps = df_clean['step'].array
+#     name_cols = []
+#     for i in range(1,len(steps)+1):
+#         name_cols.append('Cleaning step '+str(i))
+#     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+#     df_clean['col']= name_cols
+#     df_clean = df_clean.set_index('col')
 
-    cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
-    df1 = pd.DataFrame(columns=cols)
-    for col in name_cols:
-        for dta in data:
-    #         print(df_clean.loc[step, dta])
-            df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
-
-
-if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
-
-    df_map_stats = pd.read_csv(snakemake.input[4])
-
-    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
-
-    tgts = df_map_stats['target'].array
-    df_map_stats = df_map_stats.set_index('target')
-
-    cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
-    df2 = pd.DataFrame(columns=cols)
-    for tgt in tgts:
-        for dta in data:
-    #         print(df_clean.loc[step, dta])
-            df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
+#     cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
+#     df1 = pd.DataFrame(columns=cols)
+#     for col in name_cols:
+#         for dta in data:
+#     #         print(df_clean.loc[step, dta])
+#             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
 
 
+# if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
 
-if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 0:
+#     df_map_stats = pd.read_csv(snakemake.input[4])
 
-    df_map = pd.read_csv(snakemake.input[2])
+#     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
-    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+#     tgts = df_map_stats['target'].array
+#     df_map_stats = df_map_stats.set_index('target')
 
-    tgts = df_map['target'].array
-    df_map = df_map.set_index('target')
-
-    cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
-    df2 = pd.DataFrame(columns=cols)
-    for tgt in tgts:
-        for dta in data:
-    #         print(df_clean.loc[step, dta])
-            df2['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+#     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
+#     df2 = pd.DataFrame(columns=cols)
+#     for tgt in tgts:
+#         for dta in data:
+#     #         print(df_clean.loc[step, dta])
+#             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
 
 
-if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 0:
-    with open(snakemake.input[3], 'r') as f:
-        lines=f.readlines()
-        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
-        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
-        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
-        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
-        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+
+# if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 0:
+
+#     df_map = pd.read_csv(snakemake.input[2])
+
+#     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+
+#     tgts = df_map['target'].array
+#     df_map = df_map.set_index('target')
+
+#     cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
+#     df2 = pd.DataFrame(columns=cols)
+#     for tgt in tgts:
+#         for dta in data:
+#     #         print(df_clean.loc[step, dta])
+#             df2['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+
+
+# if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 0:
+#     with open(snakemake.input[3], 'r') as f:
+#         lines=f.readlines()
+#         nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+#         nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+#         nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+#         nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+#         nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
 
 
 
@@ -102,20 +102,20 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
 # print(df)
 
 
-df = pd.DataFrame()
+# df = pd.DataFrame()
 
 
 
-df = pd.DataFrame.from_dict(predf)
-df1['RUNID'] = snakemake.params.RUNID
-df2['RUNID'] = snakemake.params.RUNID
-df1['Sample'] = snakemake.params.sample
-df2['Sample'] = snakemake.params.sample
+# df = pd.DataFrame.from_dict(predf)
+# df1['RUNID'] = snakemake.params.RUNID
+# df2['RUNID'] = snakemake.params.RUNID
+# df1['Sample'] = snakemake.params.sample
+# df2['Sample'] = snakemake.params.sample
 
-merged = pd.merge(df,df1,on=['RUNID','Sample'])
-merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
+# merged = pd.merge(df,df1,on=['RUNID','Sample'])
+# merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
 
-merged2.to_csv(snakemake.output[0], index = False)
+# merged2.to_csv(snakemake.output[0], index = False)
 
  # str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
 
