@@ -213,7 +213,7 @@ rule consensus_no_blast:
         # ref = '{ref}',
         RUNID = RUNID,
         sample = '{sample_no_blast}',
-        covlimit = '{covlimit}',
+        # covlimit = '{covlimit}',
         cleanopts = CLEAN_OPTS
 
     output:
