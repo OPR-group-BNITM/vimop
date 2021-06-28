@@ -230,9 +230,9 @@ with open(snakemake.input[0], 'r') as f:
 
 
 
-if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 0:
+if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 1:
 
-    df_clean = pd.read_csv(snakemake.input[3])
+    df_clean = pd.read_csv(snakemake.input[1])
     steps = df_clean['step'].array
     name_cols = []
     for i in range(1,len(steps)+1):
@@ -269,7 +269,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
 if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 0:
 
-    df_map = pd.read_csv(snakemake.input[4])
+    df_map = pd.read_csv(snakemake.input[2])
 
     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
