@@ -204,7 +204,7 @@ rule consensus_no_blast:
         RESULTS+'/{sample_no_blast}/02_clean/' + RUNID+'-{sample_no_blast}-clean-stats.txt',
         RESULTS+'/{sample_no_blast}/03_map-'+RUNID+'-{sample_no_blast}-canu-mapped-assembly-stats-all-targets.txt',
         RESULTS+'/{sample_no_blast}/04_assemble/'+RUNID+'-{sample_no_blast}-canu-assembly-stats.txt',
-        RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-mapped-stats-all-targets.txt',
+        RESULTS+'/{sample_no_blast}/03_map-'+RUNID+'-{sample_no_blast}-mapped-stats-all-targets.txt',
         # RESULTS + '/{sample}/05_consensus/'+RUNID+'-{sample}-{ref}-stats.txt',
         # RESULTS + '/{sample}/05_consensus/'+RUNID+'-bam-stats-sorted-{sample}-{ref}.txt',
         # CONSENSUS_PATH +'/{sample}/'+RUNID+'-{sample}-{ref}-coverage.txt',
