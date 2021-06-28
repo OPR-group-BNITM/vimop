@@ -51,15 +51,15 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
-    tgts = df_map['target'].array
-    df_map = df_map.set_index('target')
+    tgts = df_map_stats['target'].array
+    df_map_stats = df_map_stats.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
     df2 = pd.DataFrame(columns=cols)
     for tgt in tgts:
         for dta in data:
     #         print(df_clean.loc[step, dta])
-            df2['Mapped reads',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+            df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
 
 
 
