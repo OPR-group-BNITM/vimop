@@ -66,7 +66,7 @@ rule all:
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/{RUNID}-{sample}-{ref}-{covlimit}x-alignment-file.csv'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
     [CONSENSUS_PATH+'/{sample}/fasta/{RUNID}-{sample}-{ref}-{covlimit}x-consensus.fasta'.format(RUNID=RUNID, sample=sample_and_ref[0], ref=sample_and_ref[1], covlimit=covlimit) for sample_and_ref, covlimit in product(zip(SAMPLES, REF), COV_LIMIT)],
-    [CONSENSUS_PATH +'/{sample_no_blast}/{RUNID}-{sample_no_blast}-noblast-{covlimit}-consensus.csv'.format(RUNID=RUNID, covlimit=covlimit, sample_no_blast=sample_no_blast) for sample_no_blast, COV_LIMIT in product(SAMPLES_NOBLAST, COV_LIMIT)]
+    [CONSENSUS_PATH +'/{sample_no_blast}/{RUNID}-{sample_no_blast}-noblast-{covlimit}-consensus.csv'.format(RUNID=RUNID, covlimit=covlimit, sample_no_blast=sample_no_blast) for sample_no_blast, covlimit in product(SAMPLES_NOBLAST, COV_LIMIT)]
 
     # [CONSENSUS_PATH +'/{sample}/{RUNID}_{sample}_consensus_selected.csv'.format(RUNID=RUNID, sample=sample, ref=ref) for sample, ref in zip(SAMPLES, REF)]
 
