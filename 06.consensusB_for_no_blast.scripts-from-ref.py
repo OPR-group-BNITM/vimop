@@ -230,7 +230,7 @@ with open(snakemake.input[0], 'r') as f:
 
 
 
-if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 0:
+if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 0:
 
     df_clean = pd.read_csv(snakemake.input[3])
     steps = df_clean['step'].array
@@ -249,9 +249,9 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
 
 
-if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) > 0:
+if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
 
-    df_map_stats = pd.read_csv(snakemake.input[10])
+    df_map_stats = pd.read_csv(snakemake.input[4])
 
     data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
@@ -267,7 +267,7 @@ if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) 
 
 
 
-if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
+if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 0:
 
     df_map = pd.read_csv(snakemake.input[4])
 
@@ -284,8 +284,8 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
             df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
 
-if os.path.getsize(snakemake.input[5]) > 0:
-    with open(snakemake.input[5], 'r') as f:
+if os.path.getsize(snakemake.input[3]) > 0:
+    with open(snakemake.input[3], 'r') as f:
         lines=f.readlines()
         nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
         nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
