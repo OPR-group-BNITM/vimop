@@ -293,12 +293,12 @@ if os.path.getsize(snakemake.input[5]) > 0:
         nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
         nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
 
-    else: 
-        nb_assemble_bases='NA'
-        nb_assemble_reads='NA'
-        nb_assemble_minlen='NA'
-        nb_assemble_avglen='NA'
-        nb_assemble_maxlen='NA'
+else: 
+    nb_assemble_bases='NA'
+    nb_assemble_reads='NA'
+    nb_assemble_minlen='NA'
+    nb_assemble_avglen='NA'
+    nb_assemble_maxlen='NA'
 
 
 
