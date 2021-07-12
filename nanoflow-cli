@@ -881,8 +881,8 @@ if (All or inputArgs.consensus):
       # mandf = pd.DataFrame()
       for manRef in inputArgs.manualRef:
         tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
+        print(tmp)
         mandf = pd.DataFrame.from_dict(tmp)
-        print(mandf)
         # mandf = mandf.append(tmp[['sample','ref','target']])
         mandf[['sample','ref','target']].to_csv(manualList)
 
