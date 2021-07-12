@@ -875,10 +875,20 @@ if (All or inputArgs.consensus):
         tmp = pd.read_csv(assembledList, names = ['sample','ref','def','length','target','bitscore'])
         blastedList = blastedList.append(tmp[['sample','ref','target']])
   
+    manualList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/'+RUNID+'-'+sample+'-'+'-manual-ref-list.csv'
+
     if (inputArgs.manualRef):
       for manRef in inputArgs.manualRef:
         tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
-        blastedList = blastedList.append(tmp,ignore_index=True)  
+        blastedList[['sample','ref','target']].to_csv(manualList)
+        
+    if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
+      tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
+      blastedList = blastedList.append(tmp[['sample','ref','target']])
+
+
+
+                # blastedList = blastedList.append(tmp,ignore_index=True)  
   blastedList.drop_duplicates(inplace = True) 
   blastedList[['sample','ref','target']].to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
 
