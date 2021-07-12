@@ -124,7 +124,7 @@ with open(COMMONVIRUSES, 'r') as f:
         df = df.sort_values(by=['RUNID','Sample','Nb of bases called','Partial reference?'],ascending=[True,True,False,True])
 
 
-        if 'lassa' in virus:
+        if 'lassa' in virus and not df.empty:
             ### Select the best S and L segments
 
             df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
