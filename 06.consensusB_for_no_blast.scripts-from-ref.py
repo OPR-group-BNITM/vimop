@@ -363,10 +363,12 @@ df2['Sample'] = snakemake.params.sample
 df3['Sample'] = snakemake.params.sample
 
 
-print(df)
-print(df1)
-print(df2)
-print(df3)
+print(df.to_string())
+print(df1.to_string())
+print(df2.to_string())
+print(df3.to_string())
+
+
 merged = pd.merge(df,df1,on=['RUNID','Sample'])
 merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
 merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
