@@ -885,9 +885,9 @@ if (All or inputArgs.consensus):
         # mandf = pd.DataFrame.from_dict(tmp)
         mandf = mandf.append(tmp, ignore_index=True).to_csv(manualList)
         # mandf[['sample','ref','target']]
-exit()
+
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
-      tmp = pd.read_csv(manualList)
+      tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
       blastedList = blastedList.append(tmp[['sample','ref','target']])
 
 
