@@ -72,7 +72,7 @@ predf = {
 
 df = pd.DataFrame.from_dict(predf)
 
-
+print(df.to_string())
 # predf = {
 #     "RUNID": [snakemake.params.RUNID],
 #     "Sample": [snakemake.params.sample],
@@ -317,7 +317,7 @@ else:
 
 
 
-
+print(merge.to_string())
 
 if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
 
@@ -339,6 +339,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     merge = pd.merge(merge.df2,on=['RUNID','Sample'])
 
 
+print(merge.to_string())
 
 
 
@@ -361,6 +362,11 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
         #         print(df_clean.loc[step, dta])
                 df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
         merge = pd.merge(merge.df3,on=['RUNID','Sample'])
+
+
+print(merge.to_string())
+
+
 # else:
 #     df3 = pd.DataFrame()
 
