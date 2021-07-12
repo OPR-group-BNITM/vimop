@@ -878,13 +878,13 @@ if (All or inputArgs.consensus):
     manualList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/'+RUNID+'-'+sample+'-'+'-manual-ref-list.csv'
 
     if (inputArgs.manualRef):
-      # mandf = pd.DataFrame()
+      mandf = pd.DataFrame()
       for manRef in inputArgs.manualRef:
         tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
-        print(tmp)
-        mandf = pd.DataFrame.from_dict(tmp)
-        # mandf = mandf.append(tmp[['sample','ref','target']])
-        mandf[['sample','ref','target']].to_csv(manualList)
+        # mantmp = 
+        # mandf = pd.DataFrame.from_dict(tmp)
+        mandf = mandf.append(tmp, ignore_index=True).to_csv(manualList)
+        # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
       tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
