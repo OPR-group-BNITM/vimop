@@ -50,7 +50,7 @@ REF=df['ref'].tolist()
 df_all = pd.read_csv(config['table'], names = ['sample'])
 SAMPLES_NOBLAST = list(set(df_all['sample'].tolist()) - set(SAMPLES))
 
-print(SAMPLES_NOBLAST)
+print('Not blasted samples'+SAMPLES_NOBLAST)
 
 
 rule all:
