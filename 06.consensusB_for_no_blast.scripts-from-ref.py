@@ -272,18 +272,19 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 0:
 
     df_map = pd.read_csv(snakemake.input[2])
+    if not df_map.empty:
 
-    data = ['num_seqs','sum_len','min_len','avg_len','max_len']
+        data = ['num_seqs','sum_len','min_len','avg_len','max_len']
 
-    tgts = df_map['target'].array
-    df_map = df_map.set_index('target')
+        tgts = df_map['target'].array
+        df_map = df_map.set_index('target')
 
-    cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
-    df3 = pd.DataFrame(columns=cols)
-    for tgt in tgts:
-        for dta in data:
-    #         print(df_clean.loc[step, dta])
-            df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+        cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
+        df3 = pd.DataFrame(columns=cols)
+        for tgt in tgts:
+            for dta in data:
+        #         print(df_clean.loc[step, dta])
+                df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
 
 
 if os.path.getsize(snakemake.input[3]) > 0:
@@ -354,6 +355,11 @@ df1['Sample'] = snakemake.params.sample
 df2['Sample'] = snakemake.params.sample
 df3['Sample'] = snakemake.params.sample
 
+
+print(df)
+print(df1)
+print(df2)
+print(df3)
 merged = pd.merge(df,df1,on=['RUNID','Sample'])
 merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
 merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
