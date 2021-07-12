@@ -29,13 +29,13 @@ with open(snakemake.input[7], 'r') as f:
     lines=f.readlines()
     nb_virus_reads=((lines[4].split())[0]).replace(",", "")
 
-coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
-nb_virus_bases_mapped=coverage['coverage'].sum()
+# coverage = pd.read_table(snakemake.input[8], names=['ref','pos','coverage'])
+    nb_virus_bases_mapped=((lines[5].split())[0]).replace(",", "")
 
 # total_sample_reads= float(nb_readsP1)+float(nb_readsP2)
 fraction_viral_reads=float(nb_virus_reads)/(float(nb_trim_reads))
 
-frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_reads))
+frac_viral_bases=float(nb_virus_bases_mapped)/(float(nb_trim_bases))
 
 
 if os.path.getsize(snakemake.input[5]) > 0:

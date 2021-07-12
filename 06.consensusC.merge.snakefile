@@ -161,18 +161,17 @@ with open(COMMONVIRUSES, 'r') as f:
             'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
             'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
 
-        samplesWithConsensus = df['Sample'].tolist()
-        for sample in SAMPLES:
-            if (sample not in samplesWithConsensus):
-                predf = {"RUNID": [RUNID],
-                "Sample": [sample]} 
-                tmp = pd.DataFrame.from_dict(predf)
-                df = df.append(tmp, sort = False)
+        # samplesWithConsensus = df['Sample'].tolist()
+        # for sample in SAMPLES:
+        #     if (sample not in samplesWithConsensus):
+        #         predf = {"RUNID": [RUNID],
+        #         "Sample": [sample]} 
+        #         tmp = pd.DataFrame.from_dict(predf)
+        #         df = df.append(tmp, sort = False)
 
 
 
         df.reset_index(drop=True, inplace=True)
-
 
 
         cols2 = df.columns.drop(cols1).tolist()
