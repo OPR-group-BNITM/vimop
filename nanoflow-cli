@@ -919,9 +919,9 @@ if (All or inputArgs.consensus):
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' \
   --cores '+ str(inputArgs.threads) 
 
-  with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-    for line in p.stdout:
-      logger.info(line.rstrip()) 
+  # with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+  #   for line in p.stdout:
+  #     logger.info(line.rstrip()) 
 
 
 
