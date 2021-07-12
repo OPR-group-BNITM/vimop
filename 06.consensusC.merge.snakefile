@@ -147,7 +147,7 @@ with open(COMMONVIRUSES, 'r') as f:
                 df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
             elif df_long.empty and not df_short.empty:
                 df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
-           elif df_short.empty and not df_long.empty:
+            elif df_short.empty and not df_long.empty:
                 df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
             df['Fraction consensus called S'] = df['% consensus called S'].div(100)
             df['Fraction consensus called L'] = df['% consensus called L'].div(100)
