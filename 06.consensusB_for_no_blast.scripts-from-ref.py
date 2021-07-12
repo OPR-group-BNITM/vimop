@@ -21,6 +21,58 @@ with open(snakemake.input[0], 'r') as f:
     nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
     nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
+
+if os.path.getsize(snakemake.input[3]) > 0:
+    with open(snakemake.input[3], 'r') as f:
+        lines=f.readlines()
+        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
+        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
+        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
+        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
+        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
+
+else: 
+    nb_assemble_bases='NA'
+    nb_assemble_reads='NA'
+    nb_assemble_minlen='NA'
+    nb_assemble_avglen='NA'
+    nb_assemble_maxlen='NA'
+
+
+
+predf = {
+    "RUNID": [snakemake.params.RUNID],
+    "Sample": [snakemake.params.sample],
+    "Reference": ['no reference'],
+    # "NCBI definition": [],
+    # "Percent ATCG": [percent_ATCG],
+    # "Nb base called": [nb_ATCG],
+    # "Nb bases in reference": [],
+    # "Nb of viral reads": [],
+    "Sample total bases after trim step": [nb_trim_bases],
+    "Sample total reads after trim step": [nb_trim_reads],
+    # "Fraction viral reads": [],
+    # "Nb of virus bases": [],
+    # "Sample total bases": [nb_trim_bases],
+    # "Fraction viral bases": [],
+    "Cleaning options": [snakemake.params.cleanopts],
+    'Trim stats, num_seqs': [nb_trim_reads],
+    'Trim stats, sum_len': [nb_trim_bases],
+    'Trim stats, min_len': [nb_trim_minlen],
+    'Trim stats, avg_len': [nb_trim_avglen],
+    'Trim stats, max_len': [nb_trim_maxlen],
+    'Assembly stats, num_seqs': [nb_assemble_reads],
+    'Assembly stats, sum_len': [nb_assemble_bases],
+    'Assembly stats, min_len': [nb_assemble_minlen],
+    'Assembly stats, avg_len': [nb_assemble_avglen],
+    'Assembly stats, max_len': [nb_assemble_maxlen]
+}
+
+
+
+df = pd.DataFrame.from_dict(predf)
+
+
 # predf = {
 #     "RUNID": [snakemake.params.RUNID],
 #     "Sample": [snakemake.params.sample],
@@ -251,10 +303,20 @@ if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 
 
     cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
     df1 = pd.DataFrame(columns=cols)
+    df1['RUNID'] = snakemake.params.RUNID
+    df1['Sample'] = snakemake.params.sample
     for col in name_cols:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
+
+
+    merge = (df,df1,on=['RUNID','Sample'])
+else:
+    merge = df
+
+
+
 
 
 if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
@@ -268,10 +330,15 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
     df2 = pd.DataFrame(columns=cols)
+    df2['RUNID'] = snakemake.params.RUNID
+    df2['Sample'] = snakemake.params.sample
     for tgt in tgts:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
+    merge = (merge.df2,on=['RUNID','Sample'])
+
+
 
 
 
@@ -287,29 +354,17 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
 
         cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
         df3 = pd.DataFrame(columns=cols)
+        df3['RUNID'] = snakemake.params.RUNID
+        df3['Sample'] = snakemake.params.sample        
         for tgt in tgts:
             for dta in data:
         #         print(df_clean.loc[step, dta])
                 df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+        merge = (merge.df3,on=['RUNID','Sample'])
 # else:
 #     df3 = pd.DataFrame()
 
 
-if os.path.getsize(snakemake.input[3]) > 0:
-    with open(snakemake.input[3], 'r') as f:
-        lines=f.readlines()
-        nb_assemble_bases=((lines[1].split())[4]).replace(",", "")
-        nb_assemble_reads=((lines[1].split())[3]).replace(",", "")
-        nb_assemble_minlen=((lines[1].split())[5]).replace(",", "")
-        nb_assemble_avglen=((lines[1].split())[6]).replace(",", "")
-        nb_assemble_maxlen=((lines[1].split())[7]).replace(",", "")
-
-else: 
-    nb_assemble_bases='NA'
-    nb_assemble_reads='NA'
-    nb_assemble_minlen='NA'
-    nb_assemble_avglen='NA'
-    nb_assemble_maxlen='NA'
 
 
 
@@ -324,57 +379,24 @@ else:
 
 
 
-predf = {
-    "RUNID": [snakemake.params.RUNID],
-    "Sample": [snakemake.params.sample],
-    "Reference": ['no reference'],
-    # "NCBI definition": [],
-    # "Percent ATCG": [percent_ATCG],
-    # "Nb base called": [nb_ATCG],
-    # "Nb bases in reference": [],
-    # "Nb of viral reads": [],
-    "Sample total bases after trim step": [nb_trim_bases],
-    "Sample total reads after trim step": [nb_trim_reads],
-    # "Fraction viral reads": [],
-    # "Nb of virus bases": [],
-    # "Sample total bases": [nb_trim_bases],
-    # "Fraction viral bases": [],
-    "Cleaning options": [snakemake.params.cleanopts],
-    'Trim stats, num_seqs': [nb_trim_reads],
-    'Trim stats, sum_len': [nb_trim_bases],
-    'Trim stats, min_len': [nb_trim_minlen],
-    'Trim stats, avg_len': [nb_trim_avglen],
-    'Trim stats, max_len': [nb_trim_maxlen],
-    'Assembly stats, num_seqs': [nb_assemble_reads],
-    'Assembly stats, sum_len': [nb_assemble_bases],
-    'Assembly stats, min_len': [nb_assemble_minlen],
-    'Assembly stats, avg_len': [nb_assemble_avglen],
-    'Assembly stats, max_len': [nb_assemble_maxlen]
-}
 
 
 
-df = pd.DataFrame.from_dict(predf)
-df1['RUNID'] = snakemake.params.RUNID
-df2['RUNID'] = snakemake.params.RUNID
-df3['RUNID'] = snakemake.params.RUNID
-df1['Sample'] = snakemake.params.sample
-df2['Sample'] = snakemake.params.sample
-df3['Sample'] = snakemake.params.sample
 
 
-print(df.to_string())
-print(df1.to_string())
-print(df2.to_string())
-print(df3.to_string())
+
+# print(df.to_string())
+# print(df1.to_string())
+# print(df2.to_string())
+# print(df3.to_string())
 
 
-merged = pd.merge(df,df1,on=['RUNID','Sample'])
-merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
-merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
+# merged = pd.merge(df,df1,on=['RUNID','Sample'])
+# merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
+# merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
 
 
-merged3.to_csv(snakemake.output[0], index = False)
+merge.to_csv(snakemake.output[0], index = False)
 
  # str(int(nb_virus_bases_mapped)) + "," + str(total_sample_bases) + "," + str(frac_viral_bases) + "," + str(seq))
 
