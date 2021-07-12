@@ -5,6 +5,8 @@ import csv
 import os
 
 
+print('Dealing with a non-blasted sample')
+
 with open(snakemake.input[0], 'r') as f:
     lines=f.readlines()
     nb_trim_bases=((lines[1].split())[4]).replace(",", "")
