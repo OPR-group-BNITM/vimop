@@ -5,6 +5,12 @@ import csv
 import os
 
 
+
+df1 = pd.DataFrame()
+df2 = pd.DataFrame()
+df3 = pd.DataFrame()
+
+
 print('Dealing with a non-blasted sample')
 
 with open(snakemake.input[0], 'r') as f:
@@ -285,6 +291,8 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
             for dta in data:
         #         print(df_clean.loc[step, dta])
                 df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+# else:
+#     df3 = pd.DataFrame()
 
 
 if os.path.getsize(snakemake.input[3]) > 0:
@@ -313,7 +321,6 @@ else:
 # print(df)
 
 
-df = pd.DataFrame()
 
 
 
