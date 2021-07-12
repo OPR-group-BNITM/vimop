@@ -6,9 +6,9 @@ import os
 
 
 
-df1 = pd.DataFrame()
-df2 = pd.DataFrame()
-df3 = pd.DataFrame()
+# df1 = pd.DataFrame()
+# df2 = pd.DataFrame()
+# df3 = pd.DataFrame()
 
 
 print('Dealing with a non-blasted sample')
