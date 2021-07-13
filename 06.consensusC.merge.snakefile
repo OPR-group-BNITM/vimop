@@ -94,7 +94,15 @@ merged2 = merged2.drop_duplicates()
 
 
 
+cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
+            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+            'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
+            'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
+cols2 = merged2.columns.drop(cols1).tolist()
+cols = cols1 + cols2
 
+
+merged2 = merged2[cols]
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
 
@@ -106,7 +114,7 @@ df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
 
 
-
+print(df_new.columns())
 
 
 with open(COMMONVIRUSES, 'r') as f:
@@ -129,7 +137,7 @@ with open(COMMONVIRUSES, 'r') as f:
         df = df.sort_values(by=['RUNID','Sample','Nb of bases called','Partial reference?'],ascending=[True,True,False,True])
 
 
-        if 'lassa' in virus and not df.empty:
+        if 'lassa' in virus:
             ### Select the best S and L segments
 
             df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
@@ -164,14 +172,16 @@ with open(COMMONVIRUSES, 'r') as f:
         'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
         'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
             # df = pd.merge(, how = 'left')
+            # if df.empty:
+                # df = df_new[]
             df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
         else:
             df['Fraction consensus called'] = df['% consensus called'].div(100)
-            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
-            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
-            'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
-            'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
+            # cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
+            # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+            # 'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
+            # 'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
 
         # samplesWithConsensus = df['Sample'].tolist()
         # for sample in SAMPLES:
