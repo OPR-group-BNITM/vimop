@@ -15,7 +15,7 @@ RUNID = config['runid']
 
 # INPUT = config['input']
 # OUTDIR = config['outdir']
-TAG = config['tag']
+# TAG = config['tag']
 TRIM_PATH = config['trim_path']
 RESULTS = config['results']
 
