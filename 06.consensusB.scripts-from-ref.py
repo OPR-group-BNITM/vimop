@@ -187,6 +187,7 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
+    df1.columns = [', '.join(col).strip() for col in df1.columns.values]
 
 
 if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) > 0:
@@ -204,6 +205,7 @@ if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) 
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
+    df2.columns = [', '.join(col).strip() for col in df2.columns.values]
 
 
 
@@ -222,6 +224,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+    df3.columns = [', '.join(col).strip() for col in df3.columns.values]
 
 
 
