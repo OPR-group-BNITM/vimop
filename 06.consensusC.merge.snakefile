@@ -56,7 +56,7 @@ for samples_nb in samples_no_blast:
         tmp['Consensus depth requirement'] = str(covlimit)+'x'
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
         # consensusdf = consensusdf.append(tmp, sort = False)
-        notblasteddf = notblasteddf.append(tmp,sort=False,ignore_index=True)
+
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
 # print(notblasteddf.to_string())
 
@@ -105,6 +105,7 @@ cols = cols1 + cols2
 merged2 = merged2[cols]
 ### All samples, all targets, some might be duplicate lines if present for multiple targets
 merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False)
+notblasteddf = merged2[merged2['Reference'] == 'no reference']
 
 
 df_new = merged2.copy()
