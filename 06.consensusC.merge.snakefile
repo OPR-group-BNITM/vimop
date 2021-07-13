@@ -56,7 +56,7 @@ for samples_nb in samples_no_blast:
         consensusdf = consensusdf.append(tmp,sort=False,ignore_index=True)
         consensusdf = consensusdf.append(tmp, sort = False)
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
-print(consensusdf.to_string())
+# print(consensusdf.to_string())
 
 
 
@@ -88,7 +88,7 @@ merged2.reset_index(drop=True, inplace=True)
 
 
 
-
+merged2 = merged2.drop_duplicates()
 
 
 
