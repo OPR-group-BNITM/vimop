@@ -157,18 +157,16 @@ with open(COMMONVIRUSES, 'r') as f:
             # coltmp = coltmp.remove('Nb of bases called')
             # coltmp = coltmp.remove('% consensus called')
             df = df[coltmp]
+            print(df.to_string())
             # df['NCBI definition'] = 'Not '+virus
              #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
         else:
             if 'lassa' in virus:
-
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
                 df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
 
                 df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
                 df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
-
-
                 df_short=df_short.rename(columns={"% consensus called":"% consensus called S","Nb of bases called": "Nb of bases called S", "Sequence":"Sequence S"})
                 df_long=df_long.rename(columns={"% consensus called":"% consensus called L","Nb of bases called": "Nb of bases called L", "Sequence":"Sequence L"})
                 df_short = df_short.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called S','Partial reference? S'],ascending=[True,True,False,False,True])
@@ -221,7 +219,6 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
                 df.reset_index(drop=True, inplace=True)
-
 
                 cols2 = df.columns.drop(cols1).tolist()
                 cols = cols1 + cols2
