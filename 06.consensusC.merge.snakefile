@@ -139,42 +139,43 @@ with open(COMMONVIRUSES, 'r') as f:
 
         if 'lassa' in virus:
             ### Select the best S and L segments
-
-            df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
-            df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
-
-            df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
-            df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
-
-
-            df_short=df_short.rename(columns={"% consensus called":"% consensus called S","Nb of bases called": "Nb of bases called S", "Sequence":"Sequence S"})
-            df_long=df_long.rename(columns={"% consensus called":"% consensus called L","Nb of bases called": "Nb of bases called L", "Sequence":"Sequence L"})
-            df_short = df_short.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called S','Partial reference? S'],ascending=[True,True,False,False,True])
-            df_long = df_long.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called L','Partial reference? L'],ascending=[True,True,False,False,True])
-
-            df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
-            df_short = df_short.reset_index()
-            df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
-            df_long = df_long.reset_index()
-            if not df_long.empty and df_short.empty:
-                df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
-            elif df_long.empty and not df_short.empty:
-                df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
-            elif df_short.empty and not df_long.empty:
-                df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
-            df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-            df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-            df.drop(['index'], axis=1,inplace = True)
-            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
-        'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
-        'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
-        'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
-        'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
-        'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
-            # df = pd.merge(, how = 'left')
             if df.empty:
                 df = df_new.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
-            df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
+            else:
+                df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
+                df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
+
+                df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
+                df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
+
+
+                df_short=df_short.rename(columns={"% consensus called":"% consensus called S","Nb of bases called": "Nb of bases called S", "Sequence":"Sequence S"})
+                df_long=df_long.rename(columns={"% consensus called":"% consensus called L","Nb of bases called": "Nb of bases called L", "Sequence":"Sequence L"})
+                df_short = df_short.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called S','Partial reference? S'],ascending=[True,True,False,False,True])
+                df_long = df_long.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called L','Partial reference? L'],ascending=[True,True,False,False,True])
+
+                df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
+                df_short = df_short.reset_index()
+                df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
+                df_long = df_long.reset_index()
+                if not df_long.empty and df_short.empty:
+                    df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                elif df_long.empty and not df_short.empty:
+                    df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                elif df_short.empty and not df_long.empty:
+                    df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                df.drop(['index'], axis=1,inplace = True)
+                cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
+            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+            'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
+            'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
+            'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
+            'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
+            # df = pd.merge(, how = 'left')
+            # if df.empty:
+            # df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
         else:
             df['Fraction consensus called'] = df['% consensus called'].div(100)
