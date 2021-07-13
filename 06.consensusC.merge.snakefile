@@ -147,7 +147,7 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = [ x for x in coltmp if "Reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
-            foo = [ x for x in coltmp if keyword.any() in x ]
+            foo = [ x for x in coltmp if keywords.any() in x ]
             print(foo)
             # mask = df.species.apply(lambda x: any(item for item in selection if item in x))
             # coltmpvirus = list((set(keywords)).intersection(set(coltmp)))
