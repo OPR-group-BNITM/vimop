@@ -110,7 +110,7 @@ merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False
 df_new = merged2.copy()
 
 
-
+print(df_new.columns)
 
 # print(.columns())
 
