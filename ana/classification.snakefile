@@ -22,9 +22,9 @@ RESULTS = config['results']
 rule all:
     input:
         expand([RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-virus.txt',
-            RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-report-virus.tsv',
-            RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-virus.tsv',
-            RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-virus.html',
+            # RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-report-virus.tsv',
+            # RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-kraken-style-report-virus.tsv',
+            # RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-virus.html',
             # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt',
             # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
             # OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv',
