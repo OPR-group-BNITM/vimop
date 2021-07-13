@@ -157,9 +157,9 @@ with open(COMMONVIRUSES, 'r') as f:
             # coltmp = coltmp.remove('Nb bases in reference')
             # coltmp = coltmp.remove('Nb of bases called')
             # coltmp = coltmp.remove('% consensus called')
-            print(coltmp)
+            # print(coltmp)
             df = df[coltmp]
-            print(df.to_string())
+            # print(df.to_string())
             # df['NCBI definition'] = 'Not '+virus
              #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
         else:
@@ -233,7 +233,7 @@ with open(COMMONVIRUSES, 'r') as f:
         # print(df.to_string())
         df = df.reset_index()
 
-        # df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
+        df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
 
 #######################
 
