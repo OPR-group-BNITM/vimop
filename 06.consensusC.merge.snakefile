@@ -145,8 +145,8 @@ with open(COMMONVIRUSES, 'r') as f:
                 coltmp = [ x for x in coltmp if "viral" not in x]
                 coltmp = [ x for x in coltmp if "Mapped reads" in x and "LASV" not in x]
                 coltmp = [ x for x in coltmp if "Mapped contigs" in x and "LASV" not in x]
-                # coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
-                coltmp = coltmp.remove('% consensus called')
+                coltmp = [ x for x in coltmp if "% consensus called" not in x ]
+                # coltmp = coltmp.remove('% consensus called')
                 coltmp = coltmp.remove('Target')
                 coltmp = coltmp.remove('Reference')
                 coltmp = coltmp.remove('Nb bases in reference')
