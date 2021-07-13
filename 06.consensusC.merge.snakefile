@@ -140,7 +140,17 @@ with open(COMMONVIRUSES, 'r') as f:
         if 'lassa' in virus:
             ### Select the best S and L segments
             if df.empty:
-                df = df_new #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
+                df = df_new
+                coltmp = df.columns
+                coltmp = [ x for x in coltmp if "viral" not in x]
+                coltmp = [ x for x in coltmp if "Mapped reads" in x and "LASV" not in x]
+                coltmp = [ x for x in coltmp if "Mapped contigs" in x and "LASV" not in x]
+                coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
+                coltmp = coltmp.remove('% consensus called','Target','Reference','Nb bases in reference','Nb of bases called')
+                # coltmp = coltmp.remove('% consensus called')
+                df = df[coltmp]
+                df['NCBI definition'] = 'Not '+virus
+                 #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
             else:
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
                 df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
