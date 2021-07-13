@@ -222,11 +222,11 @@ with open(COMMONVIRUSES, 'r') as f:
 
                 cols2 = df.columns.drop(cols1).tolist()
                 cols = cols1 + cols2
-                print(cols)
+                # print(cols)
 
                 df = df[cols]
-        print()
-        print(df.to_string())
+        # print()
+        # print(df.to_string())
 
         # print(df.to_string())
         df = df.reset_index()
