@@ -11,7 +11,7 @@ import os
 # df3 = pd.DataFrame()
 
 
-print('Dealing with a non-blasted sample')
+# print('Dealing with a non-blasted sample')
 
 with open(snakemake.input[0], 'r') as f:
     lines=f.readlines()
@@ -317,7 +317,7 @@ else:
 
 
 
-print(merge.to_string())
+# print(merge.to_string())
 
 if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 0:
 
@@ -342,7 +342,7 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     merge = pd.merge(merge,df2,on=['RUNID','Sample'])
 
 
-print(merge.to_string())
+# print(merge.to_string())
 
 
 
@@ -369,7 +369,7 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
         merge = pd.merge(merge,df3,on=['RUNID','Sample'])
 
 
-print(merge.to_string())
+# print(merge.to_string())
 
 
 # else:
