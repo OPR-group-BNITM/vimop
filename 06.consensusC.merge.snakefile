@@ -163,7 +163,9 @@ with open(COMMONVIRUSES, 'r') as f:
         'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
         'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Target L','Reference L','NCBI definition L','Partial reference? L',
         'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
-            df = pd.merge(df,notblasteddf, how = 'left')
+            df = pd.merge(, how = 'left')
+            df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
+
         else:
             df['Fraction consensus called'] = df['% consensus called'].div(100)
             cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
