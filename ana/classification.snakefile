@@ -73,7 +73,7 @@ rule krona_representation_virus:
         '../envs/general.yaml'
     threads: 1 #workflow.cores
     shell:
-        'ktImportTaxonomy -tax $HOME/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
+        'ktImportTaxonomy -tax {params.virus_db}/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
 
 
 
