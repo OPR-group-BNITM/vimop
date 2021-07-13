@@ -303,13 +303,14 @@ if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 
 
     cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
     df1 = pd.DataFrame(columns=cols)
-    df1['RUNID'] = snakemake.params.RUNID
-    df1['Sample'] = snakemake.params.sample
+
     for col in name_cols:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
     df1.columns = [', '.join(col).strip() for col in df1.columns.values]
+    df1['RUNID'] = snakemake.params.RUNID
+    df1['Sample'] = snakemake.params.sample
     merge = pd.merge(df,df1,on=['RUNID','Sample'])
 else:
     merge = df
@@ -329,14 +330,15 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
 
     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
     df2 = pd.DataFrame(columns=cols)
-    df2['RUNID'] = snakemake.params.RUNID
-    df2['Sample'] = snakemake.params.sample
+
     for tgt in tgts:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
 
     df2.columns = [', '.join(col).strip() for col in df2.columns.values]
+    df2['RUNID'] = snakemake.params.RUNID
+    df2['Sample'] = snakemake.params.sample
     merge = pd.merge(merge,df2,on=['RUNID','Sample'])
 
 
@@ -356,14 +358,14 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
 
         cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
         df3 = pd.DataFrame(columns=cols)
-        df3['RUNID'] = snakemake.params.RUNID
-        df3['Sample'] = snakemake.params.sample        
+       
         for tgt in tgts:
             for dta in data:
         #         print(df_clean.loc[step, dta])
                 df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
         df3.columns = [', '.join(col).strip() for col in df3.columns.values]
-
+        df3['RUNID'] = snakemake.params.RUNID
+        df3['Sample'] = snakemake.params.sample 
         merge = pd.merge(merge,df3,on=['RUNID','Sample'])
 
 
