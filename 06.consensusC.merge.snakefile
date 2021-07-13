@@ -203,8 +203,8 @@ with open(COMMONVIRUSES, 'r') as f:
             # if df.empty:
             # df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
-        else:
-            df['Fraction consensus called'] = df['% consensus called'].div(100)
+            else:
+                df['Fraction consensus called'] = df['% consensus called'].div(100)
             # cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
             # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
             # 'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
@@ -220,14 +220,14 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
 
-            df.reset_index(drop=True, inplace=True)
+                df.reset_index(drop=True, inplace=True)
 
 
-            cols2 = df.columns.drop(cols1).tolist()
-            cols = cols1 + cols2
-            print(cols)
+                cols2 = df.columns.drop(cols1).tolist()
+                cols = cols1 + cols2
+                print(cols)
 
-            df = df[cols]
+                df = df[cols]
         print()
         print(df.to_string())
 
