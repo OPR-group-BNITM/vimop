@@ -147,7 +147,7 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
             coltmp = [ x for x in coltmp if "NCBI definition" not in x ]
-            # coltmp = [ x for x in coltmp if "Reference" not in x]
+            coltmp = [ x for x in coltmp if "Reference" not in x]
 
             foo = [ x for x in coltmp if set(keywords.split('|')).isdisjoint(set(x.split(', '))) and "Mapped" in x ]
             # any(x in list1 for x in list2):
@@ -168,6 +168,18 @@ with open(COMMONVIRUSES, 'r') as f:
             # print(coltmp)
             df = df[coltmp]
             df['NCBI definition'] = 'Not '+ virus
+            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
+            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step','NCBI definition']
+            cols2 = df.columns.drop(cols1).tolist()
+            cols = cols1 + cols2
+
+
+            df = df[cols]
+            
+
+
+            # 'RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
+            # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step'
             # print(df.to_string())
             # df['NCBI definition'] = 'Not '+virus
              #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
@@ -214,10 +226,10 @@ with open(COMMONVIRUSES, 'r') as f:
 
             else:
                 df['Fraction consensus called'] = df['% consensus called'].div(100)
-            # cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
-            # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
-            # 'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
-            # 'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
+                cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
+                'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
+                'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
+                'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
 
         # samplesWithConsensus = df['Sample'].tolist()
         # for sample in SAMPLES:
