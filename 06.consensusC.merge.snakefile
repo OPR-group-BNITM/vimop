@@ -158,7 +158,7 @@ with open(COMMONVIRUSES, 'r') as f:
                 # coltmp = coltmp.remove('Nb of bases called')
                 # coltmp = coltmp.remove('% consensus called')
                 df = df[coltmp]
-                df['NCBI definition'] = 'Not '+virus
+                # df['NCBI definition'] = 'Not '+virus
                  #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
             else:
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
