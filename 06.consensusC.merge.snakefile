@@ -192,6 +192,12 @@ with open(COMMONVIRUSES, 'r') as f:
             'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
             'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
             'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
+                cols2 = df.columns.drop(cols1).tolist()
+                cols = cols1 + cols2
+
+
+                df = df[cols]
+
             # df = pd.merge(, how = 'left')
             # if df.empty:
             # df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
@@ -213,14 +219,14 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
 
-        df.reset_index(drop=True, inplace=True)
+            df.reset_index(drop=True, inplace=True)
 
 
-        cols2 = df.columns.drop(cols1).tolist()
-        cols = cols1 + cols2
+            cols2 = df.columns.drop(cols1).tolist()
+            cols = cols1 + cols2
 
 
-        df = df[cols]
+            df = df[cols]
 
 
         df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
