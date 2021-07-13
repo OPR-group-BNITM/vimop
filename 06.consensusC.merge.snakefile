@@ -140,7 +140,7 @@ with open(COMMONVIRUSES, 'r') as f:
         if 'lassa' in virus:
             ### Select the best S and L segments
             if df.empty:
-                df = df_new
+                df = df_new.copy()
                 coltmp = df.columns
                 coltmp = [ x for x in coltmp if "viral" not in x]
                 coltmp = [ x for x in coltmp if "Mapped reads" in x and "LASV" not in x]
