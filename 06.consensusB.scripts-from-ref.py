@@ -27,8 +27,8 @@ with open(snakemake.input[6], 'r') as f:
 
 with open(snakemake.input[7], 'r') as f:
     lines=f.readlines()
-    print(lines[1])
-    nb_virus_reads=((lines[1].split())[3]).replace(",", "")
+    # print(lines[1])
+    nb_virus_reads=((lines[4].split())[0]).replace(",", "")
 
     # nb_virus_bases_mapped=((lines[1].split())[4]).replace(",", "")
 
