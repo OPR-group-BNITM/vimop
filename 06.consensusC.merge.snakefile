@@ -168,7 +168,7 @@ with open(COMMONVIRUSES, 'r') as f:
             # print(coltmp)
             df = df[coltmp]
             df['NCBI definition'] = 'Not '+ virus
-            cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
+            cols1 = ['RUNID+label','RUNID','Label','Sample','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step','NCBI definition']
             cols2 = df.columns.drop(cols1).tolist()
             cols = cols1 + cols2
