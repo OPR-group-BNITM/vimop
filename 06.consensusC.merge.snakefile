@@ -222,7 +222,6 @@ with open(COMMONVIRUSES, 'r') as f:
 
             # df = pd.merge(, how = 'left')
             # if df.empty:
-            # df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
             else:
                 df['Fraction consensus called'] = df['% consensus called'].div(100)
@@ -230,6 +229,7 @@ with open(COMMONVIRUSES, 'r') as f:
                 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
                 'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
                 'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
+                df = pd.concat([df,notblasteddf], axis=0, join='outer', ignore_index=False, copy=True).reset_index()
 
         # samplesWithConsensus = df['Sample'].tolist()
         # for sample in SAMPLES:
