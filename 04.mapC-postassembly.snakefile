@@ -129,7 +129,7 @@ rule blast:
     conda:
         'envs/general.yaml'
     params:
-        virus_db=DB_DIR+'/ALL'
+        virus_db=DB_DIR+'/{target}'
     threads: 4 #workflow.cores
     shell:
         """
