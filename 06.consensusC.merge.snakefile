@@ -241,7 +241,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
 
 
-                df.reset_index(drop=True, inplace=True)
+                # df.reset_index(drop=True, inplace=True)
 
                 cols2 = df.columns.drop(cols1).tolist()
                 cols = cols1 + cols2
