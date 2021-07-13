@@ -147,10 +147,10 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = [ x for x in coltmp if "Reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
-            foo = [ x for x in coltmp if set(keywords.split('|')).isdisjoint(set(x.split(', '))) ]
+            foo = [ x for x in coltmp if set(keywords.split('|')).isdisjoint(set(x.split(', '))) and "Mapped" in x ]
             # any(x in list1 for x in list2):
             # set(list1).isdisjoint(set(list2))
-            print(foo)
+            print(coltmp - foo)
             # mask = df.species.apply(lambda x: any(item for item in selection if item in x))
             # coltmpvirus = list((set(keywords)).intersection(set(coltmp)))
             # coltmp = [ x for x in coltmp if "Mapped" not in x]
