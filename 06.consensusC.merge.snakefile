@@ -148,6 +148,7 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
             coltmp = [ x for x in coltmp if "NCBI definition" not in x ]
             coltmp = [ x for x in coltmp if "Reference" not in x]
+            coltmp = [ x for x in coltmp if "Sequence" not in x]
 
             foo = [ x for x in coltmp if set(keywords.split('|')).isdisjoint(set(x.split(', '))) and "Mapped" in x ]
             # any(x in list1 for x in list2):
@@ -176,7 +177,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
             df = df[cols]
             
-
+            df = df.drop_duplicates()
 
             # 'RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step'
@@ -207,7 +208,6 @@ with open(COMMONVIRUSES, 'r') as f:
                     df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
                 df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                 df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                df.drop(['index'], axis=1,inplace = True)
                 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
             'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
@@ -253,6 +253,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
         # print(df.to_string())
         df = df.reset_index()
+        df.drop(['index'], axis=1,inplace = True)
 
         df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
 
