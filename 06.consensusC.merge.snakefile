@@ -197,9 +197,9 @@ with open(COMMONVIRUSES, 'r') as f:
                 df_long = df_long.sort_values(by=['RUNID','Sample','Consensus depth requirement','Nb of bases called L','Partial reference? L'],ascending=[True,True,False,False,True])
 
                 df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
-                df_short = df_short.reset_index()
-                df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
-                df_long = df_long.reset_index()
+                df_short = df_short.reset_index(drop=True, inplace=True)
+                df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index(drop=True, inplace=True)
+                df_long = df_long.reset_index(drop=True, inplace=True)
                 if not df_long.empty and df_short.empty:
                     df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
                 elif df_long.empty and not df_short.empty:
@@ -229,7 +229,7 @@ with open(COMMONVIRUSES, 'r') as f:
                 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
                 'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
                 'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
-                df = pd.concat([df,notblasteddf], axis=0, join='outer', sort=False, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
+                df = pd.concat([df,notblasteddf], axis=0, join='outer', sort=False, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index(drop=True, inplace=True)
 
         # samplesWithConsensus = df['Sample'].tolist()
         # for sample in SAMPLES:
@@ -252,7 +252,7 @@ with open(COMMONVIRUSES, 'r') as f:
         # print(df.to_string())
 
         # print(df.to_string())
-        df = df.reset_index()
+        df = df.reset_index(drop=True, inplace=True)
         df.drop(['index'], axis=1,inplace = True)
 
         df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
