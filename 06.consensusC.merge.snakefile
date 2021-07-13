@@ -58,7 +58,7 @@ for samples_nb in samples_no_blast:
         # consensusdf = consensusdf.append(tmp, sort = False)
         notblasteddf = notblasteddf.append(tmp,sort=False,ignore_index=True)
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
-# print(consensusdf.to_string())
+print(notblasteddf.to_string())
 
 
 
