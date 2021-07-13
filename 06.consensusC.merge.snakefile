@@ -156,6 +156,7 @@ with open(COMMONVIRUSES, 'r') as f:
             # coltmp = coltmp.remove('Nb bases in reference')
             # coltmp = coltmp.remove('Nb of bases called')
             # coltmp = coltmp.remove('% consensus called')
+            print(coltmp)
             df = df[coltmp]
             print(df.to_string())
             # df['NCBI definition'] = 'Not '+virus
