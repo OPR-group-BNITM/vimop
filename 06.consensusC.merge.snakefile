@@ -253,7 +253,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
         # print(df.to_string())
         df.reset_index(drop=True, inplace=True)
-        df.drop(['index'], axis=1,inplace = True)
+        # df.drop(['index'], axis=1,inplace = True)
 
         df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
 
