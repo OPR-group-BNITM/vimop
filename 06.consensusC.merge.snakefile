@@ -130,7 +130,7 @@ with open(COMMONVIRUSES, 'r') as f:
         keywords = keywords.replace(' ,', ',')
         keywords = keywords.replace(', ', ',')
         keywords = keywords.replace(',', '|')
-        print(keywords)
+        # print(keywords)
         df = virus + 'df'
 
         df = df_new[df_new['NCBI definition'].str.contains(keywords)]
@@ -228,6 +228,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
             df = df[cols]
 
+        print(df.to_string())
 
         df.sort_values(by=['RUNID','Sample'],ascending=[True,True]).to_excel(RESULTS+'/'+RUNID+'-'+virus+'-selected.xlsx',index=False)
 
