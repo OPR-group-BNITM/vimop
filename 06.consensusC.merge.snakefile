@@ -144,10 +144,10 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = [ x for x in coltmp if "viral" not in x]
             coltmp = [ x for x in coltmp if "% consensus called" not in x ]
             coltmp = [ x for x in coltmp if "Target" not in x ]
-            coltmp = [ x for x in coltmp if "Reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
             coltmp = [ x for x in coltmp if "NCBI definition" not in x ]
+            # coltmp = [ x for x in coltmp if "Reference" not in x]
 
             foo = [ x for x in coltmp if set(keywords.split('|')).isdisjoint(set(x.split(', '))) and "Mapped" in x ]
             # any(x in list1 for x in list2):
@@ -167,6 +167,7 @@ with open(COMMONVIRUSES, 'r') as f:
             # coltmp = coltmp.remove('% consensus called')
             # print(coltmp)
             df = df[coltmp]
+            df['NCBI definition'] = 'Not '+ virus
             # print(df.to_string())
             # df['NCBI definition'] = 'Not '+virus
              #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
