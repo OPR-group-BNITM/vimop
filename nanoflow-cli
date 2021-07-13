@@ -324,20 +324,20 @@ if (All or inputArgs.trim):
       for line in p.stdout:
           logger.info(line.rstrip()) 
 
+if (All or inputArgs.trim or inputArgs.classify):
+  logger.info("Centrifuge environment file:")
+  with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(''.join(line.split()))  
+  trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
+  outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
+  --cores '+ str(inputArgs.threads) 
 
-  # logger.info("Centrifuge environment file:")
-  # with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
-  #   lines = f.readlines() 
-  #   for line in lines:
-  #     logger.info(''.join(line.split()))  
-  # trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
-  # outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads) 
-
-  # with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #     for line in p.stdout:
-  #         logger.info(line.rstrip()) 
+  with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+      for line in p.stdout:
+          logger.info(line.rstrip()) 
 
 
 
