@@ -153,9 +153,9 @@ with open(COMMONVIRUSES, 'r') as f:
             print(foo)
             # mask = df.species.apply(lambda x: any(item for item in selection if item in x))
             # coltmpvirus = list((set(keywords)).intersection(set(coltmp)))
-            coltmp = [ x for x in coltmp if "Mapped" not in x]
+            # coltmp = [ x for x in coltmp if "Mapped" not in x]
 
-            coltmp = coltmp + coltmpvirus
+            # coltmp = coltmp + coltmpvirus
             # coltmp = coltmp.remove('% consensus called')
             # coltmp = coltmp.remove('')
             # coltmp = coltmp.remove('Reference')
