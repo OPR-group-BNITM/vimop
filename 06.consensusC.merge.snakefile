@@ -141,8 +141,9 @@ with open(COMMONVIRUSES, 'r') as f:
         if df.empty:
             df = df_new.copy()
             coltmp = df.columns
-            print(coltmp)
             coltmp = [ x for x in coltmp if "viral" not in x]
+            print(coltmp)
+
             coltmp = [ x for x in coltmp if "Mapped reads" in x and "LASV" not in x]
             coltmp = [ x for x in coltmp if "Mapped contigs" in x and "LASV" not in x]
             coltmp = [ x for x in coltmp if "% consensus called" not in x ]
