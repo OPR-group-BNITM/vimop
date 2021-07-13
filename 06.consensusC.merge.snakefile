@@ -225,7 +225,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
             cols2 = df.columns.drop(cols1).tolist()
             cols = cols1 + cols2
-
+            print(cols)
 
             df = df[cols]
         print()
