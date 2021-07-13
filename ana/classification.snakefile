@@ -77,47 +77,47 @@ rule krona_representation_virus:
 
 
 
-rule classify_all:
-    input:
-        INPUT
-    output:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt'
-    params:
-        virus_db=DB_DIR
-    conda:
-        '../envs/centrifuge.yaml'
-    threads: 1 #workflow.cores
-    shell:
-        'centrifuge -x {params.virus_db}/hpvc -U {input[0]} --report-file {output[0]} -S {output[1]}'
+# rule classify_all:
+#     input:
+#         INPUT
+#     output:
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-report-all.tsv',
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt'
+#     params:
+#         virus_db=DB_DIR
+#     conda:
+#         '../envs/centrifuge.yaml'
+#     threads: 1 #workflow.cores
+#     shell:
+#         'centrifuge -x {params.virus_db}/hpvc -U {input[0]} --report-file {output[0]} -S {output[1]}'
 
 
-rule kraken_style_report_all:
-    input:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt'
-    output:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv'
-    params:
-        virus_db=DB_DIR
-    conda:
-        '../envs/centrifuge.yaml'
-    threads: 1 #workflow.cores
-    shell:
-        'centrifuge-kreport -x {params.virus_db}/hpvc {input[0]} > {output[0]}'
+# rule kraken_style_report_all:
+#     input:
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.txt'
+#     output:
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv'
+#     params:
+#         virus_db=DB_DIR
+#     conda:
+#         '../envs/centrifuge.yaml'
+#     threads: 1 #workflow.cores
+#     shell:
+#         'centrifuge-kreport -x {params.virus_db}/hpvc {input[0]} > {output[0]}'
 
 
-rule krona_representation_all:
-    input:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv'
-    output:
-        OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.html'
-    params:
-        virus_db=DB_DIR
-    conda:
-        '../envs/general.yaml'
-    threads: 1 #workflow.cores
-    shell:
-        'ktImportTaxonomy -tax $HOME/anaconda3/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
+# rule krona_representation_all:
+#     input:
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-kraken-style-report-all.tsv'
+#     output:
+#         OUTDIR+'/'+RUNID+'-{sample}-'+TAG+'-centrifuge-classification-all.html'
+#     params:
+#         virus_db=DB_DIR
+#     conda:
+#         '../envs/general.yaml'
+#     threads: 1 #workflow.cores
+#     shell:
+#         'ktImportTaxonomy -tax $HOME/anaconda3/opt/krona/taxonomy -m 3 -t 5 {input[0]} -o {output[0]}'
 
 
 
