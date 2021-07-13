@@ -309,8 +309,7 @@ if os.path.exists(snakemake.input[1]) and os.path.getsize(snakemake.input[1]) > 
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
-
-
+    df1.columns = [', '.join(col).strip() for col in df1.columns.values]
     merge = pd.merge(df,df1,on=['RUNID','Sample'])
 else:
     merge = df
@@ -336,6 +335,8 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
+
+    df2.columns = [', '.join(col).strip() for col in df2.columns.values]
     merge = pd.merge(merge,df2,on=['RUNID','Sample'])
 
 
@@ -361,6 +362,8 @@ if os.path.exists(snakemake.input[2]) and os.path.getsize(snakemake.input[2]) > 
             for dta in data:
         #         print(df_clean.loc[step, dta])
                 df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
+        df3.columns = [', '.join(col).strip() for col in df3.columns.values]
+
         merge = pd.merge(merge,df3,on=['RUNID','Sample'])
 
 
