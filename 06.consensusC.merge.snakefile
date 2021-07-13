@@ -32,7 +32,7 @@ consensusdf = pd.DataFrame()
 blastList=pd.read_csv(config['blastlist'], names=['Sample', 'ref','target'])
 
 samples_no_blast = list(set(SAMPLES) - set(blastList['Sample'].tolist()))
-print('Samples not blasted: '+str(samples_no_blast))
+# print('Samples not blasted: '+str(samples_no_blast))
 # df_no_blast = df[df['Sample'] in samples_no_blast]
 
 
@@ -58,7 +58,7 @@ for samples_nb in samples_no_blast:
         # consensusdf = consensusdf.append(tmp, sort = False)
         notblasteddf = notblasteddf.append(tmp,sort=False,ignore_index=True)
 consensusdf['Sample'] = consensusdf['Sample'].astype(str)
-print(notblasteddf.to_string())
+# print(notblasteddf.to_string())
 
 
 
