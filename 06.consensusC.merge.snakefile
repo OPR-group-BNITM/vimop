@@ -112,9 +112,11 @@ df_new['NCBI definition'] = df_new['NCBI definition'].astype(str)
 df_new['Partial reference?'] = df_new['NCBI definition'].apply(lambda x: 'partial' if 'partial' in x else 'complete')
 
 
-print(df_new.columns())
+# print(.columns())
 
-
+for col in df_new.columns:
+    print(col)
+    
 with open(COMMONVIRUSES, 'r') as f:
     lines = f.read().splitlines() 
 
