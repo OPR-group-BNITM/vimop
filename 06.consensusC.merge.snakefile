@@ -143,7 +143,7 @@ with open(COMMONVIRUSES, 'r') as f:
             coltmp = df.columns
             coltmp = [ x for x in coltmp if "viral" not in x]
             print(coltmp)
-            coltmpvirus = (set(keywords)).intersection(set(coltmp))
+            coltmpvirus = ((set(keywords)).intersection(set(coltmp))).tolist()
             coltmp = [ x for x in coltmp if "Mapped" not in x]
             coltmp = [ x for x in coltmp if "% consensus called" not in x ]
             coltmp = [ x for x in coltmp if "Target" not in x ]
