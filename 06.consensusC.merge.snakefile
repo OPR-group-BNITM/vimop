@@ -95,9 +95,7 @@ merged2 = merged2.drop_duplicates()
 
 
 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called','Released?','Version','Completion date','Analysis comments',
-            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
-            'Nb of viral reads','Nb of virus bases','Fraction viral reads','Target','Reference','NCBI definition','Partial reference?',
-            'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
+            'Cleaning options','Sample total reads after trim step','Sample total bases after trim step','Target','Reference']
 cols2 = merged2.columns.drop(cols1).tolist()
 cols = cols1 + cols2
 
