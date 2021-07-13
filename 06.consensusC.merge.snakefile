@@ -110,7 +110,7 @@ merged2.to_excel(RESULTS+'/'+RUNID+'-all-consensus-all-targets.xlsx',index=False
 df_new = merged2.copy()
 
 
-print(df_new.columns)
+# print(df_new.columns)
 
 # print(.columns())
 
@@ -142,14 +142,17 @@ with open(COMMONVIRUSES, 'r') as f:
             df = df_new.copy()
             coltmp = df.columns
             coltmp = [ x for x in coltmp if "viral" not in x]
-            print(coltmp)
-            coltmpvirus = list((set(keywords)).intersection(set(coltmp)))
-            coltmp = [ x for x in coltmp if "Mapped" not in x]
             coltmp = [ x for x in coltmp if "% consensus called" not in x ]
             coltmp = [ x for x in coltmp if "Target" not in x ]
             coltmp = [ x for x in coltmp if "Reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb bases in reference" not in x ]
             coltmp = [ x for x in coltmp if "Nb of bases called" not in x ]
+            foo = [ x for x in coltmp if keyword.any() in x ]
+            print(foo)
+            # mask = df.species.apply(lambda x: any(item for item in selection if item in x))
+            # coltmpvirus = list((set(keywords)).intersection(set(coltmp)))
+            coltmp = [ x for x in coltmp if "Mapped" not in x]
+
             coltmp = coltmp + coltmpvirus
             # coltmp = coltmp.remove('% consensus called')
             # coltmp = coltmp.remove('')
