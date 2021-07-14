@@ -7,3 +7,6 @@ covid: COVID, SARS, SARS-CoV-2
 yellowfever: Yellow fever, YFV, Yellow
 westnile: West Nile, WNV
 lcmv: Lymphocytic choriomeningitis, LCMV
+junin: Junin, Argentinian mammarenavirus, JUNV
+hazara: Hazara viru, HAZV
+ms2: Escherichia virus MS2, MS2
