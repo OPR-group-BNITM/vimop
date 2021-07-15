@@ -284,8 +284,9 @@ else:
       print(fastqdir)
       # if not 'fail' in fastqdir:
       for BC in fastqdirs:
+        print(BC)
         barcodetmp = BC.split('/')[-1]
-
+        print(barcodetmp)
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
         with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
           for fname in glob.glob(BC+'/*.fastq*'):
