@@ -90,6 +90,8 @@ optionalArgs.add_argument('-barcode-kit', '--barcode-kit', action='store', dest=
 
 optionalArgs.add_argument('-1', '--demultiplex', action='store_true', help='Demultiplex')
 optionalArgs.add_argument('-2', '--trim', action='store_true', help='Trim')
+optionalArgs.add_argument('--classify', action='store_true', help='Classify')
+
 optionalArgs.add_argument('-3', '--clean', action ='store_true', help='Remove contaminant reads, default: reagents,human RNA, human DNA use --clean_option to change options  default reagents,human')
 optionalArgs.add_argument('--clean_option', dest='cleanOptions', nargs='*',type=str, default=['reagents', 'human'], help='Specify order and which contaminant reads to remove among: reagents,human,mouse,mastomys,bacteria,arachnea | default: reagent, human')
 
