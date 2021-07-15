@@ -278,7 +278,7 @@ else:
   if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*'):
     fastqdirs = []
     for directory in inputArgs.fastqDir:
-      fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*'))))
+      fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*'))- set(glob.glob(directory +'/**/*fast5*/barcode*'))))
     fastqdirs = [item for sublist in fastqdirs for item in sublist]
     for fastqdir in fastqdirs:
       print(fastqdir)
@@ -289,6 +289,7 @@ else:
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
         with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
           for fname in glob.glob(BC+'/*.fastq*'):
+              print(fname)
               with open(fname) as infile:
                   for line in infile:
                       outfile.write(line)

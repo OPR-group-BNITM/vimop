@@ -10,3 +10,6 @@ lcmv: Lymphocytic choriomeningitis, LCMV
 junin: Junin, Argentinian mammarenavirus, JUNV
 hazara: Hazara viru, HAZV
 ms2: Escherichia virus MS2, MS2
+hanta: Hantaviridae, Hanta
+arena: Arenaviridae, Arena
+nairo: Nairo
