@@ -283,6 +283,7 @@ else:
     for fastqdir in fastqdirs:
       logger.info(fastqdir)
       for BC in fastqdirs:
+        print(BC)
         barcodetmp = BC.split('/')[-1]
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
         with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
