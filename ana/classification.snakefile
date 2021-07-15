@@ -40,12 +40,13 @@ rule classify_virus:
         RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-report-virus.tsv',
         RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-virus.txt'
     params:
-        virus_db=DB_DIR
+        out_folder=RESULTS+'/classification/{sample}',
+	    virus_db=DB_DIR
     conda:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge -x {params.virus_db}/viral -U {input[0]} --report-file {output[0]} -S {output[1]}'
+        'mkdir -p {params.out_folder}; centrifuge --mm -x {params.virus_db}/viral -U {input[0]} --report-file {output[0]} -S {output[1]}'
 
 
 rule kraken_style_report_virus:
@@ -84,12 +85,13 @@ rule classify_all:
         RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-report-all.tsv',
         RESULTS+'/classification/{sample}/'+RUNID+'-{sample}-centrifuge-classification-all.txt'
     params:
-        virus_db=DB_DIR
+        virus_db=DB_DIR,
+        out_folder=RESULTS+'/classification/{sample}'
     conda:
         '../envs/centrifuge.yaml'
     threads: 1 #workflow.cores
     shell:
-        'centrifuge -x {params.virus_db}/hpvc -U {input[0]} --report-file {output[0]} -S {output[1]}'
+        'mkdir -p {params.out_folder}; centrifuge --mm -x {params.virus_db}/hpvc -U {input[0]} --report-file {output[0]} -S {output[1]}'
 
 
 rule kraken_style_report_all:
