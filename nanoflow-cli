@@ -281,6 +281,7 @@ else:
       fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*', recursive=True))- set(glob.glob(directory +'/**/*fast5*/barcode*', recursive=True))))
     fastqdirs = [item for sublist in fastqdirs for item in sublist]
     for fastqdir in fastqdirs:
+      logger.info(fastqdir)
       for BC in fastqdirs:
         barcodetmp = BC.split('/')[-1]
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
