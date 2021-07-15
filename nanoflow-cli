@@ -280,10 +280,10 @@ else:
     for directory in inputArgs.fastqDir:
       print(glob.glob(directory +'/**/*pass/barcode*', recursive=True))
       print()
-      print(glob.glob(directory +'/**/*fail/barcode*'))
+      print(glob.glob(directory +'/**/*fail/barcode*', recursive=True))
       print()
-      print(glob.glob(directory +'/**/*fast5*/barcode*'))
-      fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*'))- set(glob.glob(directory +'/**/*fast5*/barcode*'))))
+      print(glob.glob(directory +'/**/*fast5*/barcode*', recursive=True))
+      fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*', recursive=True))- set(glob.glob(directory +'/**/*fast5*/barcode*', recursive=True))))
     print(fastqdirs)
     fastqdirs = [item for sublist in fastqdirs for item in sublist]
     print(fastqdirs)
