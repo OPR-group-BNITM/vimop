@@ -242,7 +242,8 @@ with open(COMMONVIRUSES, 'r') as f:
                     cols2 = df.columns.drop(cols1).tolist()
                     cols = cols1 + cols2
                     df = df[cols]
-
+                else:
+                    print('WTF is going on?')
                 # elif df_short.empty and df_long.empty:
                 #     df['% consensus called S'] = 0
                 #     df['% consensus called L'] = 0
