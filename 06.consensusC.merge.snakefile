@@ -201,36 +201,44 @@ with open(COMMONVIRUSES, 'r') as f:
                 df_short = df_short.reset_index()
                 df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
                 df_long = df_long.reset_index()
-                if not df_long.empty and df_short.empty:
-                    df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
-                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                elif df_long.empty and not df_short.empty:
-                    df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
-                    df['% consensus called L'] = 0
-                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                elif df_short.empty and not df_long.empty:
-                    df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
-                    df['% consensus called S'] = 0
-                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                # elif df_short.empty and df_long.empty:
-                #     df['% consensus called S'] = 0
-                #     df['% consensus called L'] = 0
-                # df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-                # df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
             'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
             'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
             'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
             'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
-                cols2 = df.columns.drop(cols1).tolist()
-                cols = cols1 + cols2
+                if not df_long.empty and df_short.empty:
+                    df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                    cols2 = df.columns.drop(cols1).tolist()
+                    cols = cols1 + cols2
+                    df = df[cols]
 
+                elif df_long.empty and not df_short.empty:
+                    df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                    df['% consensus called L'] = 0
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                    cols2 = df.columns.drop(cols1).tolist()
+                    cols = cols1 + cols2
+                    df = df[cols]
 
-                df = df[cols]
+                elif df_short.empty and not df_long.empty:
+                    df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                    df['% consensus called S'] = 0
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                    cols2 = df.columns.drop(cols1).tolist()
+                    cols = cols1 + cols2
+                    df = df[cols]
+
+                # elif df_short.empty and df_long.empty:
+                #     df['% consensus called S'] = 0
+                #     df['% consensus called L'] = 0
+                # df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                # df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+
 
             # df = pd.merge(, how = 'left')
             # if df.empty:
