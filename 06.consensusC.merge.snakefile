@@ -212,7 +212,7 @@ with open(COMMONVIRUSES, 'r') as f:
             'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
             'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
             'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
-                if not df_long.empty and df_short.empty:
+                if not df_long.empty and not df_short.empty:
                     print('both S and L not empty')
                     df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
