@@ -178,7 +178,7 @@ with open(COMMONVIRUSES, 'r') as f:
             df = df[cols]
             
             df = df.drop_duplicates()
-            print(df.to_string())
+            # print(df.to_string())
             # 'RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step'
             # print(df.to_string())
