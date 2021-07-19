@@ -187,11 +187,11 @@ with open(COMMONVIRUSES, 'r') as f:
         else:
             print(virus)
             if 'lassa' in virus:
-                print(virus)
+                # print(virus)
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
                 df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
-                print(df_short.to_string())
-                print(df_long.to_string())
+                # print(df_short.to_string())
+                # print(df_long.to_string())
                 # print()
                 df_short=df_short.rename(columns={"Reference": "Reference S", "Partial reference?": "Partial reference? S", "NCBI definition": "NCBI definition S","Nb bases in reference": "Nb bases in reference S", "Nb of viral reads": "Nb of viral reads S", "Fraction viral bases": "Fraction viral bases S","Fraction viral reads": "Fraction viral reads S","Nb of virus bases": "Nb of virus bases S","Target": "Target S"})
                 df_long=df_long.rename(columns={"Reference": "Reference L", "Partial reference?": "Partial reference? L", "NCBI definition": "NCBI definition L","Nb bases in reference": "Nb bases in reference L", "Nb of viral reads": "Nb of viral reads L", "Fraction viral bases": "Fraction viral bases L","Fraction viral reads": "Fraction viral reads L","Nb of virus bases": "Nb of virus bases L","Target": "Target L"})
@@ -202,8 +202,10 @@ with open(COMMONVIRUSES, 'r') as f:
 
                 df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
                 df_short = df_short.reset_index()
+                print(df_short.to_string())
                 df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first()
                 df_long = df_long.reset_index()
+                print(df_long.to_string())
                 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
             'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
