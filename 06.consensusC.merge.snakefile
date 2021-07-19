@@ -138,7 +138,6 @@ with open(COMMONVIRUSES, 'r') as f:
         df = df.sort_values(by=['RUNID','Sample','Nb of bases called','Partial reference?'],ascending=[True,True,False,True])
 
 
-            ### Select the best S and L segments
         if df.empty:
             df = df_new.copy()
             coltmp = df.columns
@@ -186,6 +185,7 @@ with open(COMMONVIRUSES, 'r') as f:
             # df['NCBI definition'] = 'Not '+virus
              #.drop(['% consensus called','Nb bases called','Partial reference?','Nb of viral reads','Nb of virus bases','Fraction viral reads','Fraction viral bases','NCBI definition','Nb bases in reference'])
         else:
+            print(virus)
             if 'lassa' in virus:
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
                 df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
