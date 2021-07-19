@@ -203,17 +203,23 @@ with open(COMMONVIRUSES, 'r') as f:
                 df_long = df_long.reset_index()
                 if not df_long.empty and df_short.empty:
                     df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                 elif df_long.empty and not df_short.empty:
                     df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['% consensus called L'] = 0
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                 elif df_short.empty and not df_long.empty:
                     df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['% consensus called S'] = 0
-                elif df_short.empty and df_long.empty:
-                    df['% consensus called S'] = 0
-                    df['% consensus called L'] = 0
-                df['Fraction consensus called S'] = df['% consensus called S'].div(100)
-                df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                    df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                    df['Fraction consensus called L'] = df['% consensus called L'].div(100)
+                # elif df_short.empty and df_long.empty:
+                #     df['% consensus called S'] = 0
+                #     df['% consensus called L'] = 0
+                # df['Fraction consensus called S'] = df['% consensus called S'].div(100)
+                # df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
             'Nb of viral reads S','Nb of virus bases S','Fraction viral reads S', 'Fraction viral bases S', 'Target S','Reference S','NCBI definition S','Partial reference? S',
