@@ -199,7 +199,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
                 df_short = df_short.groupby(['RUNID','Sample','Consensus depth requirement']).first()
                 df_short = df_short.reset_index()
-                df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first().reset_index()
+                df_long = df_long.groupby(['RUNID','Sample','Consensus depth requirement']).first()
                 df_long = df_long.reset_index()
                 cols1 = ['RUNID+label','RUNID','Label','Sample','% consensus called S','% consensus called L','Released?','Version','Completion date','Analysis comments',
             'Cleaning options','Sample total reads after trim step','Sample total bases after trim step',
