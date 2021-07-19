@@ -187,6 +187,7 @@ with open(COMMONVIRUSES, 'r') as f:
         else:
             print(virus)
             if 'lassa' in virus:
+                print(virus)
                 df_short = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=0., right=4000.))].copy()
                 df_long = df[df['Nb bases in reference'].apply(lambda x: x in pd.Interval(left=4001., right=9500.))].copy()
 
@@ -208,6 +209,7 @@ with open(COMMONVIRUSES, 'r') as f:
             'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
             'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
                 if not df_long.empty and df_short.empty:
+                    print('both S and L not empty')
                     df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
@@ -216,6 +218,8 @@ with open(COMMONVIRUSES, 'r') as f:
                     df = df[cols]
 
                 elif df_long.empty and not df_short.empty:
+                    print('L empty')
+
                     df = df_short.sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['% consensus called L'] = 0
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
@@ -225,6 +229,8 @@ with open(COMMONVIRUSES, 'r') as f:
                     df = df[cols]
 
                 elif df_short.empty and not df_long.empty:
+                    print('S empty')
+
                     df = df_long.sort_values(by=['RUNID','Sample'],ascending=[True,True])
                     df['% consensus called S'] = 0
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
