@@ -2,7 +2,7 @@
 lassa: Lassa mammarena, Lassa, LASV
 ebola: Ebola, EBOV
 dengue: Dengue, DENV
-zika: Zika
+zika: Zika, ZIKV
 covid: COVID, SARS, SARS-CoV-2
 yellowfever: Yellow fever, YFV, Yellow
 westnile: West Nile, WNV
@@ -13,3 +13,5 @@ ms2: Escherichia virus MS2, MS2
 hanta: Hantaviridae, Hanta
 arena: Arenaviridae, Arena
 nairo: Nairo
+filo: Filo, Filoviridae
+marburg: Marburg
