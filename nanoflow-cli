@@ -211,7 +211,7 @@ with open(scriptPath + '/envs/general.yaml', 'r') as f:
 
 if (not inputArgs.demultiplex and not inputArgs.trim and not inputArgs.clean 
   and not inputArgs.map and not inputArgs.assemble 
-  and not inputArgs.consensus):
+  and not inputArgs.consensus and not inputArgs.keep_bam):
   logger.info('Running complete pipeline')
   All = True
 
