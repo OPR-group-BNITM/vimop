@@ -1,7 +1,7 @@
 import pandas as pd
 from itertools import *
 
-# SAMPLES = df['sample']
+SAMPLES = df['sample']
 RESULTS = config['results']
 BENCHMARK = config['benchmark']
 TRIM_PATH = config['trim_path']
