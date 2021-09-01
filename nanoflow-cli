@@ -953,6 +953,7 @@ if (inputArgs.keep_bam):
   fileHandler = logging.FileHandler(consensus_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
+  blastedList = pd.DataFrame()
 
   for sample in SAMPLES:
     manualList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/'+RUNID+'-'+sample+'-'+'-manual-ref-list.csv'
