@@ -943,6 +943,8 @@ logger.info('Analysis finished')
   ###################################################################################################################################################################
 
 if (inputArgs.keep_bam):
+  df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
+
   SAMPLES = df['sample']
 
   consensus_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/consensus-'+nowTime+'.log'
