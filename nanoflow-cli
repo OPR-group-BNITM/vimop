@@ -102,6 +102,7 @@ optionalArgs.add_argument('--assembler', action='store', dest='assembler', nargs
 optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str, metavar='STR', help='Label the analysis run with extra info if planning to run several times', default='')
 optionalArgs.add_argument('-size','-genomeSize', action='store', dest='genomeSize', type=str, metavar='INT', help='Best guess for genome size, default=10000', default=10000)
 optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
+optionalArgs.add_argument('--keep_bam', action='store_true', dest='keep_bam', help='Generate the bam files, MUST be used while specifying sample with -s and ref with --ref')
 
 
 # optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
@@ -933,8 +934,6 @@ if (All or inputArgs.consensus):
     for line in p.stdout:
       logger.info(line.rstrip()) 
 
-
-
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
@@ -943,7 +942,56 @@ logger.info('Analysis finished')
 
   ###################################################################################################################################################################
 
+if (inputArgs.keep_bam):
 
+  consensus_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/consensus-'+nowTime+'.log'
+  logger.info('Consensus generation')
+  logger.info('Consensus log file: '+consensus_log_file)
+  fileHandler = logging.FileHandler(consensus_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+
+  for sample in SAMPLES:
+    manualList = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/'+RUNID+'-'+sample+'-'+'-manual-ref-list.csv'
+    if (inputArgs.manualRef):
+      mandf = pd.DataFrame()
+      for manRef in inputArgs.manualRef:
+        tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
+        # mantmp = 
+        # mandf = pd.DataFrame.from_dict(tmp)
+        mandf = mandf.append(tmp, ignore_index=True).to_csv(manualList,header=False,index=False)
+        # mandf[['sample','ref','target']]
+
+    if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
+      tmp = pd.read_csv(manualList, names = ['ref','sample','target'])
+      blastedList = blastedList.append(tmp[['sample','ref','target']])
+
+
+
+  blastedList.drop_duplicates(inplace = True) 
+  blastedList[['sample','ref','target']].to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
+
+  logger.info('Blasted list considered:')
+  with open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', 'r') as f:
+    lines = f.readlines() 
+    for line in lines:
+      logger.info(''.join(line.split()))
+
+  consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusD-keep-bam.snakefile \
+  --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv  \
+  --cores '+ str(inputArgs.threads) 
+
+  with subprocess.Popen(consensus_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    for line in p.stdout:
+      logger.info(line.rstrip()) 
+
+  fileHandler = logging.FileHandler(analysis_log_file)
+  fileHandler.setFormatter(logFormatter)
+  logger.addHandler(fileHandler)
+  logger.info('Consensus generation finished')
+logger.info('Analysis finished')
+
+  ###################################################################################################################################################################
 
 exit()
 
