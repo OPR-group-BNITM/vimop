@@ -943,6 +943,7 @@ logger.info('Analysis finished')
   ###################################################################################################################################################################
 
 if (inputArgs.keep_bam):
+  SAMPLES = df['sample']
 
   consensus_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/consensus-'+nowTime+'.log'
   logger.info('Consensus generation')
