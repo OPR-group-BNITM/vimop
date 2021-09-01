@@ -1,7 +1,7 @@
 import pandas as pd
 from itertools import *
 
-SAMPLES = df['sample']
+# SAMPLES = df['sample']
 RESULTS = config['results']
 BENCHMARK = config['benchmark']
 TRIM_PATH = config['trim_path']
@@ -47,10 +47,10 @@ df=pd.read_csv(config['blastlist'], names = ['sample','ref','target'])
 SAMPLES=df['sample'].tolist()
 REF=df['ref'].tolist()
 
-df_all = pd.read_csv(config['table'], names = ['sample'])
-SAMPLES_NOBLAST = list(set(df_all['sample'].tolist()) - set(SAMPLES))
+# df_all = pd.read_csv(config['table'], names = ['sample'])
+# SAMPLES_NOBLAST = list(set(df_all['sample'].tolist()) - set(SAMPLES))
 
-print('Not blasted samples'+str(SAMPLES_NOBLAST))
+# print('Not blasted samples'+str(SAMPLES_NOBLAST))
 
 
 rule all:
