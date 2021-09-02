@@ -1,4 +1,4 @@
-#!/usr/bin/env pfython3
+#!/usr/bin/env python3
 
 
 ### Requirements: snakemake
