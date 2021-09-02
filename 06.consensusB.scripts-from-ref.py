@@ -167,7 +167,7 @@ with open(snakemake.output[1], 'w') as csvfile:
     writer.writerows(results)
 
 with open(snakemake.output[2], 'w') as f:
-    f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + ''.join(consensus) + '\n' + str(''.join(consensus)))
+    f.write('>'+ str(snakemake.params.RUNID) + "," + str(snakemake.params.sample) + "," + str(snakemake.params.ref) + '\n' + str(''.join(consensus)))
 
 
 

@@ -1,29 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env pfython3
 
 
-### Requirements: snakemake, gputils
+### Requirements: snakemake
 
-#conda install -c conda-forge gputil
 
 
 
 
 ###################################################################################################
-
-# import conda.cli.python_api as Conda
-# (stdout_str, stderr_str, return_code_int) = Conda.run_command(
-#     Conda.Commands.INSTALL,
-#     '-c', 'bioconda',
-#     'snakemake=5.22.1',
-#     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
-# )
-
-# (stdout_str, stderr_str, return_code_int) = Conda.run_command(
-#     Conda.Commands.INSTALL,
-#     '-c', 'conda-forge',
-#     'gputil',
-#     use_exception_handler=True, stdout=sys.stdout, stderr=sys.stderr
-# )
 
 
 import os
@@ -38,7 +22,6 @@ from pathlib import Path
 import datetime
 import glob
 import time
-import GPUtil
 import pandas as pd
 import shutil
 import gzip
@@ -59,7 +42,7 @@ nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
 nowTimeDay = datetime.datetime.now().strftime('%Y.%m.%d')
 
 myPlatform = platform.system()
-GPU = GPUtil.getGPUs()
+# GPU = GPUtil.getGPUs()
 # ALL = True
 # TRIM = False
 # CLEAN= False
@@ -231,17 +214,17 @@ if (inputArgs.demultiplex):
   fastqdirs = [item for sublist in fastqdirs for item in sublist]
   for fastqdir in fastqdirs:
     print(fastqdir)
-    if (not GPU):
-      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "'+ (' ').join(inputArgs.barcodeKit) + '"'
+    # if (not GPU):
+    #   guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "'+ (' ').join(inputArgs.barcodeKit) + '"'
       
-      with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-          for line in p.stdout:
-              logger.info(line.rstrip()) 
-    else:
-      guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --barcode_kits "'+ (' ').join(inputArgs.barcodeKit)+ '"'
-      with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-          for line in p.stdout:
-              logger.info(line.rstrip()) 
+    #   with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+    #       for line in p.stdout:
+    #           logger.info(line.rstrip()) 
+    # else:
+    guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --barcode_kits "'+ (' ').join(inputArgs.barcodeKit)+ '"'
+    with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            logger.info(line.rstrip()) 
 
   for fastqdir in fastqdirs:
     print(fastqdir)
