@@ -57,7 +57,7 @@ rule fastqc_stats_post_demultiplex:
         'envs/general.yaml'
     params:
         outdir=RESULTS+'/{sample}/00_initial_stats/'
-    threads: 1
+    threads: 4
     shell:
         'fastqc -q -t {threads} -o {params.outdir} {input}'
 
@@ -93,7 +93,7 @@ rule fastqc_stats_post_seqtk_trimfq:
         outdir=RESULTS+'/{sample}/01_trim/'
     conda:
         'envs/general.yaml'
-    threads: 1
+    threads: 4
     shell:
         'fastqc -q -t {threads} -o {params.outdir} {input}'
 
