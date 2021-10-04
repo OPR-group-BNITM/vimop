@@ -270,12 +270,12 @@ with open(COMMONVIRUSES, 'r') as f:
                 nb_assemble_maxlen='NA'
 
                 with open(RESULTS+'/'+sample+'/01_trim/'+RUNID+'-'+sample+'-seqtk-trimfq-stats.txt', 'r') as f:
-                lines=f.readlines()
-                nb_trim_bases=((lines[1].split())[4]).replace(",", "")
-                nb_trim_reads=((lines[1].split())[3]).replace(",", "")
-                nb_trim_minlen=((lines[1].split())[5]).replace(",", "")
-                nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
-                nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
+                    lines=f.readlines()
+                    nb_trim_bases=((lines[1].split())[4]).replace(",", "")
+                    nb_trim_reads=((lines[1].split())[3]).replace(",", "")
+                    nb_trim_minlen=((lines[1].split())[5]).replace(",", "")
+                    nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
+                    nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
 
                 predf = {"RUNID": [RUNID_wo_label],
                 "Sample": [sample],
