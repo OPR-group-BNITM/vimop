@@ -210,6 +210,9 @@ with open(COMMONVIRUSES, 'r') as f:
             'Nb bases in reference S','Nb of bases called S','Fraction consensus called S','Sequence S',
             'Nb of viral reads L','Nb of virus bases L','Fraction viral reads L','Fraction viral bases L', 'Target L','Reference L','NCBI definition L','Partial reference? L',
             'Nb bases in reference L','Nb of bases called L','Fraction consensus called L','Sequence L']
+                # general_cols = ['RUNID+label','RUNID','Label','Sample','Released?','Version','Completion date','Analysis comments',
+            # 'Cleaning options','Sample total reads after trim step','Sample total bases after trim step']
+
                 if not df_long.empty and not df_short.empty:
                     print('both S and L not empty')
                     df = pd.merge(df_long,df_short, how='outer').sort_values(by=['RUNID','Sample'],ascending=[True,True])
@@ -228,7 +231,7 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                     cols1_tmp = [ x for x in cols1 if " L" not in x ]
                     cols2 = df.columns.drop(cols1_tmp).tolist()
-                    cols = cols1 + cols2
+                    cols = cols1_tmp + cols2
                     df = df[cols]
 
                 elif df_short.empty and not df_long.empty:
@@ -240,7 +243,7 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                     cols1_tmp = [ x for x in cols1 if " S" not in x ]
                     cols2 = df.columns.drop(cols1_tmp).tolist()
-                    cols = cols1 + cols2
+                    cols = cols1_tmp + cols2
                     df = df[cols]                
                     df = pd.concat([df,notblasteddf], axis=0, join='outer',sort=True, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
