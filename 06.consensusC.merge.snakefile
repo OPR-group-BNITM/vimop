@@ -22,7 +22,7 @@ label = config['label']
 RUNID_wo_label = config['runidwolabel']
 DATE = config['CompletionDay']
 COMMONVIRUSES = config['CommonViruses']
-
+CLEAN_OPTS = config['clean_option']
 # TARGET = list((config['target']).split(","))
 # TARGET.append('spades')
 
@@ -249,12 +249,6 @@ with open(COMMONVIRUSES, 'r') as f:
                     df = df[cols]                
                     df = pd.concat([df,notblasteddf], axis=0, join='outer',sort=True, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
-                
-
-
-
-
-
 
             else:
                 df['Fraction consensus called'] = df['% consensus called'].div(100)
@@ -264,13 +258,58 @@ with open(COMMONVIRUSES, 'r') as f:
                 'Nb bases in reference','Nb of bases called','Fraction consensus called','Sequence']
                 df = pd.concat([df,notblasteddf], axis=0, join='outer',sort=True, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
-        # samplesWithConsensus = df['Sample'].tolist()
-        # for sample in SAMPLES:
-        #     if (sample not in samplesWithConsensus):
-        #         predf = {"RUNID": [RUNID],
-        #         "Sample": [sample]} 
-        #         tmp = pd.DataFrame.from_dict(predf)
-        #         df = df.append(tmp, sort = False)
+
+
+        samplesWithConsensus = df['Sample'].tolist()
+        for sample in SAMPLES:
+            if (sample not in samplesWithConsensus):
+                nb_assemble_bases='NA'
+                nb_assemble_reads='NA'
+                nb_assemble_minlen='NA'
+                nb_assemble_avglen='NA'
+                nb_assemble_maxlen='NA'
+
+                with open(RESULTS+'/'+sample+'/01_trim/'+RUNID+'-'+sample+'-seqtk-trimfq-stats.txt', 'r') as f:
+                lines=f.readlines()
+                nb_trim_bases=((lines[1].split())[4]).replace(",", "")
+                nb_trim_reads=((lines[1].split())[3]).replace(",", "")
+                nb_trim_minlen=((lines[1].split())[5]).replace(",", "")
+                nb_trim_avglen=((lines[1].split())[6]).replace(",", "")
+                nb_trim_maxlen=((lines[1].split())[7]).replace(",", "")
+
+                predf = {"RUNID": [RUNID_wo_label],
+                "Sample": [sample],
+                "Reference": ['no reference'],
+                # "NCBI definition": [],
+                # "Percent ATCG": [percent_ATCG],
+                # "Nb base called": [nb_ATCG],
+                # "Nb bases in reference": [],
+                # "Nb of viral reads": [],
+                "Sample total bases after trim step": [nb_trim_bases],
+                "Sample total reads after trim step": [nb_trim_reads],
+                # "Fraction viral reads": [],
+                # "Nb of virus bases": [],
+                # "Sample total bases": [nb_trim_bases],
+                # "Fraction viral bases": [],
+                "Cleaning options": [CLEAN_OPTS],
+                'Trim stats, num_seqs': [nb_trim_reads],
+                'Trim stats, sum_len': [nb_trim_bases],
+                'Trim stats, min_len': [nb_trim_minlen],
+                'Trim stats, avg_len': [nb_trim_avglen],
+                'Trim stats, max_len': [nb_trim_maxlen],
+                'Assembly stats, num_seqs': [nb_assemble_reads],
+                'Assembly stats, sum_len': [nb_assemble_bases],
+                'Assembly stats, min_len': [nb_assemble_minlen],
+                'Assembly stats, avg_len': [nb_assemble_avglen],
+                'Assembly stats, max_len': [nb_assemble_maxlen],
+                'RUNID+label': [RUNID],
+                'Version': [config['version']],
+                'Completion date': DATE,
+                'Released?': '',
+                'Analysis comments': ''
+                } 
+                tmp = pd.DataFrame.from_dict(predf)
+                df = df.append(tmp, sort = False)
 
 
 
