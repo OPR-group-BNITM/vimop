@@ -229,9 +229,10 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['% consensus called L'] = 0
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                    cols1_tmp = [ x for x in cols1 if " L" not in x ]
-                    cols2 = df.columns.drop(cols1_tmp).tolist()
-                    cols = cols1_tmp + cols2
+                    cols1_tmp = [ x for x in cols1 if " L" in x ]
+                    df[cols1_tmp] = ''
+                    cols2 = df.columns.drop(cols1).tolist()
+                    cols = cols1 + cols2
                     df = df[cols]
 
                 elif df_short.empty and not df_long.empty:
@@ -241,9 +242,10 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['% consensus called S'] = 0
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
-                    cols1_tmp = [ x for x in cols1 if " S" not in x ]
-                    cols2 = df.columns.drop(cols1_tmp).tolist()
-                    cols = cols1_tmp + cols2
+                    cols1_tmp = [ x for x in cols1 if " S" in x ]
+                    df[cols1_tmp] = ''
+                    cols2 = df.columns.drop(cols1).tolist()
+                    cols = cols1 + cols2
                     df = df[cols]                
                     df = pd.concat([df,notblasteddf], axis=0, join='outer',sort=True, ignore_index=False, copy=True).sort_values(by=['RUNID','Sample'],ascending=[True,True]).reset_index()
 
