@@ -279,6 +279,7 @@ with open(COMMONVIRUSES, 'r') as f:
 
                 predf = {"RUNID": [RUNID_wo_label],
                 "Sample": [sample],
+                "Label": [label],
                 # "NCBI definition": [],
                 # "Percent ATCG": [percent_ATCG],
                 # "Nb base called": [nb_ATCG],
