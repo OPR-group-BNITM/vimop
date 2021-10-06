@@ -72,7 +72,7 @@ predf = {
 
 df = pd.DataFrame.from_dict(predf)
 
-print(df.to_string())
+# print(df.to_string())
 # predf = {
 #     "RUNID": [snakemake.params.RUNID],
 #     "Sample": [snakemake.params.sample],
