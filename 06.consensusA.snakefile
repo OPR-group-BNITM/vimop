@@ -174,14 +174,14 @@ rule stats_trim:
 
 rule touch:
     input:
-        RESULTS+'/{sample}/05_consensus/'+RUNID+'-{sample}-{ref}-stats.txt'
+        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'
     output:
         RESULTS+'/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
         RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-canu-mapped-assembly-stats-all-targets.txt',
         RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt'
     shell:
         'touch {output[0]} {output[1]} {output[2]}'
-        
+
 rule consensus:
     input:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam',
