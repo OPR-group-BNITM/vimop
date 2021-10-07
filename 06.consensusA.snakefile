@@ -165,7 +165,7 @@ rule coverage:
         'bedtools genomecov -ibam {input[0]} -d > {output[0]}'
 
 rule stats_trim:
-    input
+    input:
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt'
@@ -181,6 +181,7 @@ rule touch:
         RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt'
     shell:
         'touch {output[0]} {output[1]} {output[2]}'
+        
 rule consensus:
     input:
         CONSENSUS_PATH +'/{sample}/'+RUNID+'-sorted-{sample}-{ref}.bam',
