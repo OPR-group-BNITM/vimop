@@ -283,15 +283,16 @@ else:
     samplesToRun = [j.group(1) for j in samplesToRunTmp]
 
   else:
-    samplesToRunTmp = [re.search('(.*)-normalised-reads-with*', i) for i in listFullDir]
-    # samplesToRun = [j.group(1) for j in samplesToRunTmp]
-    # TRIM_PATH+'/'+RUNID+'-'+sample+'-seqtk-trimfq.fastq'
-    # # for i in inputArgs.norm_fastq:
-    # for i in inputArgs.norm_fastq:
-    #   sampleToRunTmp = i.split('/-normalised-reads-with*')[0]
-    #   # samplesToRunTmp = re.search('(.*)-normalised-reads-with*', i)
-    #   shutil.copyfile(i, ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-'+sampleToRunTmp+'-seqtk-trimfq.fastq')
-
+    samplesToRun = []
+    for i in inputArgs.norm_fastq:
+      if i.contains(reads):
+        sampleToRunTmp = i.split('/-normalised-reads-with*')[0]
+        sampleToRunTmp = 'reads-'+ sampleToRunTmp 
+      if i.contains(bases):
+        sampleToRunTmp = i.split('/-normalised-bases-with*')[0]
+        sampleToRunTmp = 'reads-'+ sampleToRunTmp 
+      shutil.copyfile(i, ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-'+sampleToRunTmp+'-seqtk-trimfq.fastq')
+      samplesToRun = samplesToRun.append(sampleToRunTmp)
 with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
   for item in sorted(samplesToRun):
     f.write('%s\n' % item)
