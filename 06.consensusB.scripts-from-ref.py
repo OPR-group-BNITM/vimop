@@ -7,7 +7,9 @@ import os
 bamfile = pysam.AlignmentFile(snakemake.input[0])
 fastafile = snakemake.input[1]
 
-
+df1 = pd.DataFrame()
+df2 = pd.DataFrame()
+df3 = pd.DataFrame()
 
 with open(fastafile, 'r') as f:
     gbtitle = ((f.readline().split(maxsplit=1))[1]).replace("$", "").replace(",", "").replace(";", "").rstrip("\n")   #.rstrip("$")
@@ -250,6 +252,7 @@ df3['RUNID'] = snakemake.params.RUNID
 df1['Sample'] = snakemake.params.sample
 df2['Sample'] = snakemake.params.sample
 df3['Sample'] = snakemake.params.sample
+
 
 merged = pd.merge(df,df1,on=['RUNID','Sample'])
 merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
