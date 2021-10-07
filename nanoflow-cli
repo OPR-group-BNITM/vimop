@@ -292,12 +292,12 @@ else:
         sampleToRunTmp = i.split('-normalised-bases-with')[0].split('/')[-1]
         sampleToRunTmp = 'reads-'+ sampleToRunTmp 
       # print(i)
-      # print(sampleToRunTmp)
+      print(sampleToRunTmp)
       os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-02-trim',exist_ok=True)
       shutil.copyfile(i, ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-'+sampleToRunTmp+'-seqtk-trimfq.fastq')
       print(sampleToRunTmp)
       samplesToRun = samplesToRun.append(sampleToRunTmp)
-      print(samplesToRun)
+    print(samplesToRun)
 with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
   for item in sorted(samplesToRun):
     f.write('%s\n' % item)
