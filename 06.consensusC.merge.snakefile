@@ -230,7 +230,8 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                     cols1_tmp = [ x for x in cols1 if " L" in x ]
-                    df[cols1_tmp] = ''
+                    for i in cols1_tmp:
+                        df[i] = ''
                     cols2 = df.columns.drop(cols1).tolist()
                     cols = cols1 + cols2
                     df = df[cols]
@@ -243,7 +244,9 @@ with open(COMMONVIRUSES, 'r') as f:
                     df['Fraction consensus called S'] = df['% consensus called S'].div(100)
                     df['Fraction consensus called L'] = df['% consensus called L'].div(100)
                     cols1_tmp = [ x for x in cols1 if " S" in x ]
-                    df[cols1_tmp] = ''
+                    # df[cols1_tmp] = ''
+                    for i in cols1_tmp:
+                        df[i] = ''
                     cols2 = df.columns.drop(cols1).tolist()
                     cols = cols1 + cols2
                     df = df[cols]                
