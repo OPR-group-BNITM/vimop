@@ -174,13 +174,15 @@ rule stats_trim:
 
 rule touch:
     input:
-        CONSENSUS_PATH +'/{sample}/refs/{ref}.fasta'
+        TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
         RESULTS+'/{sample}/02_clean/' + RUNID+'-{sample}-clean-stats.txt',
         RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-canu-mapped-assembly-stats-all-targets.txt',
-        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt'
+        RESULTS+'/{sample}/04_assemble/'+RUNID+'-{sample}-canu-assembly-stats.txt',
+        RESULTS+'/{sample}/03_map-'+RUNID+'-{sample}-mapped-stats-all-targets.txt'
+
     shell:
-        'touch {output[0]} {output[1]} {output[2]}'
+        'touch {output[0]} {output[1]} {output[2]} {output[3]}'
 
 rule consensus:
     input:
