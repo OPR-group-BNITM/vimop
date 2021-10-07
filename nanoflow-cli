@@ -86,6 +86,7 @@ optionalArgs.add_argument('-l','--label', action='store', dest='label', type=str
 optionalArgs.add_argument('-size','-genomeSize', action='store', dest='genomeSize', type=str, metavar='INT', help='Best guess for genome size, default=10000', default=10000)
 optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', nargs='*', type=str, metavar='INT', help='Coverage limit for calling a consensus base', default=[20])
 optionalArgs.add_argument('--keep_bam', action='store_true', dest='keep_bam', help='Generate the bam files, MUST be used while specifying sample with -s and ref with --ref')
+optionalArgs.add_argument('--norm_fastq', action='store', dest='norm_fastq', nargs='*', type=str, help='Take a (list of) trimmed fastq file(s) as input for the pipeline. Intended to be used after normalisation')
 
 
 # optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
@@ -260,26 +261,36 @@ logger.info('Samples to run:')
 if (inputArgs.selectedSamples):
   samplesToRun = inputArgs.selectedSamples
 else:
+  if not inputArgs.norm_fastq:
+    if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*'):
+      fastqdirs = []
+      for directory in inputArgs.fastqDir:
+        fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*', recursive=True))- set(glob.glob(directory +'/**/*fast5*/barcode*', recursive=True))))
+      fastqdirs = [item for sublist in fastqdirs for item in sublist]
+      for BC in fastqdirs:
+        logger.info('Barcode folder: '+BC)
+        barcodetmp = BC.split('/')[-1]
+        os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
+        with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
+          for fname in glob.glob(BC+'/*.fastq*'):
+              # print(fname)
+              with open(fname) as infile:
+                  for line in infile:
+                      outfile.write(line)
 
-  if not glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*'):
-    fastqdirs = []
-    for directory in inputArgs.fastqDir:
-      fastqdirs.append(list(set(glob.glob(directory +'/**/*pass/barcode*', recursive=True)) - set(glob.glob(directory +'/**/*fail/barcode*', recursive=True))- set(glob.glob(directory +'/**/*fast5*/barcode*', recursive=True))))
-    fastqdirs = [item for sublist in fastqdirs for item in sublist]
-    for BC in fastqdirs:
-      logger.info('Barcode folder: '+BC)
-      barcodetmp = BC.split('/')[-1]
-      os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/',exist_ok=True)
-      with open(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+barcodetmp+'-demultiplexed.fastq', 'a') as outfile:
-        for fname in glob.glob(BC+'/*.fastq*'):
-            # print(fname)
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
+    listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*')]
+    samplesToRunTmp = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
+    samplesToRun = [j.group(1) for j in samplesToRunTmp]
 
-  listFullDir = [i.split('/')[-1] for i in glob.glob(ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-barcode*-demultiplexed.fastq*')]
-  samplesToRunTmp = [re.search(RUNID+'-(.*)-demultiplexed.fastq', i) for i in listFullDir]
-  samplesToRun = [j.group(1) for j in samplesToRunTmp]
+  else:
+    samplesToRunTmp = [re.search('(.*)-normalised-reads-with*', i) for i in listFullDir]
+    # samplesToRun = [j.group(1) for j in samplesToRunTmp]
+    # TRIM_PATH+'/'+RUNID+'-'+sample+'-seqtk-trimfq.fastq'
+    # # for i in inputArgs.norm_fastq:
+    # for i in inputArgs.norm_fastq:
+    #   sampleToRunTmp = i.split('/-normalised-reads-with*')[0]
+    #   # samplesToRunTmp = re.search('(.*)-normalised-reads-with*', i)
+    #   shutil.copyfile(i, ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-'+sampleToRunTmp+'-seqtk-trimfq.fastq')
 
 with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
   for item in sorted(samplesToRun):
@@ -876,8 +887,8 @@ if (All or inputArgs.consensus):
       for manRef in inputArgs.manualRef:
         tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
         # mantmp = 
-        # mandf = pd.DataFrame.from_dict(tmp)
-        mandf = mandf.append(tmp, ignore_index=True).to_csv(manualList,header=False,index=False)
+        tmpdf = pd.DataFrame.from_dict(tmp)
+        mandf = mandf.append(tmpdf, ignore_index=True).to_csv(manualList,header=False,index=False)
         # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
