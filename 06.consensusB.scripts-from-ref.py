@@ -193,6 +193,8 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
     df1.columns = [', '.join(col).strip() for col in df1.columns.values]
+    df1['RUNID'] = snakemake.params.RUNID
+    df1['Sample'] = snakemake.params.sample
 
 
 if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) > 0:
@@ -211,6 +213,8 @@ if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) 
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
     df2.columns = [', '.join(col).strip() for col in df2.columns.values]
+    df2['RUNID'] = snakemake.params.RUNID
+    df2['Sample'] = snakemake.params.sample
 
 
 
@@ -230,7 +234,8 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     #         print(df_clean.loc[step, dta])
             df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
     df3.columns = [', '.join(col).strip() for col in df3.columns.values]
-
+    df3['RUNID'] = snakemake.params.RUNID
+    df3['Sample'] = snakemake.params.sample
 
 
 # with open(snakemake.input[3], 'r') as f:
@@ -246,18 +251,20 @@ df = pd.DataFrame()
 
 
 df = pd.DataFrame.from_dict(predf)
-df1['RUNID'] = snakemake.params.RUNID
-df2['RUNID'] = snakemake.params.RUNID
-df3['RUNID'] = snakemake.params.RUNID
-df1['Sample'] = snakemake.params.sample
-df2['Sample'] = snakemake.params.sample
-df3['Sample'] = snakemake.params.sample
 
 
-merged = pd.merge(df,df1,on=['RUNID','Sample'])
-merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
-merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
-
+if not df1.empty:
+    merged = pd.merge(df,df1,on=['RUNID','Sample'])
+else:
+    merged = df
+if not df2.empty:
+    merged2 = pd.merge(merged,df2,on=['RUNID','Sample'])
+else:
+    merged2 = merged
+if not df3.empty:
+    merged3 = pd.merge(merged2,df3,on=['RUNID','Sample'])
+else:
+    merged3 = merged2
 
 merged3.to_csv(snakemake.output[0], index = False)
 
