@@ -893,7 +893,7 @@ if (All or inputArgs.consensus):
         # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
-      tmp = pd.read_csv(manualList, names = ['ref','sample','target'])
+      tmp = pd.read_csv(manualList, names = ['sampe','ref','target'])
       blastedList = blastedList.append(tmp[['sample','ref','target']])
 
 
