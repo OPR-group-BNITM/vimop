@@ -169,6 +169,8 @@ rule stats_trim:
         TRIM_PATH+'/'+RUNID+'-{sample}-seqtk-trimfq.fastq'
     output:
         RESULTS+'/{sample}/01_trim/'+RUNID+'-{sample}-seqtk-trimfq-stats.txt'
+    conda:
+        'envs/general.yaml'
     shell:
         'seqkit stats {input} > {output}'
 
