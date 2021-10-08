@@ -277,7 +277,7 @@ tmp_cols.remove('RUNID')
 tmp_cols.remove('Sample')
 
 tmp_cols = ['RUNID','Sample'] + tmp_cols
-print(tmp_cols)
+# print(tmp_cols)
 merged3 = merged3[tmp_cols]
 
 merged3.to_csv(snakemake.output[0], index = False)
