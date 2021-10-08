@@ -232,8 +232,8 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     df_map = df_map.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
-    cols = array.insert(0,'Sample')
-    cols = array.insert(0,'RUNID')
+    cols = cols.insert(0,'Sample')
+    cols = cols.insert(0,'RUNID')
     df3 = pd.DataFrame(columns=cols)
     for tgt in tgts:
         for dta in data:
