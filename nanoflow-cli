@@ -958,7 +958,7 @@ if (inputArgs.keep_bam):
     if (inputArgs.manualRef):
       mandf = pd.DataFrame()
       for manRef in inputArgs.manualRef:
-        tmp = {'sample': sample, 'ref': manRef, 'target': 'Manual reference'}
+        tmp = {'sample': [sample], 'ref': [manRef], 'target': ['Manual reference']}
         # mantmp = 
         tmpdf = pd.DataFrame.from_dict(tmp)
         mandf = mandf.append(tmpdf, ignore_index=True)
@@ -968,7 +968,7 @@ if (inputArgs.keep_bam):
         # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
-      tmp = pd.read_csv(manualList, names = ['ref','sample','target'])
+      tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
       blastedList = blastedList.append(tmp[['sample','ref','target']])
 
 
