@@ -187,8 +187,8 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
     df_clean = df_clean.set_index('col')
 
     cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
-    cols = array.insert(0,'Sample')
-    cols = array.insert(0,'RUNID')
+    cols = cols.insert(0,'Sample')
+    cols = cols.insert(0,'RUNID')
     df1 = pd.DataFrame(columns=cols)
     for col in name_cols:
         for dta in data:
@@ -209,8 +209,8 @@ if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) 
     df_map_stats = df_map_stats.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
-    cols = array.insert(0,'Sample')
-    cols = array.insert(0,'RUNID')
+    cols = cols.insert(0,'Sample')
+    cols = cols.insert(0,'RUNID')
     df2 = pd.DataFrame(columns=cols)
     for tgt in tgts:
         for dta in data:
