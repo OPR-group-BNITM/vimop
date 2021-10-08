@@ -272,7 +272,7 @@ if not df3.empty:
 else:
     merged3 = merged2
 
-tmp_cols = merged3.columns.values
+tmp_cols = list(merged3.columns.values)
 tmp_cols.remove('RUNID')
 tmp_cols.remove('Sample')
 
