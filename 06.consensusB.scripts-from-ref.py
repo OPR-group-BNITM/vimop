@@ -187,14 +187,16 @@ if os.path.exists(snakemake.input[3]) and os.path.getsize(snakemake.input[3]) > 
     df_clean = df_clean.set_index('col')
 
     cols = pd.MultiIndex.from_product([['Clean'], name_cols,data], sortorder=None)
+    cols = array.insert(0,'Sample')
+    cols = array.insert(0,'RUNID')
     df1 = pd.DataFrame(columns=cols)
     for col in name_cols:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df1['Clean',col,dta] = pd.Series(df_clean.loc[col,dta])
     df1.columns = [', '.join(col).strip() for col in df1.columns.values]
-    df1['RUNID'] = snakemake.params.RUNID
-    df1['Sample'] = snakemake.params.sample
+    # df1['RUNID'] = snakemake.params.RUNID
+    # df1['Sample'] = snakemake.params.sample
 
 
 if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) > 0:
@@ -207,14 +209,16 @@ if os.path.exists(snakemake.input[10]) and os.path.getsize(snakemake.input[10]) 
     df_map_stats = df_map_stats.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Mapped reads'],tgts,data], sortorder=None)
+    cols = array.insert(0,'Sample')
+    cols = array.insert(0,'RUNID')
     df2 = pd.DataFrame(columns=cols)
     for tgt in tgts:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df2['Mapped reads',tgt,dta] = pd.Series(df_map_stats.loc[tgt,dta])
     df2.columns = [', '.join(col).strip() for col in df2.columns.values]
-    df2['RUNID'] = snakemake.params.RUNID
-    df2['Sample'] = snakemake.params.sample
+    # df2['RUNID'] = snakemake.params.RUNID
+    # df2['Sample'] = snakemake.params.sample
 
 
 
@@ -228,14 +232,16 @@ if os.path.exists(snakemake.input[4]) and os.path.getsize(snakemake.input[4]) > 
     df_map = df_map.set_index('target')
 
     cols = pd.MultiIndex.from_product([['Mapped contigs'],tgts,data], sortorder=None)
+    cols = array.insert(0,'Sample')
+    cols = array.insert(0,'RUNID')
     df3 = pd.DataFrame(columns=cols)
     for tgt in tgts:
         for dta in data:
     #         print(df_clean.loc[step, dta])
             df3['Mapped contigs',tgt,dta] = pd.Series(df_map.loc[tgt,dta])
     df3.columns = [', '.join(col).strip() for col in df3.columns.values]
-    df3['RUNID'] = snakemake.params.RUNID
-    df3['Sample'] = snakemake.params.sample
+    # df3['RUNID'] = snakemake.params.RUNID
+    # df3['Sample'] = snakemake.params.sample
 
 
 # with open(snakemake.input[3], 'r') as f:
