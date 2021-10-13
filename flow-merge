@@ -1,0 +1,7 @@
+#! /bin/bash
+
+echo "Usage: 
+flow-merge fastq1_R1 fastq1_R2 fastq2_R1 fastq2_R2 new_name"
+
+cat $1 $3 > ${5}_R1.fastq.gz
+cat $2 $4 > ${5}_R2.fastq.gz
