@@ -4,6 +4,46 @@ nextflow.enable.dsl = 2
 include { fastq_ingress } from './lib/ingress'
 
 
+process trim {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("demultiplexed.fastq")
+    output:
+        tuple val(meta), path("trimmed.fastq")
+    """
+    seqtk trimfq -b 30 -e 30 demultiplexed.fastq > trimmed.fastq
+    """
+}
+
+
+process seqtk_stats {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("seqs.fastq")
+    output:
+        tuple val(meta), path("stats.txt")
+    """
+    seqkit stats seqs.fastq > stats.txt
+    """
+}
+
+
+process fastqc {
+    label "opr_general"
+    cpus 4
+    input:
+        tuple val(meta), path("seqs.fastq")
+    output:
+        tuple val(meta), path("fastqc")
+    """
+    mkdir -p fastqc
+    fastqc -q -t ${task.cpus} -o fastqc seqs.fastq 
+    """
+}
+
+
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
 // publish files from a workflow whilst decoupling the publish from the process steps.
 // The process takes a tuple containing the filename and the name of a sub-directory to
@@ -30,39 +70,41 @@ process output {
 workflow pipeline {
     take:
         samples
-        reference
-        blastdb
-        nextclade_data
     main:
-        // TODO
-        // alignment = alignReads(samples.map{ meta, reads, stats -> [ meta,reads ] }, reference)
+        trimmed_files = trim(samples.map{meta, reads, stats -> [meta, reads]})
+        trim_stats = seqtk_stats(trimmed_files)
+        trim_fastqc = fastqc(trimmed_files)
 
+        // add stats to ch_to_publish
+        ch_to_publish = Channel.empty()
+        | mix(
+            trim_stats | map {meta, stats -> [stats, "$meta.alias/trim_stats"]},
+            trim_fastqc | map {meta, fastqc -> [fastqc, "$meta.alias/trim_stats"]},
+        )
     emit: 
         results = ch_to_publish
-}    
+}
 
 
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
 workflow {
-
     Pinguscript.ping_start(nextflow, workflow, params)
-
     samples = fastq_ingress([
         "input": params.fastq,
         "stats": true,
         "sample_sheet": params.sample_sheet
     ])
-
     // print the output samples
     samples.view {
-        sample->
+        sample ->
         println "${sample[0].barcode} ${sample[0].type} ${sample[0].run_ids} ${sample[0].alias}\n${sample[1]}\n${sample[2]}"
     }
-
-    // TODO
-    // Run a workflow
-    // publish data to output directory
+    pipeline(samples)
+    pipeline.out.results
+    | toList
+    | flatMap
+    | output
 }
 
 workflow.onComplete {
