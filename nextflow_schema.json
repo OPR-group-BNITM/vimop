@@ -1,0 +1,253 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
+    "title": "epi2me-labs/wf-flu",
+    "workflow_title": "Influenza Typing Workflow",
+    "description": "Influenza A&B typing and analysis from Nanopore data.",
+    "demo_url": "",
+    "aws_demo_url": "",
+    "url": "",
+    "type": "object",
+    "resources": {
+        "recommended": {
+            "cpus": 32,
+            "memory": "32GB"
+        },
+        "minimum": {
+            "cpus": 4,
+            "memory": "2GB"
+        },
+        "run_time": "30 minutes when number of cores >= samples",
+        "arm_support": false
+    },
+    "definitions": {
+        "input": {
+            "title": "Input Options",
+            "type": "object",
+            "fa_icon": "fas fa-arrow-right",
+            "description": "Parameters for finding and handling input data for analysis.",
+            "properties": {
+                "fastq": {
+                    "type": "string",
+                    "title": "FASTQ",
+                    "format": "path",
+                    "description": "FASTQ files to use in the analysis.",
+                    "help_text": "This accepts one of three cases: (i) the path to a single FASTQ file; (ii) the path to a top-level directory containing FASTQ files; (iii) the path to a directory containing one level of sub-directories which in turn contain FASTQ files. In the first and second case, a sample name can be supplied with `--sample`. In the last case, the data is assumed to be multiplexed with the names of the sub-directories as barcodes. In this case, a sample sheet can be provided with `--sample_sheet`."
+                },
+                "basecaller_cfg": {
+                    "type": "string",
+                    "title": "Basecaller model configuration",
+                    "description": "Name of the model that was used to basecall signal data, used to select an appropriate Medaka model.",
+                    "help_text": "The basecaller configuration is used to automatically select the appropriate Medaka model. The automatic selection can be overridden with the 'medaka_variant_model' and 'medaka_consensus_model' parameters. The model list only shows models that are compatible with this workflow.",
+                    "default": "dna_r10.4.1_e8.2_400bps_hac",
+                    "enum": [
+                        "dna_r10.4.1_e8.2_400bps_hac@v3.5.2",
+                        "dna_r10.4.1_e8.2_400bps_sup@v3.5.2",
+                        "dna_r9.4.1_e8_fast@v3.4",
+                        "dna_r9.4.1_e8_hac@v3.3",
+                        "dna_r9.4.1_e8_sup@v3.3",
+                        "dna_r10.4.1_e8.2_400bps_hac_prom",
+                        "dna_r9.4.1_450bps_hac_prom",
+                        "dna_r10.3_450bps_hac",
+                        "dna_r10.3_450bps_hac_prom",
+                        "dna_r10.4.1_e8.2_260bps_hac",
+                        "dna_r10.4.1_e8.2_260bps_hac_prom",
+                        "dna_r10.4.1_e8.2_400bps_hac",
+                        "dna_r9.4.1_450bps_hac",
+                        "dna_r9.4.1_e8.1_hac",
+                        "dna_r9.4.1_e8.1_hac_prom"
+                    ]
+                },
+                "analyse_unclassified": {
+                    "type": "boolean",
+                    "title": "Analyse unclassified reads",
+                    "default": false,
+                    "description": "Analyse unclassified reads from input directory. By default the workflow will not process reads in the unclassified directory.",
+                    "help_text": "If selected and if the input is a multiplex directory the workflow will also process the unclassified directory."
+                }
+            },
+            "allOf": [
+                {
+                    "required": [
+                        "fastq"
+                    ]
+                },
+                {
+                    "oneOf": [
+                        {
+                            "required": [
+                                "basecaller_cfg"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "medaka_consensus_model"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "samples": {
+            "title": "Sample Options",
+            "type": "object",
+            "fa_icon": "fas fa-vials",
+            "description": "Parameters that relate to samples such as sample sheets and sample names.",
+            "properties": {
+                "sample_sheet": {
+                    "type": "string",
+                    "title": "Sample sheet",
+                    "format": "file-path",
+                    "description": "A CSV file used to map barcodes to sample aliases. The sample sheet can be provided when the input data is a directory containing sub-directories with FASTQ files.",
+                    "help_text": "The sample sheet is a CSV file with, minimally, columns named `barcode` and `alias`. Extra columns are allowed. A `type` column is required for certain workflows and should have the following values; `test_sample`, `positive_control`, `negative_control`, `no_template_control`."
+                }
+            }
+        },
+        "output": {
+            "title": "Output Options",
+            "type": "object",
+            "fa_icon": "fas fa-arrow-left",
+            "description": "Parameters for saving and naming workflow outputs.",
+            "properties": {
+                "out_dir": {
+                    "type": "string",
+                    "title": "Output directory",
+                    "default": "output",
+                    "format": "directory-path",
+                    "description": "Directory for output of all workflow results."
+                }
+            }
+        },
+        "advanced_options": {
+            "title": "Advanced Options",
+            "type": "object",
+            "fa_icon": "far fa-question-circle",
+            "description": "Advanced options for configuring processes inside the workflow.",
+            "help_text": "These advanced options do not need to be changed for typical use, but allow fine tuning of workflows for users who want more control over the workflow.",
+            "properties": {
+                "reference": {
+                    "type": "string",
+                    "title": "Reference FASTA",
+                    "format": "file-path",
+                    "description": "Enter the full path to a custom reference genome you would like to use.",
+                    "help_text": "The workflow defaults to the IRMA consensus reference. This option allows you to specify a path to an alternative reference."
+                },
+                "blastdb": {
+                    "type": "string",
+                    "title": "Typing BLAST Database",
+                    "format": "file-path",
+                    "description": "blastdb file used for typing.",
+                    "help_text": "The workflow provides the INSaFLU blastdb. If you would like to supply an alternative then provide the full path to the file here."
+                },
+                "min_coverage": {
+                    "type": "integer",
+                    "title": "Minimum depth coverage",
+                    "description": "Coverage threshold for masking bases in the consensus.",
+                    "help_text": "Any bases that are covered below 20x are masked (i.e. represented by 'N') by default in the consensus, this threshold can be changed using this parameter.",
+                    "minimum": 0,
+                    "default": 20
+                },
+                "min_qscore": {
+                    "type": "number",
+                    "title": "Minimum read Q-score",
+                    "description": "Minimum read quality score for fastcat.",
+                    "help_text": "Any reads which are below quality score of 9 are not used by default. This parameter allows you to customise that. For more information on quality scores please see this blog post: https://labs.epi2me.io/quality-scores",
+                    "minimum": 0,
+                    "default": 9
+                },
+                "downsample": {
+                    "type": "integer",
+                    "title": "Downsampling read threshold",
+                    "description": "Number of reads to downsample to in each direction, leave blank for no downsampling.",
+                    "help_text": "The workflow for each segment will first filter reads to include only those that are ±10% of the segment length before downsampling to the specified integer (taking an even split from forward and reverse reads). This downsampled data is then used in variant calling.",
+                    "minimum": 2
+                },
+                "medaka_consensus_model": {
+                    "type": "string",
+                    "title": "Medaka consensus model",
+                    "description": "The name of a Medaka model to use. By default the workflow will select an appropriate Medaka model from the basecaller configuration provided. Entering a name here will override the automated selection and use the Medaka model named here.",
+                    "help_text": "The workflow will attempt to map the basecalling model used to a suitable Medaka consensus model. You can override this by providing a model with this option instead."
+                },
+                "rbk": {
+                    "type": "boolean",
+                    "title": "rbk",
+                    "description": "Set when using data created with the RBK protocol.",
+                    "help_text": "This prevents shorter reads being filtered out and also turns off downsampling as this is not appropriate for the shorter reads generated with RBK.",
+                    "default": false
+                }
+            }
+        },
+        "misc": {
+            "title": "Miscellaneous Options",
+            "type": "object",
+            "description": "Everything else.",
+            "default": "",
+            "properties": {
+                "disable_ping": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable to prevent sending a workflow ping."
+                },
+                "help": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Display help text.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": true
+                },
+                "version": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Display version and exit.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": true
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/input"
+        },
+        {
+            "$ref": "#/definitions/samples"
+        },
+        {
+            "$ref": "#/definitions/output"
+        },
+        {
+            "$ref": "#/definitions/advanced_options"
+        },
+        {
+            "$ref": "#/definitions/misc"
+        }
+    ],
+    "properties": {
+        "aws_image_prefix": {
+            "type": "string",
+            "hidden": true
+        },
+        "aws_queue": {
+            "type": "string",
+            "hidden": true
+        },
+        "_reference": {
+            "type": "string",
+            "hidden": true
+        },
+        "_blastdb": {
+            "type": "string",
+            "hidden": true
+        },
+        "monochrome_logs": {
+            "type": "boolean"
+        },
+        "validate_params": {
+            "type": "boolean",
+            "default": true
+        },
+        "show_hidden_params": {
+            "type": "boolean"
+        }
+    }
+}
