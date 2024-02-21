@@ -32,9 +32,6 @@ last_step = SPEC2[-1]
 
 
 for sample in SAMPLES:
-    # print(TRIM_PATH+'/'+RUNID+'-'+sample+'_seqtk_trimfq.fastq')
-    # print(CLEAN_PATH + '/' + RUNID+'-'+sample+'-pre_'+first_step+'.fastq')
-    # os.mkdir(CLEAN_PATH + '/'+sample, mode = 0o777)
     os.makedirs(CLEAN_PATH + '/'+sample, exist_ok=True)
     os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/', exist_ok=True)
     copyfile(TRIM_PATH+'/'+RUNID+'-'+sample+'-seqtk-trimfq.fastq', CLEAN_PATH + '/'+sample+'/' + RUNID+'-'+sample+'-pre_'+first_step+'.fastq')
@@ -58,28 +55,17 @@ for step in SPEC2:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-pre_'+next_step+'.fastq')
         else:
             copyfile(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'.fastq', CLEAN_PATH + '/' + sample+ '/' + RUNID+'-'+sample+'-cleaned.fastq')
-            # os.system('')
 for sample in SAMPLES:
     stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
     i = 0
-
-    # print(i)
     for step in SPEC2:
         stat_file = open(CLEAN_PATH + '/' + sample+ '/' +step+'/' + RUNID+'-'+sample+'-no-'+step+'-stats.txt','r')
         lines = stat_file.readlines()
-        # stats = pd.DataFrame(, data=(re.sub(',','',lines[1])).split()[3:8])
         if "FAST" in lines[1]:
             stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
-        # print(i)
         if i == 0:
             stats['step'] = SPEC[i]
         else:
             stats['step'].iloc[-1] = SPEC[i]
-        # print(SPEC)
-        # print(i)
         i+=1
     stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/02_clean/' + RUNID+'-'+sample+'-clean-stats.txt', index=False)
-
-
-    # rmtree(CLEAN_PATH + '/' + sample+ '/' +step)
-

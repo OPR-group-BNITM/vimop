@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 
-
 ### Requirements: snakemake
-
-
-
-
-
 ###################################################################################################
-
 
 import os
 os.environ['ANSIBLE_FORCE_COLOR'] = "TRUE"
@@ -26,31 +19,16 @@ import pandas as pd
 import shutil
 import gzip
 from Bio import SeqIO
-
-
-
-# import shlex
-# from StringIO import StringIO
 import threading
 
 scriptPath = os.path.dirname(os.path.abspath(__file__))
 print(scriptPath)
 home = str(Path.home())
 All = False
-# currentPath = 
 nowTime = datetime.datetime.now().strftime('%Y.%m.%d-%Hh%Mm%Ss')
 nowTimeDay = datetime.datetime.now().strftime('%Y.%m.%d')
-
 myPlatform = platform.system()
-# GPU = GPUtil.getGPUs()
-# ALL = True
-# TRIM = False
-# CLEAN= False
-# MAP = False
-# ASSEMBLE = False
-# CONSENSUS = False
 
-# manualRef = []
 def output_reader(proc):
     for line in iter(proc.stdout.readline, b''):
         print('got line: {0}'.format(line.decode('utf-8')), end='')
@@ -88,21 +66,6 @@ optionalArgs.add_argument('-cov','-covLimit', action='store', dest='covLimit', n
 optionalArgs.add_argument('--keep_bam', action='store_true', dest='keep_bam', help='Generate the bam files, MUST be used while specifying sample with -s and ref with --ref')
 optionalArgs.add_argument('--norm_fastq', action='store', dest='norm_fastq', nargs='*', type=str, help='Take a (list of) trimmed fastq file(s) as input for the pipeline. Intended to be used after normalisation')
 
-
-# optionalArgs.add_argument('--cpu', action='store_true', help='Run demultiplexing on CPU, default: GPU')
-# optionalArgs.add_argument('--mac', action='store_true', help='Run on a mac')
-
-# In [3]: import platform
-#    ...: platform.system()
-# Out[3]: 'Linux'
-
-# analysisArgs = parser.add_argument_group('Analysis arguments')
-# analysisArgs.add_argument('--classify', action='store_true', help='Classification with centrifuge')
-# analysisArgs.add_argument('--coverage', action='store_true', help='Coverage image')
-# analysisArgs.add_argument('--readlength', action='store_true', help='Read length images')
-
-
-
 inputArgs = parser.parse_args()
 
 if (inputArgs.label):
@@ -113,12 +76,6 @@ else:
 
 ANALYSIS_FOLDER = inputArgs.outputFolder + '/' + RUNID + '_ANALYSIS'
 os.makedirs(ANALYSIS_FOLDER,exist_ok=True)
-
-
-# root_directory = Path(inputArgs.outputFolder)
-# sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
-
-# print(cleanOpts)
 
 cleanOpts = re.sub('human','human_rna,human_dna',((',').join(inputArgs.cleanOptions)))
 cleanOpts = re.sub('reagents','reagent',cleanOpts)
@@ -215,13 +172,6 @@ if (inputArgs.demultiplex):
   fastqdirs = [item for sublist in fastqdirs for item in sublist]
   for fastqdir in fastqdirs:
     print(fastqdir)
-    # if (not GPU):
-    #   guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:]) + '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes  --barcode_kits "'+ (' ').join(inputArgs.barcodeKit) + '"'
-      
-    #   with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-    #       for line in p.stdout:
-    #           logger.info(line.rstrip()) 
-    # else:
     guppy_command = 'guppy_barcoder -r -i ' + fastqdir + ' -x auto -s '+ ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/' + ('-').join(fastqdir.split('/')[-2:])+ '  --compress_fastq --trim_barcodes --require_barcodes_both_ends --detect_mid_strand_barcodes --barcode_kits "'+ (' ').join(inputArgs.barcodeKit)+ '"'
     with subprocess.Popen(guppy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
@@ -244,10 +194,6 @@ if (inputArgs.demultiplex):
               with open(fname) as infile:
                 for line in infile:
                   outfile.write(line)
-      # rm_command = 'mv '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i+'/*fastq.gz '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+RUNID+'-'+i+'-demultiplexed.fastq.gz && rm -r '+ANALYSIS_FOLDER + '/' + RUNID + '-01-demultiplex/'+i
-      # subprocess.run(mv_command, shell = True)
-
-
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
@@ -305,9 +251,6 @@ with open(ANALYSIS_FOLDER+'/table.csv', 'w+') as f:
 
 if (All or inputArgs.trim):
 
- 
-
-
   trim_log_file = ANALYSIS_FOLDER+'/'+RUNID+'_RESULTS/logfiles/trim-'+nowTime+'.log'
   logger.info('Trim')
   logger.info('Trim log file: '+trim_log_file)
@@ -331,13 +274,9 @@ if (All or inputArgs.trim or inputArgs.classify):
   trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --use-conda --conda-prefix '+home+'/opt/iflow \
   --cores  '+ str(inputArgs.threads)
-# --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-02-trim/'+RUNID+'-{sample}-seqtk-trimfq.fastq \
-#   outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/01_trim/classification tag=trimmed 
   with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True, bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip()) 
-
-
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
@@ -361,24 +300,6 @@ if (All or inputArgs.clean):
   with subprocess.Popen(clean_script_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip())
-
-
-  # logger.info("Centrifuge environment file:")
-  # with open(scriptPath + '/envs/centrifuge.yaml', 'r') as f:
-  #   lines = f.readlines() 
-  #   for line in lines:
-  #     logger.info(''.join(line.split()))  
-  # trim_classify_command = 'snakemake --snakefile '+scriptPath+'/ana/classification.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config input='+ANALYSIS_FOLDER + '/' + RUNID + '-03-clean/{sample}/'+ RUNID+'-{sample}-cleaned.fastq \
-  # outdir='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/{sample}/03_clean/classification tag=cleaned --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads) 
-
-  # with subprocess.Popen(trim_classify_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
-  #     for line in p.stdout:
-  #         logger.info(line.rstrip()) 
-
-
-
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
@@ -414,8 +335,6 @@ if (All or inputArgs.map):
       for line in lines:
         logger.info(''.join(line.split()))
 
-    
-
     df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
     stats = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len'])
 
@@ -424,8 +343,6 @@ if (All or inputArgs.map):
     for sample in SAMPLES:
       for target in TARGETS:
         logger.info(sample+ ': Assembly of '+target+' mapped reads with canu')
-        # map_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target
-        # os.mkdir(map_dir)
         os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target,exist_ok=True)
         canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/canu-attempts.tsv'
         Path(canuAttemps_file).touch()
@@ -435,7 +352,6 @@ if (All or inputArgs.map):
           data = {'Attempt number':[0], 'Status':['failed']}
           canuAttempts = pd.DataFrame(data)
 
-        # logger.info('Starting with: '+str(canuAttempts['Attempt number'].iloc[-1]))
         while (canuAttempts['Status'].iloc[-1] != 'success' and not canuAttempts['Attempt number'].iloc[-1] == 4):
           lastAttempt = int(canuAttempts['Attempt number'].iloc[-1])
           lastAttemptStatus = canuAttempts['Status'].iloc[-1]
@@ -573,18 +489,11 @@ if (All or inputArgs.map):
                   sequences = SeqIO.parse(input_handle, "fastq")
                   count = SeqIO.write(sequences, output_handle, "fasta")
 
-# print("Converted %i records" % count)
-
-              # shutil.copyfile(,contigsFile)
             shutil.copyfile(contigsFile, ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta')
 
             Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-'+target+'/'+RUNID+'-'+sample+'-'+target+'-canu-contigs.fasta').touch()
-              
-              # break
-        # break
-      logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
-        
 
+      logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
 
     logger.info('Map: post-assembly')
 
@@ -596,7 +505,6 @@ if (All or inputArgs.map):
     with subprocess.Popen(map_scriptC_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
       for line in p.stdout:
           logger.info(line.rstrip())
-    # logger.info('Open file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt')
 
     df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
     SAMPLES = df['sample']
@@ -606,8 +514,6 @@ if (All or inputArgs.map):
       stats_mapped_contigs = pd.DataFrame(columns=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len','target'])
 
       for target in TARGETS:
-        #Statistics on the mapped reads
-        # print(sample)
         if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') and os.path.getsize(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt') > 0:
           stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-mapped-stats.txt','r')
           lines = stat_file.readlines()
@@ -624,17 +530,12 @@ if (All or inputArgs.map):
           stats_mapped_contigs = stats_mapped_contigs.append(tmp, ignore_index=True)
           stat_file.close()
 
-
-
       if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt'):
         os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt')
       stats_mapped.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-stats-all-targets.txt', index=False)
       if os.path.exists(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt'):
         os.remove(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt')
       stats_mapped_contigs.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-canu-mapped-assembly-stats-all-targets.txt', index=False)
-# logger.info('Write file: '+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt')
-
-
 
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
@@ -662,7 +563,6 @@ if (All or inputArgs.assemble):
     for line in p.stdout:
         logger.info(line.rstrip())
 
-
   if ('canu' in inputArgs.assembler):
     logger.info("Canu environment file:")
 
@@ -670,16 +570,11 @@ if (All or inputArgs.assemble):
       lines = f.readlines() 
       for line in lines:
         logger.info(''.join(line.split()))
-
-    
-
     df = pd.read_csv(ANALYSIS_FOLDER + '/table.csv', names = ['sample'])
     SAMPLES = df['sample']
     TARGETS = (',').join(inputArgs.targetPathogen).split(',')
     for sample in SAMPLES:
       logger.info(sample+ ': Assembly with canu')
-      # assemble_dir = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble'
-      # os.mkdir(assemble_dir)
       os.makedirs(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble',exist_ok=True)
       canuAttemps_file = ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/canu-attempts.tsv'
       Path(canuAttemps_file).touch()
@@ -708,7 +603,6 @@ if (All or inputArgs.assemble):
           with subprocess.Popen(canu_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True,bufsize=1, universal_newlines=True) as p:
             for line in p.stdout:
               logger.info(line.rstrip())
-
 
           contigsFile = ANALYSIS_FOLDER + '/' + RUNID + '-05-assemble' + '/'+sample+'/02_assemble-canu-'+str(lastAttempt)+'/' + RUNID+'-'+sample+'.contigs.fasta'
           if os.path.exists(contigsFile) and os.path.getsize(contigsFile) > 0:
@@ -758,7 +652,6 @@ if (All or inputArgs.assemble):
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
 
-
         if (lastAttempt == 3):
           logger.info('Running attempt number 3')
 
@@ -790,7 +683,6 @@ if (All or inputArgs.assemble):
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
 
-
         if (lastAttempt == 4):
           logger.info('Running attempt number 4')
 
@@ -821,13 +713,7 @@ if (All or inputArgs.assemble):
             canufile = open(canuAttemps_file, 'w+')
             canufile.write(str(lastAttempt)+'\tfailed')
             canufile.close()
-            # Path('contigsFile').touch()
             Path(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/04_assemble/'+RUNID+'-'+sample+'-'+'canu-contigs.fasta').touch()
-
-
-        # logger.info('Finishing attempt: '+str(canuAttempts['Attempt number'].iloc[-1]))
-      
-
 
     logger.info('Assemble: post-assembly')
     assemble_scriptC_command = 'snakemake --snakefile '+scriptPath+'/05.assembleC-postassembly.snakefile \
@@ -838,14 +724,6 @@ if (All or inputArgs.assemble):
       for line in p.stdout:
           logger.info(line.rstrip())
 
-    #   stat_file = open(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/' + sample +'/03_map-'+ target +  '/'+RUNID+'-'+sample+'-'+target+'-canu-mapped-assembly-stats.txt','r')
-    #   lines = stat_file.readlines()
-    #   stats = stats.append(pd.Series((re.sub(',','',lines[1])).split()[3:8], index=['num_seqs', 'sum_len', 'min_len', 'avg_len','max_len']), ignore_index=True)
-    #   stat['target']= target
-
-    # stats.to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+sample+'/03_map-' + RUNID+'-'+sample+'-mapped-assembly-stats.txt', index=False)
-
-  
   fileHandler = logging.FileHandler(analysis_log_file)
   fileHandler.setFormatter(logFormatter)
   logger.addHandler(fileHandler)
@@ -889,19 +767,14 @@ if (All or inputArgs.consensus):
       mandf = pd.DataFrame()
       for manRef in inputArgs.manualRef:
         tmp = {'sample': [sample], 'ref': [manRef], 'target': ['Manual reference']}
-        # mantmp = 
         tmpdf = pd.DataFrame.from_dict(tmp)
         mandf = mandf.append(tmpdf, ignore_index=True)
       mandf.to_csv(manualList,header=False,index=False)
-        # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
       tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
       blastedList = blastedList.append(tmp[['sample','ref','target']])
 
-
-
-                # blastedList = blastedList.append(tmp,ignore_index=True)  
   blastedList.drop_duplicates(inplace = True) 
   blastedList[['sample','ref','target']].to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
 
@@ -920,10 +793,6 @@ if (All or inputArgs.consensus):
       for line in p.stdout:
           logger.info(line.rstrip()) 
 
-
-  # consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
-  # --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' --use-conda --conda-prefix '+home+'/opt/iflow \
-  # --cores '+ str(inputArgs.threads) 
   consensus_command = 'snakemake --snakefile '+scriptPath+'/06.consensusC.merge.snakefile \
   --configfile '+ANALYSIS_FOLDER+'/config.yaml --config blastlist='+ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv steps='+cleanOpts+' \
   --cores '+ str(inputArgs.threads) 
@@ -959,19 +828,13 @@ if (inputArgs.keep_bam):
       mandf = pd.DataFrame()
       for manRef in inputArgs.manualRef:
         tmp = {'sample': [sample], 'ref': [manRef], 'target': ['Manual reference']}
-        # mantmp = 
         tmpdf = pd.DataFrame.from_dict(tmp)
         mandf = mandf.append(tmpdf, ignore_index=True)
         mandf.to_csv(manualList,header=False,index=False)
-        # mandf = pd.DataFrame.from_dict(tmp)
-        # mandf = mandf.append(tmp, ignore_index=True).to_csv(manualList,header=False,index=False)
-        # mandf[['sample','ref','target']]
 
     if os.path.exists(manualList) and os.path.getsize(manualList) > 0:
       tmp = pd.read_csv(manualList, names = ['sample','ref','target'])
       blastedList = blastedList.append(tmp[['sample','ref','target']])
-
-
 
   blastedList.drop_duplicates(inplace = True) 
   blastedList[['sample','ref','target']].to_csv(ANALYSIS_FOLDER + '/' + RUNID + '_RESULTS/'+RUNID+'-all-blasted-list.csv', header=False,index=False)
@@ -999,16 +862,3 @@ logger.info('Analysis finished')
   ###################################################################################################################################################################
 
 exit()
-
-
-
-
-
-
-
-
-
-
-# exit()
-
-
