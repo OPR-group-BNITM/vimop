@@ -73,6 +73,25 @@ process classify_centrifuge {
 }
 
 
+process map_contaminants {
+    label "opr_clean"
+    cpus 4
+    input:
+        // TODO: 
+        tuple path('database.fasta.gz'), path('seqs.fastq')
+    output:
+        tuple path('mapped.sam')
+    """
+    minimap2 \
+        -x map-ont \
+        -a database.fasta.gz \
+        -t ${task.cpus} \
+        -o mapped.sam \
+        seqs.fastq
+    """
+}
+
+
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
 // publish files from a workflow whilst decoupling the publish from the process steps.
 // The process takes a tuple containing the filename and the name of a sub-directory to
