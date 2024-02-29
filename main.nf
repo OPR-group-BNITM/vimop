@@ -73,21 +73,36 @@ process classify_centrifuge {
 }
 
 
-process map_contaminants {
+process filter_contaminants {
     label "opr_clean"
     cpus 4
     input:
-        // TODO: 
-        tuple path('database.fasta.gz'), path('seqs.fastq')
+        tuple val(meta), path('seqs.fastq'), path('db.fna.gz'), val(i)
     output:
-        tuple path('mapped.sam')
+        tuple val(meta), path('filtered.fastq'), val(i)
     """
     minimap2 \
         -x map-ont \
-        -a database.fasta.gz \
+        -a db.fna.gz \
         -t ${task.cpus} \
-        -o mapped.sam \
-        seqs.fastq
+        seqs.fastq \
+    | samtools fastq \
+        -f 4 \
+        --reference db.fna.gz \
+        -1 filtered.fastq -2 filtered.fastq -0 filtered.fastq -s filtered.fastq -n
+    """
+}
+
+
+process filter_stats {
+    label "opr_clean"
+    cpus 1
+    input:
+        tuple val(meta), path("seqs.fastq"), val(last_contaminant)
+    output:
+        tuple val(meta), path("stats.txt"), val(last_contaminant)
+    """
+    seqkit stats seqs.fastq > stats.txt
     """
 }
 
@@ -103,12 +118,14 @@ process output {
     publishDir (
         params.out_dir,
         mode: "copy",
-        saveAs: { dirname ? "$dirname/$fname" : fname }
+        saveAs: { 
+            dirname ? (fname_out ? "$dirname/$fname_out" : "$dirname/$fname_in") : fname_in
+        }
     )
     input:
-        tuple path(fname), val(dirname)
+        tuple path(fname_in), val(dirname), val(fname_out)
     output:
-        path fname
+        path(fname_in)
     """
     """
 }
@@ -124,21 +141,37 @@ workflow pipeline {
         trim_stats = seqtk_stats(trimmed)
         trim_fastqc = fastqc(trimmed)
 
-        to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral', 'hpvc')))
+        // metagenomic read classification with centrifuge
+        // to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral', 'hpvc')))
+        to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral')))
         classification = classify_centrifuge(to_classify)
+
+        // contaminant filtering
+        cleaning_candidates = trimmed.combine([0])
+        // // TODO: branch instead?
+        to_be_cleaned = cleaning_candidates.filter {meta, fastq, i -> i < params.contamination_filters.size()}
+        cleaned_complete = cleaning_candidates.filter {meta, fastq, i -> i >= params.contamination_filters.size()}
+        cleaned = filter_contaminants(
+            to_be_cleaned.map{meta, fastq, i -> [meta, fastq, params.contamination_databases[params.contamination_filters[0]], i]}
+        )
+        cleaned.map{meta, fastq, i -> [meta, fastq, i+1]}.into(cleaning_candidates)
+        clean_stats = filter_stats(cleaned.map{meta, fastq, i -> [meta, fastq, params.contamination_filters[0]]})
+
+        // TODO:
+        // cleaned to export?
+        // stats to export -> collect to one .csv?
 
         // define output
         ch_to_publish = Channel.empty()
         | mix(
-            trim_stats | map {meta, stats -> [stats, "$meta.alias/trim_stats"]},
-            trim_fastqc | map {meta, fastqc -> [fastqc, "$meta.alias/trim_stats"]},
-            classification | map {meta, classification, report, kraken, html -> [classification, "$meta.alias/classification"]},
-            classification | map {meta, classification, report, kraken, html -> [report, "$meta.alias/classification"]},
-            classification | map {meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification"]},
-            classification | map {meta, classification, report, kraken, html -> [html, "$meta.alias/classification"]},
+            trim_stats | map {meta, stats -> [stats, "$meta.alias/trim_stats", null]},
+            trim_fastqc | map {meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null]},
+            classification | map {meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null]},
+            classification | map {meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null]},
+            classification | map {meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null]},
+            classification | map {meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null]},
+            clean_stats | map {meta, stats, step -> [stats, "$meta.alias/clean", "${step}_stats.txt"]},
         )
-
-        // TODO cleaning
 
     emit: 
         results = ch_to_publish
