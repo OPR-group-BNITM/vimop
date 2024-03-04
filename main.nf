@@ -77,32 +77,43 @@ process filter_contaminants {
     label "opr_clean"
     cpus 4
     input:
-        tuple val(meta), path('seqs.fastq'), path('db.fna.gz'), val(i)
+        tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
-        tuple val(meta), path('filtered.fastq'), val(i)
+        tuple val(meta), path('seqs.fastq'), path('stats.csv')
     """
-    minimap2 \
-        -x map-ont \
-        -a db.fna.gz \
-        -t ${task.cpus} \
-        seqs.fastq \
-    | samtools fastq \
-        -f 4 \
-        --reference db.fna.gz \
-        -1 filtered.fastq -2 filtered.fastq -0 filtered.fastq -s filtered.fastq -n
-    """
-}
+    #!/usr/bin/env bash
 
+    contaminants=($contaminants)
+    fn_input=seqs.fastq
 
-process filter_stats {
-    label "opr_clean"
-    cpus 1
-    input:
-        tuple val(meta), path("seqs.fastq"), val(last_contaminant)
-    output:
-        tuple val(meta), path("stats.txt"), val(last_contaminant)
-    """
-    seqkit stats seqs.fastq > stats.txt
+    seqkit stats \$fn_input >> stats.csv
+
+    for i in "\${!contaminants[@]}"
+    do
+        c=\${contaminants[\$i]}
+        ii=\$((i+1))
+        db=db_\${ii}.fna.gz
+        fn_out=filtered_no_\${c}.fastq
+
+        fn_sam=filter_\${c}.sam
+
+        minimap2 \
+            -x map-ont \
+            -a \$db \
+            -t ${task.cpus} \
+            \$fn_input \
+        | samtools fastq \
+            -f 4 \
+            --reference \$db \
+            -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
+
+        echo "\${c},\${db},\${fn_input},\${fn_out}" >> stats.csv
+        seqkit stats \$fn_out >> stats.csv
+
+        fn_input=\$fn_out
+
+    done
+    mv \$fn_input filtered.fastq
     """
 }
 
@@ -147,19 +158,10 @@ workflow pipeline {
         classification = classify_centrifuge(to_classify)
 
         // contaminant filtering
-        cleaning_candidates = trimmed.combine([0])
-        // // TODO: branch instead?
-        to_be_cleaned = cleaning_candidates.filter {meta, fastq, i -> i < params.contamination_filters.size()}
-        cleaned_complete = cleaning_candidates.filter {meta, fastq, i -> i >= params.contamination_filters.size()}
+        db_files = params.contamination_filters.collect{filter -> params.contamination_databases[filter]}
         cleaned = filter_contaminants(
-            to_be_cleaned.map{meta, fastq, i -> [meta, fastq, params.contamination_databases[params.contamination_filters[0]], i]}
+            trimmed.map{meta, reads -> [meta, reads, db_files, params.contamination_filters.join(" ")]}
         )
-        cleaned.map{meta, fastq, i -> [meta, fastq, i+1]}.into(cleaning_candidates)
-        clean_stats = filter_stats(cleaned.map{meta, fastq, i -> [meta, fastq, params.contamination_filters[0]]})
-
-        // TODO:
-        // cleaned to export?
-        // stats to export -> collect to one .csv?
 
         // define output
         ch_to_publish = Channel.empty()
@@ -170,7 +172,7 @@ workflow pipeline {
             classification | map {meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null]},
             classification | map {meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null]},
             classification | map {meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null]},
-            clean_stats | map {meta, stats, step -> [stats, "$meta.alias/clean", "${step}_stats.txt"]},
+            cleaned | map {meta, reads, stats -> [stats, "$meta.alias/clean", null]},
         )
 
     emit: 
