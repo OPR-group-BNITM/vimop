@@ -79,20 +79,21 @@ process filter_contaminants {
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
-        tuple val(meta), path('seqs.fastq'), path('stats.csv')
+        tuple val(meta), path('seqs.fastq'), path('stats.tsv')
     """
     #!/usr/bin/env bash
 
     contaminants=($contaminants)
     fn_input=seqs.fastq
 
-    seqkit stats \$fn_input >> stats.csv
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
+    echo -n "nofilter\t" >> stats.tsv
+    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
 
     for i in "\${!contaminants[@]}"
     do
         c=\${contaminants[\$i]}
-        ii=\$((i+1))
-        db=db_\${ii}.fna.gz
+        db=db_\$((i+1)).fna.gz
         fn_out=filtered_no_\${c}.fastq
 
         fn_sam=filter_\${c}.sam
@@ -107,11 +108,10 @@ process filter_contaminants {
             --reference \$db \
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
-        echo "\${c},\${db},\${fn_input},\${fn_out}" >> stats.csv
-        seqkit stats \$fn_out >> stats.csv
+        echo -n "\${c}\t" >> stats.tsv
+        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
 
         fn_input=\$fn_out
-
     done
     mv \$fn_input filtered.fastq
     """
@@ -175,7 +175,7 @@ workflow pipeline {
             cleaned | map {meta, reads, stats -> [stats, "$meta.alias/clean", null]},
         )
 
-    emit: 
+    emit:
         results = ch_to_publish
 }
 
