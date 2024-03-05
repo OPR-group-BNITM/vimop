@@ -79,7 +79,7 @@ process filter_contaminants {
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
-        tuple val(meta), path('seqs.fastq'), path('stats.tsv')
+        tuple val(meta), path('filtered.fastq'), path('stats.tsv')
     """
     #!/usr/bin/env bash
 
