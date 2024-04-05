@@ -83,7 +83,7 @@ process filter_contaminants {
     """
     #!/usr/bin/env bash
 
-    contaminants=($contaminants)
+    contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
 
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
@@ -114,6 +114,73 @@ process filter_contaminants {
         fn_input=\$fn_out
     done
     mv \$fn_input filtered.fastq
+    """
+}
+
+
+// TODO: add map_target_name to meta instead of the output files?
+process draft_assembly {
+    label "opr_draft_assembly"
+    cpus 8
+    input:
+        tuple
+            val(meta),
+            path("seqs.fastq"),
+            val(subsampling_sizes),
+            val(min_readlengths),
+            val(min_overlaps),
+            val(genome_size),
+            val(cor_out_coverage),
+            val(map_target_name)
+    output:
+        tuple val(meta), path("assemblies-${map_target_name}.fasta"), path("stats-${map_target_name}.tsv")
+    """
+    #!/usr/bin/env bash
+
+    subsampling_sizes=(${subsampling_sizes.join(" ")})
+    min_readlengths=(${min_readlengths.join(" ")})
+    min_overlaps=(${min_overlaps.join(" ")})
+
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
+
+    for i in "\${!subsampling_sizes[@]}"
+    do
+        n_reads=\${subsampling_sizes[\$i]}
+        min_readlen=\${min_readlengths[\$i]}
+        min_overlap=\${min_overlaps[\$i]}
+
+        # check if the subsampled file exists, else subsample
+        fname_subsampled=seqs_\${n_reads}.fastq
+        if [ ! -f \$fname_subsampled ]; then
+            reformat.sh qin=33 ow=t samplereadstarget=75000 in=seqs.fastq out=\${fname_subsampled}
+            echo -n "subsample_\${n_reads}\t" >> stats.tsv
+            seqkit stats \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+        fi
+
+        outdir=attempt_\$i
+        prefix=attempt_\$i
+        fname_contigs=\${outdir}/\${prefix}.contigs.fasta
+
+        canu \
+            -nanopore-raw \$fname_subsampled \
+            -fast \
+            -d \$outdir \
+            -p \$prefix \
+            genomeSize=$genome_size \
+            minReadLength=min_readlen \
+            minOverlapLength=min_overlap \
+            corOutCoverage=$cor_out_coverage
+
+        canu_status=\$?
+
+        if [[ \$canu_status -eq 0 ]] && [[ -f \$fname_contigs ]] && [[ -s \$fname_contigs ]]; then
+            mv \$fname_contigs assemblies.fasta
+            break
+        fi
+    done
+
+    # creates empty file if not exist
+    touch assemblies.fasta
     """
 }
 
@@ -152,6 +219,7 @@ workflow pipeline {
         trim_stats = seqtk_stats(trimmed)
         trim_fastqc = fastqc(trimmed)
 
+        // TODO: add classification databases to configs!
         // metagenomic read classification with centrifuge
         // to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral', 'hpvc')))
         to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral')))
@@ -160,8 +228,10 @@ workflow pipeline {
         // contaminant filtering
         db_files = params.contamination_filters.collect{filter -> params.contamination_databases[filter]}
         cleaned = filter_contaminants(
-            trimmed.map{meta, reads -> [meta, reads, db_files, params.contamination_filters.join(" ")]}
+            trimmed.map{meta, reads -> [meta, reads, db_files, params.contamination_filters]}
         )
+
+        // TODO: - 
 
         // define output
         ch_to_publish = Channel.empty()
@@ -173,6 +243,7 @@ workflow pipeline {
             classification | map {meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null]},
             classification | map {meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null]},
             cleaned | map {meta, reads, stats -> [stats, "$meta.alias/clean", null]},
+            // TODO: - export assembly stats + assemblies?
         )
 
     emit:
