@@ -25,7 +25,7 @@ process seqtk_stats {
     output:
         tuple val(meta), path("stats.txt")
     """
-    seqkit stats seqs.fastq > stats.txt
+    seqkit stats -T seqs.fastq > stats.txt
     """
 }
 
@@ -118,22 +118,44 @@ process filter_contaminants {
 }
 
 
-// TODO: add map_target_name to meta instead of the output files?
-process draft_assembly {
+process filter_virus_target {
+    label "opr_target_mapping"
+    cpus 6
+    input:
+        tuple val(meta), path('seqs.fastq'), path('reference.mmi'), path('reference.fasta')
+    output:
+        tuple val(meta), path('filtered.fastq'), path('stats.tsv')
+    """
+    #!/usr/bin/env bash
+
+    minimap2 \
+        -x map-ont \
+        -a reference.mmi \
+        -t 4 \
+        seqs.fastq \
+    | samtools fastq \
+        --threads 2 \
+        -F 4 \
+        --reference reference.fasta > filtered.fastq
+    
+    seqkit stats -T filtered.fastq > stats.tsv
+    """
+}
+
+
+process assemble_canu {
     label "opr_draft_assembly"
     cpus 8
     input:
-        tuple
-            val(meta),
+        tuple val(meta),
             path("seqs.fastq"),
             val(subsampling_sizes),
             val(min_readlengths),
             val(min_overlaps),
             val(genome_size),
-            val(cor_out_coverage),
-            val(map_target_name)
+            val(cor_out_coverage)
     output:
-        tuple val(meta), path("assemblies-${map_target_name}.fasta"), path("stats-${map_target_name}.tsv")
+        tuple val(meta), path("assemblies.fasta"), path("stats.tsv")
     """
     #!/usr/bin/env bash
 
@@ -152,9 +174,9 @@ process draft_assembly {
         # check if the subsampled file exists, else subsample
         fname_subsampled=seqs_\${n_reads}.fastq
         if [ ! -f \$fname_subsampled ]; then
-            reformat.sh qin=33 ow=t samplereadstarget=75000 in=seqs.fastq out=\${fname_subsampled}
+            reformat.sh qin=33 ow=t samplereadstarget=\${n_reads} in=seqs.fastq out=\${fname_subsampled}
             echo -n "subsample_\${n_reads}\t" >> stats.tsv
-            seqkit stats \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+            seqkit stats -T \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
         fi
 
         outdir=attempt_\$i
@@ -215,7 +237,7 @@ workflow pipeline {
         samples
     main:
         // trimming
-        trimmed = trim(samples.map{meta, reads, stats -> [meta, reads]})
+        trimmed = trim(samples.map{ meta, reads, stats -> [meta, reads] })
         trim_stats = seqtk_stats(trimmed)
         trim_fastqc = fastqc(trimmed)
 
@@ -226,24 +248,60 @@ workflow pipeline {
         classification = classify_centrifuge(to_classify)
 
         // contaminant filtering
-        db_files = params.contamination_filters.collect{filter -> params.contamination_databases[filter]}
+        db_files = params.contamination_filters.collect{ filter -> params.contamination_databases[filter] }
         cleaned = filter_contaminants(
-            trimmed.map{meta, reads -> [meta, reads, db_files, params.contamination_filters]}
+            trimmed.map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
         )
 
-        // TODO: - 
+        // TODO: create the mapping indices? - precompute for the whole DB!
+        // - get the targets from the params, also get the minimap version from the parameters?
+        // TODO: mapping
+
+        def assembly_params = [
+            params.assembly_parameters.collect { it.n_reads },
+            params.assembly_parameters.collect { it.min_readlen },
+            params.assembly_parameters.collect { it.min_overlap },
+            params.assembly_target_genome_size,
+            params.assembly_cor_out_coverage
+        ]
+
+        // TODO: only if assemble without target
+        // TODO: add target-mapped results
+        to_assemble_targeted = Channel.empty()
+
+        if (params.assemble_notarget) {
+            to_assemble_notarget = cleaned.map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+        } else {
+            to_assemble_notarget = Channel.empty()
+        }
+        to_assemble = to_assemble_notarget.mix(to_assemble_targeted)
+
+        assemblies = assemble_canu(to_assemble)
+
+        // TODO: get blast candidates
+
+        // TODO: blast
+
+        // TODO: get references from blast
+
+        // TODO: map reads against references
+
+        // TODO: create consensus
+
+        // TODO: assemble report
 
         // define output
         ch_to_publish = Channel.empty()
         | mix(
-            trim_stats | map {meta, stats -> [stats, "$meta.alias/trim_stats", null]},
-            trim_fastqc | map {meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null]},
-            classification | map {meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null]},
-            classification | map {meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null]},
-            classification | map {meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null]},
-            classification | map {meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null]},
-            cleaned | map {meta, reads, stats -> [stats, "$meta.alias/clean", null]},
-            // TODO: - export assembly stats + assemblies?
+            trim_stats | map { meta, stats -> [stats, "$meta.alias/trim_stats", null] },
+            trim_fastqc | map { meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null] },
+            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
+            classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
+            classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
+            classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
+            cleaned | map { meta, reads, stats -> [stats, "$meta.alias/clean", null] },
+            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
+            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] }
         )
 
     emit:
