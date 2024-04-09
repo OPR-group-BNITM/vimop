@@ -8,11 +8,11 @@ process trim {
     label "opr_general"
     cpus 1
     input:
-        tuple val(meta), path("demultiplexed.fastq")
+        tuple val(meta), path("demultiplexed.fastq.gz")
     output:
         tuple val(meta), path("trimmed.fastq")
     """
-    seqtk trimfq -b 30 -e 30 demultiplexed.fastq > trimmed.fastq
+    seqtk trimfq -b 30 -e 30 demultiplexed.fastq.gz > trimmed.fastq
     """
 }
 
@@ -86,9 +86,9 @@ process filter_contaminants {
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
 
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
-    echo -n "nofilter\t" >> stats.tsv
-    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats_tmp.tsv
+    echo -n "nofilter\t" >> stats_tmp.tsv
+    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
 
     for i in "\${!contaminants[@]}"
     do
@@ -108,12 +108,13 @@ process filter_contaminants {
             --reference \$db \
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
-        echo -n "\${c}\t" >> stats.tsv
-        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+        echo -n "\${c}\t" >> stats_tmp.tsv
+        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
 
         fn_input=\$fn_out
     done
     mv \$fn_input filtered.fastq
+    mv stats_tmp.tsv stats.tsv
     """
 }
 
@@ -189,8 +190,8 @@ process assemble_canu {
             -d \$outdir \
             -p \$prefix \
             genomeSize=$genome_size \
-            minReadLength=min_readlen \
-            minOverlapLength=min_overlap \
+            minReadLength=\$min_readlen \
+            minOverlapLength=\$min_overlap \
             corOutCoverage=$cor_out_coverage
 
         canu_status=\$?
