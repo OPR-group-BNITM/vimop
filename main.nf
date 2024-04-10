@@ -113,7 +113,7 @@ process filter_contaminants {
 
         fn_input=\$fn_out
     done
-    mv \$fn_input filtered.fastq
+    cp \$fn_input filtered.fastq
     mv stats_tmp.tsv stats.tsv
     """
 }
@@ -121,25 +121,31 @@ process filter_contaminants {
 
 process filter_virus_target {
     label "opr_target_mapping"
-    cpus 6
+    cpus 4
     input:
-        tuple val(meta), path('seqs.fastq'), path('reference.mmi'), path('reference.fasta')
+        tuple val(meta), path('seqs.fastq'), path(db_path)
     output:
-        tuple val(meta), path('filtered.fastq'), path('stats.tsv')
+        tuple val(meta), path('filtered.fastq')
     """
     #!/usr/bin/env bash
 
+    if [[ -f ${db_path}/${meta.mapping_target}.mmi ]]; then
+        fname_ref_index=${db_path}/${meta.mapping_target}.mmi
+    elif [[ -f ${db_path}/${meta.mapping_target}.fasta ]]; then
+        fname_ref_index=${db_path}/${meta.mapping_target}.fasta
+    else
+        echo "No file ${db_path}/${meta.mapping_target}.fasta or ${db_path}/${meta.mapping_target}.mmi found as reference file to map" >&2
+        exit 1
+    fi
+
     minimap2 \
         -x map-ont \
-        -a reference.mmi \
-        -t 4 \
+        -a \$fname_ref_index \
+        -t ${task.cpus} \
         seqs.fastq \
     | samtools fastq \
-        --threads 2 \
         -F 4 \
         --reference reference.fasta > filtered.fastq
-    
-    seqkit stats -T filtered.fastq > stats.tsv
     """
 }
 
@@ -165,6 +171,8 @@ process assemble_canu {
     min_overlaps=(${min_overlaps.join(" ")})
 
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
+    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
+    seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
 
     for i in "\${!subsampling_sizes[@]}"
     do
@@ -242,10 +250,8 @@ workflow pipeline {
         trim_stats = seqtk_stats(trimmed)
         trim_fastqc = fastqc(trimmed)
 
-        // TODO: add classification databases to configs!
         // metagenomic read classification with centrifuge
-        // to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral', 'hpvc')))
-        to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.of('viral')))
+        to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.from(params.centrifuge_classification_libraries)))
         classification = classify_centrifuge(to_classify)
 
         // contaminant filtering
@@ -254,10 +260,13 @@ workflow pipeline {
             trimmed.map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
         )
 
-        // TODO: create the mapping indices? - precompute for the whole DB!
-        // - get the targets from the params, also get the minimap version from the parameters?
-        // TODO: mapping
+        // mapping reads to given virus targets to filter them
+        to_map = cleaned.combine(Channel.of(params.virus_db)).combine(Channel.from(params.targets)).map{
+            meta, reads, stats, virus_db, target -> [meta + ["mapping_target": target], reads, virus_db]
+        }
+        mapped_to_virus_target = filter_virus_target(to_map)
 
+        // assembly to get queries to find final mapping targets
         def assembly_params = [
             params.assembly_parameters.collect { it.n_reads },
             params.assembly_parameters.collect { it.min_readlen },
@@ -265,18 +274,13 @@ workflow pipeline {
             params.assembly_target_genome_size,
             params.assembly_cor_out_coverage
         ]
-
-        // TODO: only if assemble without target
-        // TODO: add target-mapped results
-        to_assemble_targeted = Channel.empty()
-
+        to_assemble_targeted = mapped_to_virus_target.map { meta, reads -> [meta, reads] + assembly_params }
         if (params.assemble_notarget) {
             to_assemble_notarget = cleaned.map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
         to_assemble = to_assemble_notarget.mix(to_assemble_targeted)
-
         assemblies = assemble_canu(to_assemble)
 
         // TODO: get blast candidates

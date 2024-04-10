@@ -8,6 +8,10 @@ nextflow main.nf \
     --fastq /Users/nils.petersen/dev/metagenomics_pipeline/nextflow_testdata/HAM-2021-RUN013/pass \
     --sample_sheet  /Users/nils.petersen/dev/metagenomics_pipeline/nextflow_testdata/HAM-2021-RUN013/samplesheet.csv 
 
+# nextflow main.nf \
+#     --fastq /Users/nils.petersen/dev/metagenomics_pipeline/nextflow_testdata/smalltest/pass \
+#     --sample_sheet  /Users/nils.petersen/dev/metagenomics_pipeline/nextflow_testdata/smalltest/samplesheet.csv 
+
 # nextflow run main.nf \
 #     --fastq /Volumes/Samsung_T5/assembly_testset/HAM-2021-RUN013/pass \
 #     --sample_sheet /Volumes/Samsung_T5/assembly_testset/HAM-2021-RUN013/pass/samplesheet.csv \
