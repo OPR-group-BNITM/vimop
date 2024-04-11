@@ -81,8 +81,6 @@ process filter_contaminants {
     output:
         tuple val(meta), path('filtered.fastq'), path('stats.tsv')
     """
-    #!/usr/bin/env bash
-
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
 
@@ -127,8 +125,6 @@ process filter_virus_target {
     output:
         tuple val(meta), path('filtered.fastq')
     """
-    #!/usr/bin/env bash
-
     if [[ -f ${db_path}/${meta.mapping_target}.mmi ]]; then
         fname_ref_index=${db_path}/${meta.mapping_target}.mmi
     elif [[ -f ${db_path}/${meta.mapping_target}.fasta ]]; then
@@ -164,8 +160,6 @@ process assemble_canu {
     output:
         tuple val(meta), path("assemblies.fasta"), path("stats.tsv")
     """
-    #!/usr/bin/env bash
-
     subsampling_sizes=(${subsampling_sizes.join(" ")})
     min_readlengths=(${min_readlengths.join(" ")})
     min_overlaps=(${min_overlaps.join(" ")})
@@ -192,6 +186,7 @@ process assemble_canu {
         prefix=attempt_\$i
         fname_contigs=\${outdir}/\${prefix}.contigs.fasta
 
+        set +e
         canu \
             -nanopore-raw \$fname_subsampled \
             -fast \
@@ -201,12 +196,13 @@ process assemble_canu {
             minReadLength=\$min_readlen \
             minOverlapLength=\$min_overlap \
             corOutCoverage=$cor_out_coverage
-
         canu_status=\$?
-
+        set -e
         if [[ \$canu_status -eq 0 ]] && [[ -f \$fname_contigs ]] && [[ -s \$fname_contigs ]]; then
             mv \$fname_contigs assemblies.fasta
             break
+        else
+            continue
         fi
     done
 
@@ -214,6 +210,116 @@ process assemble_canu {
     touch assemblies.fasta
     """
 }
+
+
+process prepare_blast_search {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("contigs.fasta")
+    output:
+        tuple val(meta), path("sorted-contigs.fasta")
+    """
+    seqkit sort --by-length --reverse contigs.fasta \
+    | seqkit rename > sorted-contigs.fasta
+    """
+}
+
+
+process contigs_stats {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("sorted-contigs.fasta")
+    output:
+        tuple val(meta), path("stats.tsv")
+    """
+    seqkit stats sorted-contigs.fasta > stats.tsv
+    """
+}
+
+
+process contigs_readlengths {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("sorted-contigs.fasta")
+    output:
+        tuple val(meta), path("readlengths.txt")
+    """
+    readlength.sh qin=33 in=sorted-contigs.fasta bin=1 out=readlengths.txt
+    """
+}
+
+
+process blast {
+    label "opr_general"
+    cpus 4
+    input:
+        tuple val(meta), path("sorted-contigs.fasta"), path(db_path), val(target)
+    output:
+        tuple val(meta), path("blast-results.xml")
+    """
+    blastn \
+        -num_threads ${task.cpus} \
+        -db ${db_path}/${target} \
+        -query sorted-contigs.fasta \
+        -out blast-results.xml \
+        -outfmt 5
+    """
+}
+
+
+process extract_blasthits {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta), path("blast-results.xml")
+    output:
+        tuple val(meta), path("blast-hits.csv")
+    """
+    #!/usr/bin/env python
+    import pandas as pd
+    from xml.etree import ElementTree
+    rows = []
+    try:
+        root = ElementTree.parse('blast-results.xml').getroot()
+        for hit in root.findall(".//Hit[Hit_num='1']"):
+            try:
+                accession = hit.find('Hit_accession').text
+                description = hit.find('Hit_def').text.replace(',', '').replace(';', '')
+                length = int(hit.find('Hit_len').text)
+                bit_score = float(hit.find(".//Hsp_bit-score").text)
+                rows.append(['${meta.alias}', '${meta.mapping_target}', accession, description, length, bit_score])
+            except (ValueError, AttributeError):
+                continue
+    except ElementTree.ParseError:
+        # empty file with no blast hits
+        pass
+    hits = pd.DataFrame(rows, columns=['sample', 'mapping_target', 'ref', 'def', 'length', 'bitscore'])
+    hits_bitscore_summed = hits.groupby(['sample', 'mapping_target', 'ref','def','length']).aggregate({'bitscore': 'sum'}).reset_index()
+    hits_bitscore_summed.to_csv('blast-hits.csv', header=True, index=False)
+    """
+}
+
+
+
+// TODO: replace this
+// instead: collect the blast hits by meta.alias
+// then find unique targets per sample
+// afterwards merge with reads
+// process merge_blasthits {
+//     input:
+//         path 'blast_hits_*.csv'
+//     output:
+//         path 'sorted_combined.csv'
+//     // TODO: check if input path is empty!
+//     """
+//     head -n 1 blast_hits_0.csv > sorted_combined.csv
+//     awk 'FNR > 1' blast_hits_*.csv | sort >> sorted_combined.csv
+//     """
+//     // TODO: extract sample + target combinations?
+// }
 
 
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
@@ -246,27 +352,28 @@ workflow pipeline {
         samples
     main:
         // trimming
-        trimmed = trim(samples.map{ meta, reads, stats -> [meta, reads] })
-        trim_stats = seqtk_stats(trimmed)
-        trim_fastqc = fastqc(trimmed)
+        trimmed = samples | map{ meta, reads, stats -> [meta, reads] } | trim
+        trim_stats = trimmed | seqtk_stats
+        trim_fastqc = trimmed | fastqc
 
         // metagenomic read classification with centrifuge
-        to_classify = trimmed.combine(Channel.of(params.virus_db).combine(Channel.from(params.centrifuge_classification_libraries)))
-        classification = classify_centrifuge(to_classify)
+        classification = trimmed
+        | combine(Channel.of(params.virus_db))
+        | combine(Channel.from(params.centrifuge_classification_libraries))
+        | classify_centrifuge
 
         // contaminant filtering
         db_files = params.contamination_filters.collect{ filter -> params.contamination_databases[filter] }
-        cleaned = filter_contaminants(
-            trimmed.map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
-        )
+        cleaned = trimmed
+        | map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
+        | filter_contaminants
 
         // mapping reads to given virus targets to filter them
-        to_map = cleaned.combine(Channel.of(params.virus_db)).combine(Channel.from(params.targets)).map{
-            meta, reads, stats, virus_db, target -> [meta + ["mapping_target": target], reads, virus_db]
-        }
-        mapped_to_virus_target = filter_virus_target(to_map)
+        mapped_to_virus_target = cleaned.combine(Channel.from(params.targets))
+        | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
+        | filter_virus_target
 
-        // assembly to get queries to find final mapping targets
+        // assembly to get queries to find references
         def assembly_params = [
             params.assembly_parameters.collect { it.n_reads },
             params.assembly_parameters.collect { it.min_readlen },
@@ -274,26 +381,57 @@ workflow pipeline {
             params.assembly_target_genome_size,
             params.assembly_cor_out_coverage
         ]
-        to_assemble_targeted = mapped_to_virus_target.map { meta, reads -> [meta, reads] + assembly_params }
+
+        to_assemble_targeted = mapped_to_virus_target
+        | map { meta, reads -> [meta, reads] + assembly_params }
+
         if (params.assemble_notarget) {
-            to_assemble_notarget = cleaned.map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+            to_assemble_notarget = cleaned
+            | map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        to_assemble = to_assemble_notarget.mix(to_assemble_targeted)
-        assemblies = assemble_canu(to_assemble)
+        assemblies = to_assemble_notarget | mix(to_assemble_targeted) | assemble_canu
 
-        // TODO: get blast candidates
+        // database search for references using blast
+        blast_queries = assemblies | map { meta, reads, stats -> [meta, reads]} | prepare_blast_search
+        blast_query_stats = blast_queries | contigs_stats
+        blast_query_lengths = blast_queries | contigs_readlengths
+        blast_hits = blast_queries
+        | map { meta, contigs -> [meta, contigs, params.virus_db, params.all_target] }
+        | blast
+        | extract_blasthits
 
-        // TODO: blast
+        // merged_blast_hits = blast_hits
+        // | map{ meta, hits -> hits}
+        // | collect
+        // | merge_blasthits
 
-        // TODO: get references from blast
+        // TODO:
+        // make mapping target list from merged blast hits (get relevant information and remove duplicates) -> sample + ref_accession
+        // add manual references (sample + ref_accession) -> for each sample?
+
+        // make list with unique sample + ref_accession combinations
+
+        // get fasta for each ref_accession (from blast)
+
+        // merge trimmed reads and targets using sample from meta -> channel: meta, reads, target_fasta
+
+
 
         // TODO: map reads against references
 
         // TODO: create consensus
 
+        // TODO: create vcf files
+
+        // TODO: export bam and vcf files
+
         // TODO: assemble report
+
+
+        // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
+
 
         // define output
         ch_to_publish = Channel.empty()
@@ -306,7 +444,12 @@ workflow pipeline {
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
             cleaned | map { meta, reads, stats -> [stats, "$meta.alias/clean", null] },
             assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
-            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] }
+            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
+            // TODO: remove blast stuff from here?
+            blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
+            blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
+            blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
+            // merged_blast_hits | map { fname -> [fname, "results/blast-hits", null] },  // TODO: there is a problem if a sample is called results!
         )
 
     emit:
