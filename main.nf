@@ -303,23 +303,49 @@ process extract_blasthits {
 }
 
 
+process get_ref_fasta {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(ref_id), path(db_path), val(db_name)
+    output:
+        tuple val(ref_id), path("ref.fasta")
+    """
+    blastdbcmd -entry ${ref_id} -db ${db_path}/${db_name} -out ref.fasta
+    """
+}
 
-// TODO: replace this
-// instead: collect the blast hits by meta.alias
-// then find unique targets per sample
-// afterwards merge with reads
-// process merge_blasthits {
-//     input:
-//         path 'blast_hits_*.csv'
-//     output:
-//         path 'sorted_combined.csv'
-//     // TODO: check if input path is empty!
-//     """
-//     head -n 1 blast_hits_0.csv > sorted_combined.csv
-//     awk 'FNR > 1' blast_hits_*.csv | sort >> sorted_combined.csv
-//     """
-//     // TODO: extract sample + target combinations?
-// }
+
+process map_to_ref {
+    label "opr_map"
+    cpus 8
+    input:
+        tuple val(meta), path("trimmed.fastq"), path("ref.fasta")
+    output:
+        tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai")
+    """
+    minimap2 -ax map-ont ref.fasta trimmed.fastq -t ${task.cpus} | samtools view -b -o mapped.bam
+    samtools sort --threads ${task.cpus} -o sorted.bam mapped.bam
+    samtools index sorted.bam
+    """
+}
+
+
+process medaka_consensus {
+    label "opr_medaka"
+    cpus 4
+    input:
+        tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai"), path("model.hdf5")
+    output:
+        tuple val(meta), path('consensus_dir')
+    """
+    medaka_consensus -t ${task.cpus} -d ref.fasta -i sorted.bam -o consensus_dir/
+    """
+}
+
+// TODO
+// vcf process?
+// medaka vcf process?
 
 
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
@@ -369,7 +395,8 @@ workflow pipeline {
         | filter_contaminants
 
         // mapping reads to given virus targets to filter them
-        mapped_to_virus_target = cleaned.combine(Channel.from(params.targets))
+        mapped_to_virus_target = cleaned
+        | combine(Channel.from(params.targets))
         | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
         | filter_virus_target
 
@@ -393,8 +420,10 @@ workflow pipeline {
         }
         assemblies = to_assemble_notarget | mix(to_assemble_targeted) | assemble_canu
 
+        // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
+
         // database search for references using blast
-        blast_queries = assemblies | map { meta, reads, stats -> [meta, reads]} | prepare_blast_search
+        blast_queries = assemblies | map { meta, contigs, stats -> [meta, contigs] } | prepare_blast_search
         blast_query_stats = blast_queries | contigs_stats
         blast_query_lengths = blast_queries | contigs_readlengths
         blast_hits = blast_queries
@@ -402,36 +431,44 @@ workflow pipeline {
         | blast
         | extract_blasthits
 
-        // merged_blast_hits = blast_hits
-        // | map{ meta, hits -> hits}
-        // | collect
-        // | merge_blasthits
+        // get unique mapping targets from blast hits stored in .csv files
+        sample_ref = blast_hits
+        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, line.split(',')[2]) }}
+        | unique
 
         // TODO:
-        // make mapping target list from merged blast hits (get relevant information and remove duplicates) -> sample + ref_accession
-        // add manual references (sample + ref_accession) -> for each sample?
+        // add manual references (sample + ref_accession) !!!!!!!
 
-        // make list with unique sample + ref_accession combinations
+        // get the targets
+        ref_seqs = sample_ref
+        | map { samplename, ref_id -> ref_id }
+        | unique
+        | map { ref_id -> [ref_id, params.virus_db, params.all_target]}
+        | get_ref_fasta
 
-        // get fasta for each ref_accession (from blast)
+        reads_and_ref = sample_ref
+        | combine(ref_seqs)
+        | filter { samplename, ref_id_1, ref_id_2, ref_seq -> ref_id_1 == ref_id_2 }
+        | map { samplename, ref_id_1, ref_id_2, ref_seq -> [samplename, ref_id_1, ref_seq] }
+        | combine(trimmed)
+        | filter { samplename, ref_id, ref_seq, meta, reads -> samplename == meta.alias }
+        | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
-        // merge trimmed reads and targets using sample from meta -> channel: meta, reads, target_fasta
+        // Map against references
+        mapped_to_ref = reads_and_ref | map_to_ref
 
+        // build the consensus sequences
+        consensi = mapped_to_ref
+        | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model] }
+        | medaka_consensus
 
-
-        // TODO: map reads against references
-
-        // TODO: create consensus
-
+        // TODO: incorporate minimum coverage?
         // TODO: create vcf files
+        // TODO: export more consensus files?
+        // TODO: export vcf files
 
-        // TODO: export bam and vcf files
-
-        // TODO: assemble report
-
-
-        // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
-
+        // TODO: assemble report - .csv (pandas)
+        // TODO: create html reports
 
         // define output
         ch_to_publish = Channel.empty()
@@ -445,11 +482,13 @@ workflow pipeline {
             cleaned | map { meta, reads, stats -> [stats, "$meta.alias/clean", null] },
             assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
             assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
-            // TODO: remove blast stuff from here?
             blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
             blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
             blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            // merged_blast_hits | map { fname -> [fname, "results/blast-hits", null] },  // TODO: there is a problem if a sample is called results!
+            mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
+            consensi | map { meta, ref, dir -> ["$dir/consensus.fasta", "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
         )
 
     emit:
