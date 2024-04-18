@@ -333,19 +333,23 @@ process map_to_ref {
 
 process medaka_consensus {
     label "opr_medaka"
-    cpus 4
+    cpus 2
     input:
-        tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai"), path("model.hdf5")
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path("model.hdf5"),
+            val(min_depth)
     output:
-        tuple val(meta), path('consensus_dir')
+        tuple val(meta), path('consensus.fasta')
     """
-    medaka_consensus -t ${task.cpus} -d ref.fasta -i sorted.bam -o consensus_dir/
+    medaka consensus sorted.bam consensus.hdf --threads ${task.cpus} --model model.hdf5
+    medaka stitch consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
     """
+    // todo use --qualities in stitch. then filter mask based on the quality? and export the consensus as fastq or fasta?
+    // seqtk seq -q20 -n N input.fastq > output.fastq
 }
-
-// TODO
-// vcf process?
-// medaka vcf process?
 
 
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
@@ -459,7 +463,7 @@ workflow pipeline {
 
         // build the consensus sequences
         consensi = mapped_to_ref
-        | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model] }
+        | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
         | medaka_consensus
 
         // TODO: incorporate minimum coverage?
@@ -488,7 +492,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
-            consensi | map { meta, ref, dir -> ["$dir/consensus.fasta", "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
+            consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
         )
 
     emit:
