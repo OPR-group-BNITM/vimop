@@ -331,6 +331,19 @@ process map_to_ref {
 }
 
 
+process calc_coverage {
+    label "opr_general"
+    cpus 8
+    input:
+        tuple val(meta), path("sorted.bam"), path("sorted.bam.bai")
+    output:
+        tuple val(meta), path("coverage.txt")
+    """
+    samtools depth -a sorted.bam > coverage.txt
+    """
+}
+
+
 process medaka_consensus {
     label "opr_medaka"
     cpus 2
@@ -347,8 +360,14 @@ process medaka_consensus {
     medaka consensus sorted.bam consensus.hdf --threads ${task.cpus} --model model.hdf5
     medaka stitch consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
     """
-    // todo use --qualities in stitch. then filter mask based on the quality? and export the consensus as fastq or fasta?
-    // seqtk seq -q20 -n N input.fastq > output.fastq
+    // TODO
+    // use --qualities in stitch
+    // then filter mask based on the quality: seqtk seq -q20 -n N input.fastq > output.fastq
+    // make a quality list?
+    // export as fasta file finally? or as fastq? (then it could be shown annotated, e.g. with colors)
+    // TODO
+    // also get variants?
+    // medaka variant --threads ${task.cpus} --ref ref.fasta consensus.hdf consensus.vcf
 }
 
 
@@ -461,15 +480,16 @@ workflow pipeline {
         // Map against references
         mapped_to_ref = reads_and_ref | map_to_ref
 
+        // get coverages
+        coverage = mapped_to_ref | map { meta, ref, bam, bai -> [meta, bam, bai]} | calc_coverage
+
         // build the consensus sequences
         consensi = mapped_to_ref
         | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
         | medaka_consensus
 
-        // TODO: incorporate minimum coverage?
-        // TODO: create vcf files
-        // TODO: export more consensus files?
-        // TODO: export vcf files
+        // TODO: create & export vcf files
+        // TODO: replace header in fasta file?
 
         // TODO: assemble report - .csv (pandas)
         // TODO: create html reports
@@ -493,6 +513,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
+            coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
         )
 
     emit:
