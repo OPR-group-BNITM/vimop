@@ -371,6 +371,41 @@ process medaka_consensus {
 }
 
 
+process simple_consensus {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            val(min_depth),
+            val(min_share)
+    output:
+        tuple val(meta), path("cons.fasta")
+    """
+    samtools consensus -m simple -c $min_share -d $min_depth -f fasta -o cons.fasta sorted.bam
+    """
+}
+
+
+process bayesian_consensus {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            val(min_depth)
+    output:
+        tuple val(meta), path("cons.fasta")
+    """
+    samtools consensus -m bayesian -d $min_depth -f fasta -o cons.fasta sorted.bam
+    """
+}
+
+
 // See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
 // publish files from a workflow whilst decoupling the publish from the process steps.
 // The process takes a tuple containing the filename and the name of a sub-directory to
@@ -423,6 +458,11 @@ workflow pipeline {
         | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
         | filter_virus_target
 
+        // mapped_to_virus_target = trimmed
+        // | combine(Channel.from(params.targets))
+        // | map{ meta, reads, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
+        // | filter_virus_target
+
         // assembly to get queries to find references
         def assembly_params = [
             params.assembly_parameters.collect { it.n_reads },
@@ -438,6 +478,8 @@ workflow pipeline {
         if (params.assemble_notarget) {
             to_assemble_notarget = cleaned
             | map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+            // to_assemble_notarget = trimmed
+            // | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
@@ -483,10 +525,19 @@ workflow pipeline {
         // get coverages
         coverage = mapped_to_ref | map { meta, ref, bam, bai -> [meta, bam, bai]} | calc_coverage
 
-        // build the consensus sequences
-        consensi = mapped_to_ref
-        | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
-        | medaka_consensus
+        if (params.consensus_method == 'simple') {
+            consensi = mapped_to_ref
+            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
+            | simple_consensus
+        } else if(params.consensus_method == 'bayesian') {
+            consensi = mapped_to_ref
+            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth] }
+            | bayesian_consensus
+        } else if (params.consensus_method == 'medaka') {
+            consensi = mapped_to_ref
+            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
+            | medaka_consensus
+        }
 
         // TODO: create & export vcf files
         // TODO: replace header in fasta file?
