@@ -149,6 +149,7 @@ process filter_virus_target {
 process assemble_canu {
     label "opr_draft_assembly"
     cpus 8
+    memory '32.GB'
     input:
         tuple val(meta),
             path("seqs.fastq"),
@@ -195,7 +196,10 @@ process assemble_canu {
             genomeSize=$genome_size \
             minReadLength=\$min_readlen \
             minOverlapLength=\$min_overlap \
-            corOutCoverage=$cor_out_coverage
+            corOutCoverage=$cor_out_coverage \
+            maxThreads=$task.cpus \
+            maxMemory=${task.memory.toGiga()}g
+
         canu_status=\$?
         set -e
         if [[ \$canu_status -eq 0 ]] && [[ -f \$fname_contigs ]] && [[ -s \$fname_contigs ]]; then
@@ -458,11 +462,6 @@ workflow pipeline {
         | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
         | filter_virus_target
 
-        // mapped_to_virus_target = trimmed
-        // | combine(Channel.from(params.targets))
-        // | map{ meta, reads, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
-        // | filter_virus_target
-
         // assembly to get queries to find references
         def assembly_params = [
             params.assembly_parameters.collect { it.n_reads },
@@ -478,8 +477,6 @@ workflow pipeline {
         if (params.assemble_notarget) {
             to_assemble_notarget = cleaned
             | map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
-            // to_assemble_notarget = trimmed
-            // | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
