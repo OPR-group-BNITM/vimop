@@ -176,10 +176,10 @@ process assemble_canu {
         min_overlap=\${min_overlaps[\$i]}
 
         # check if the subsampled file exists, else subsample
-        fname_subsampled=seqs_\${n_reads}.fastq
+        fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}.fastq
         if [ ! -f \$fname_subsampled ]; then
-            reformat.sh qin=33 ow=t samplereadstarget=\${n_reads} in=seqs.fastq out=\${fname_subsampled}
-            echo -n "subsample_\${n_reads}\t" >> stats.tsv
+            reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=seqs.fastq out=\$fname_subsampled minlen=\$min_readlen
+            echo -n "subsample_\${n_reads}_minlen_\${min_readlen}\t" >> stats.tsv
             seqkit stats -T \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
         fi
 
