@@ -483,6 +483,7 @@ workflow pipeline {
         assemblies = to_assemble_notarget | mix(to_assemble_targeted) | assemble_canu
 
         // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
+        // read in old pipeline!
 
         // database search for references using blast
         blast_queries = assemblies | map { meta, contigs, stats -> [meta, contigs] } | prepare_blast_search
@@ -500,6 +501,8 @@ workflow pipeline {
 
         // TODO:
         // add manual references (sample + ref_accession) !!!!!!!
+        // or sample + file
+        // sample can also be ALL
 
         // get the targets
         ref_seqs = sample_ref
@@ -562,6 +565,8 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
+            // advanced output
+            cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
         )
 
     emit:
@@ -590,6 +595,8 @@ workflow {
 }
 
 workflow.onComplete {
+    // Writing the configuration to the output directory
+    file("${params.out_dir}/run_config.txt") << workflow.config.toPrettyString()
     Pinguscript.ping_complete(nextflow, workflow, params)
 }
 workflow.onError {
