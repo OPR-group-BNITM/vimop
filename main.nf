@@ -595,10 +595,13 @@ workflow {
 }
 
 workflow.onComplete {
-    // Writing the configuration to the output directory
-    file("${params.out_dir}/run_config.txt") << workflow.config.toPrettyString()
+    File outputFile = new File("${params.out_dir}/params.json")
+    def json = new JsonBuilder(params)
+    outputFile.withWriter('UTF-8') { writer -> writer.write(json.toPrettyString()) }
+    // notify that the workflow is complete
     Pinguscript.ping_complete(nextflow, workflow, params)
 }
+
 workflow.onError {
     Pinguscript.ping_error(nextflow, workflow, params)
 }
