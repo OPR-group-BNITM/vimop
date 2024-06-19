@@ -496,8 +496,16 @@ workflow pipeline {
         | extract_blasthits
 
         // get unique mapping targets from blast hits stored in .csv files
-        sample_ref = blast_hits
+        sample_ref = blast_hits  
         | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, line.split(',')[2]) }}
+        | unique
+
+        // get custom accessions for references given by user
+        custom_refs = Channel.from(params.custom_sample_ref)
+
+        // add custom references to the sample_ref channel
+        sample_ref = sample_ref 
+        | concat(custom_refs) 
         | unique
 
         // TODO:
