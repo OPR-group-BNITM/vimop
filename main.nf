@@ -40,7 +40,7 @@ process fastqc {
         tuple val(meta), path("fastqc")
     """
     mkdir -p fastqc
-    fastqc -q -t ${task.cpus} -o fastqc seqs.fastq 
+    fastqc -q -t ${task.cpus} -o fastqc seqs.fastq
     """
 }
 
@@ -52,10 +52,10 @@ process classify_centrifuge {
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
         tuple val(meta),
-              path("classification-${target_db}.tsv"),
-              path("classification-report-${target_db}.tsv"),
-              path("classification-kraken-${target_db}.tsv"),
-              path("classification-${target_db}.html")
+            path("classification-${target_db}.tsv"),
+            path("classification-report-${target_db}.tsv"),
+            path("classification-kraken-${target_db}.tsv"),
+            path("classification-${target_db}.html")
     """
     centrifuge \
         --mm \
@@ -422,7 +422,7 @@ process output {
     publishDir (
         params.out_dir,
         mode: "copy",
-        saveAs: { 
+        saveAs: {
             dirname ? (fname_out ? "$dirname/$fname_out" : "$dirname/$fname_in") : fname_in
         }
     )
@@ -496,19 +496,17 @@ workflow pipeline {
         | extract_blasthits
 
         // get unique mapping targets from blast hits stored in .csv files
-        sample_ref = blast_hits  
+        sample_ref = blast_hits
         | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, line.split(',')[2]) }}
         | unique
 
         // get custom accessions for references given by user
         custom_refs = Channel.from(params.custom_sample_ref)
-        custom_refs.view()
-        if (!custom_refs == [] ) {
         // add custom references to the sample_ref channel
-        sample_ref = sample_ref 
-        | concat(custom_refs) 
+        sample_ref = sample_ref
+        | concat(custom_refs)
         | unique
-        }
+
         // TODO:
         // add manual references (sample + ref_accession) !!!!!!!
         // or sample + file
@@ -520,46 +518,44 @@ workflow pipeline {
         | unique
         | map { ref_id -> [ref_id, params.virus_db, params.all_target]}
         | get_ref_fasta
-        
+
         // add custom reference files here
         custom_sample_ref_files = Channel.from(params.custom_sample_ref_files)
 
-        if (!custom_sample_ref_files == []) {
-            // read custom reference files
-            custom_sample_ref_id_seqs = custom_sample_ref_files
-            | map { sample, file_path ->
-                lines = file(file_path).readLines()
-                matches = lines.findAll { line -> line =~ /^>/ } // get Fasta headers 
-                            .collectMany { line -> (line =~ /(?<=>)[^\s]+/).findAll() } // Extract entry_ids from the header
-                // Assert that there is only one sequence per file
-                assert matches.size() == 1 : "ERROR: Custom reference file must contain only one sequence: ${file_path}"
-                custom_sample_ref_ids = matches.collect { match -> [sample, match] }.flatten() // Pair each match with the sample
-                custom_sample_ref_seqs = matches.collect { match -> [match, file_path] }.flatten() // Pair each match with the file_path
-                [custom_sample_ref_ids, custom_sample_ref_seqs]
-            }
-
-            custom_ref_seqs = custom_sample_ref_id_seqs // [ref_id, path_to_ref_seq]
-            | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_seqs] }
-
-            custom_sample_ref_ids = custom_sample_ref_id_seqs // [sample, ref_id]
-            | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_ids] }
-
-            // extend the reference sequences with the custom ones
-            ref_seqs = ref_seqs
-            | concat(custom_ref_seqs)
-            | unique
-
-            sample_ref = sample_ref
-            | concat(custom_sample_ref_ids)
-            | unique
+        // read custom reference files
+        custom_sample_ref_id_seqs = custom_sample_ref_files
+        | map { sample, file_path ->
+            lines = file(file_path).readLines()
+            matches = lines.findAll { line -> line =~ /^>/ } // get Fasta headers
+                        .collectMany { line -> (line =~ /(?<=>)[^\s]+/).findAll() } // Extract entry_ids from the header
+            // Assert that there is only one sequence per file
+            assert matches.size() == 1 : "ERROR: Custom reference file must contain only one sequence: ${file_path}"
+            custom_sample_ref_ids = matches.collect { match -> [sample, match] }.flatten() // Pair each match with the sample
+            custom_sample_ref_seqs = matches.collect { match -> [match, file_path] }.flatten() // Pair each match with the file_path
+            [custom_sample_ref_ids, custom_sample_ref_seqs]
         }
 
-        reads_and_ref = sample_ref
-        | combine(ref_seqs)
+        custom_ref_seqs = custom_sample_ref_id_seqs // [ref_id, path_to_ref_seq]
+        | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_seqs] }
+
+        custom_sample_ref_ids = custom_sample_ref_id_seqs // [sample, ref_id]
+        | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_ids] }
+
+        // extend the reference sequences with the custom ones
+        extended_ref_seqs = ref_seqs
+        | concat(custom_ref_seqs)
+        | unique
+
+        extended_sample_ref = sample_ref
+        | concat(custom_sample_ref_ids)
+        | unique
+
+        reads_and_ref = extended_sample_ref
+        | combine(extended_ref_seqs)
         | filter { samplename, ref_id_1, ref_id_2, ref_seq -> ref_id_1 == ref_id_2 }
         | map { samplename, ref_id_1, ref_id_2, ref_seq -> [samplename, ref_id_1, ref_seq] }
         | combine(trimmed)
-        | filter { samplename, ref_id, ref_seq, meta, reads -> samplename == meta.alias } 
+        | filter { samplename, ref_id, ref_seq, meta, reads -> samplename == meta.alias }
         | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
 
