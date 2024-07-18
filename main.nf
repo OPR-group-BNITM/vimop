@@ -217,6 +217,9 @@ process assemble_canu {
         fi
     done
 
+    # remove potentially large fastq files.
+    rm minlen_*.fastq
+
     # creates empty file if not exist
     touch assemblies.fasta
     """
