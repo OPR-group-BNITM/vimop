@@ -177,9 +177,15 @@ process assemble_canu {
         min_overlap=\${min_overlaps[\$i]}
 
         # check if the subsampled file exists, else subsample
+        fname_minlen=minlen_\${min_readlen}.fastq
+        if [ ! -f \$fname_minlen ]; then
+            reformat.sh qin=33 ow=t in=seqs.fastq out=\$fname_minlen minlen=\$min_readlen
+            echo -n "minlen_\${min_readlen}\t" >> stats.tsv
+            seqkit stats -T \$fname_minlen | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+        fi
         fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}.fastq
         if [ ! -f \$fname_subsampled ]; then
-            reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=seqs.fastq out=\$fname_subsampled minlen=\$min_readlen
+            reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=\$fname_minlen out=\$fname_subsampled
             echo -n "subsample_\${n_reads}_minlen_\${min_readlen}\t" >> stats.tsv
             seqkit stats -T \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
         fi
@@ -210,6 +216,9 @@ process assemble_canu {
             continue
         fi
     done
+
+    # remove potentially large fastq files.
+    rm minlen_*.fastq
 
     # creates empty file if not exist
     touch assemblies.fasta
