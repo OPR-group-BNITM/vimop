@@ -278,7 +278,8 @@ process blast {
         -db ${db_path}/${target} \
         -query sorted-contigs.fasta \
         -out blast-results.xml \
-        -outfmt 5
+        -outfmt 5 \
+        -max_target_seqs 1
     """
 }
 
@@ -310,8 +311,7 @@ process extract_blasthits {
         # empty file with no blast hits
         pass
     hits = pd.DataFrame(rows, columns=['sample', 'mapping_target', 'ref', 'def', 'length', 'bitscore'])
-    hits_bitscore_summed = hits.groupby(['sample', 'mapping_target', 'ref','def','length']).aggregate({'bitscore': 'sum'}).reset_index()
-    hits_bitscore_summed.to_csv('blast-hits.csv', header=True, index=False)
+    hits.to_csv('blast-hits.csv', header=True, index=False)
     """
 }
 
@@ -397,7 +397,7 @@ process simple_consensus {
     output:
         tuple val(meta), path("cons.fasta")
     """
-    samtools consensus -m simple -c $min_share -d $min_depth -f fasta -o cons.fasta sorted.bam
+    samtools consensus -a -m simple -c $min_share -d $min_depth -f fasta -o cons.fasta sorted.bam
     """
 }
 
@@ -414,7 +414,45 @@ process bayesian_consensus {
     output:
         tuple val(meta), path("cons.fasta")
     """
-    samtools consensus -m bayesian -d $min_depth -f fasta -o cons.fasta sorted.bam
+    samtools consensus -a -m bayesian -d $min_depth -f fasta -o cons.fasta sorted.bam
+    """
+}
+
+
+process compute_mapping_stats {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(meta),
+        path('ref.fasta'),
+        path('sorted.bam'),
+        path('sorted.bam.bai'),
+        path('cons.fasta'),
+        path('depth.txt')
+    output:
+        tuple val(meta), path("${task.index}_mapping_stats.csv")  // alternateive samplename + targetID
+    """
+    ref_id=\$(head -n 1 ref.fasta | sed 's/>//' | awk '{print \$1}')
+    ref_len=\$(seqtk size ref.fasta | awk '{print \$2}')
+    num_mapped_reads=\$(samtools view -F 4 -c sorted.bam)
+    n_count=\$(seqtk comp cons.fasta | awk '{print \$9}')
+    non_n_count=\$(seqtk comp cons.fasta | awk '{print \$2}')
+    avg_coverage=\$(awk '{sum+=\$3} END {if (NR > 0) print sum/NR; else print 0}' depth.txt)
+    echo "\$ref_id\t\$ref_len\t\$num_mapped_reads\t\$n_count\t\$non_n_count\t\$avg_coverage" > ${task.index}_mapping_stats.csv
+    """
+}
+
+
+process concat_mapping_stats {
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(samplename), path(collected_stats)
+    output:
+        tuple val(samplename), path('all_stats.tsv')
+    """
+    echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tCalledNucleobases\tAverageCoverage" > all_stats.tsv
+    cat ${collected_stats.join(" ")} >> all_stats.tsv
     """
 }
 
@@ -515,11 +553,6 @@ workflow pipeline {
         | concat(custom_refs)
         | unique
 
-        // TODO:
-        // add manual references (sample + ref_accession) !!!!!!!
-        // or sample + file
-        // sample can also be ALL
-
         // get the targets
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
@@ -566,7 +599,6 @@ workflow pipeline {
         | filter { samplename, ref_id, ref_seq, meta, reads -> samplename == meta.alias }
         | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
-
         // Map against references
         mapped_to_ref = reads_and_ref | map_to_ref
 
@@ -588,9 +620,23 @@ workflow pipeline {
         }
 
         // TODO: create & export vcf files
-        // TODO: replace header in fasta file?
+        // TODO: replace header in consensus fasta files! (Do already in consensus step!)
+
+        // compute the stats for the reads mapped to the different targets and build a big table.
+        collected_mapping_stats = mapped_to_ref
+        | map {meta, ref, bam, bai -> [meta.alias, meta.consensus_target, meta, ref, bam, bai]}
+        | join(consensi | map {meta, cons -> [meta.alias, meta.consensus_target, cons]}, by: [0, 1])
+        | join(coverage | map {meta, cov -> [meta.alias, meta.consensus_target, cov]}, by: [0, 1])
+        | map {samplename, target_name, meta, ref, bam, bai, cons, cov -> [meta, ref, bam, bai, cons, cov]}
+        | compute_mapping_stats
+        | map {meta, stats -> [meta.alias, stats]}
+        | groupTuple(by: 0)
+        | concat_mapping_stats
 
         // TODO: assemble report - .csv (pandas)
+        // DONE - target mapping -> Done (mapping_stats)
+        // 2 - general sample: mapping to filters, assembly (can define later what is shown)
+        // 1 - merge target mapping and general sample into common stream
         // TODO: create html reports
 
         // define output
@@ -613,6 +659,8 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
+            // Report related output
+            collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
             // advanced output
             cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
         )
@@ -631,10 +679,6 @@ workflow {
         "stats": true,
         "sample_sheet": params.sample_sheet
     ])
-    // samples.view {
-    //     sample ->
-    //     println "${sample[0].barcode} ${sample[0].type} ${sample[0].run_ids} ${sample[0].alias}\n${sample[1]}\n${sample[2]}"
-    // }
     pipeline(samples)
     pipeline.out.results
     | toList
