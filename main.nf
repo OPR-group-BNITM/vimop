@@ -79,7 +79,7 @@ process filter_contaminants {
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
-        tuple val(meta), path('filtered.fastq'), path('stats.tsv')
+        tuple val(meta), path('filtered.fastq'), path("stats_clean_${task.index}.tsv")
     """
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
@@ -112,7 +112,7 @@ process filter_contaminants {
         fn_input=\$fn_out
     done
     cp \$fn_input filtered.fastq
-    mv stats_tmp.tsv stats.tsv
+    mv stats_tmp.tsv stats_clean_${task.index}.tsv
     """
 }
 
@@ -159,7 +159,7 @@ process assemble_canu {
             val(genome_size),
             val(cor_out_coverage)
     output:
-        tuple val(meta), path("assemblies.fasta"), path("stats.tsv")
+        tuple val(meta), path("assemblies.fasta"), path("stats_assemblies_${task.index}.tsv")
     """
     subsampling_sizes=(${subsampling_sizes.join(" ")})
     min_readlengths=(${min_readlengths.join(" ")})
@@ -176,13 +176,13 @@ process assemble_canu {
         min_overlap=\${min_overlaps[\$i]}
 
         # check if the subsampled file exists, else subsample
-        fname_minlen=minlen_\${min_readlen}.fastq
+        fname_minlen=minlen_\${min_readlen}_${meta.mapping_target}.fastq
         if [ ! -f \$fname_minlen ]; then
             reformat.sh qin=33 ow=t in=seqs.fastq out=\$fname_minlen minlen=\$min_readlen
             echo -n "minlen_\${min_readlen}\t" >> stats.tsv
             seqkit stats -T \$fname_minlen | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
         fi
-        fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}.fastq
+        fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}_${meta.mapping_target}.fastq
         if [ ! -f \$fname_subsampled ]; then
             reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=\$fname_minlen out=\$fname_subsampled
             echo -n "subsample_\${n_reads}_minlen_\${min_readlen}\t" >> stats.tsv
@@ -221,6 +221,7 @@ process assemble_canu {
 
     # creates empty file if not exist
     touch assemblies.fasta
+    mv stats.tsv stats_assemblies_${task.index}.tsv
     """
 }
 
@@ -371,7 +372,8 @@ process medaka_consensus {
         tuple val(meta), path('consensus.fasta')
     """
     medaka consensus sorted.bam consensus.hdf --threads ${task.cpus} --model model.hdf5
-    medaka stitch consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
+    medaka stitch consensus.hdf ref.fasta consensus_pre_rename.fasta --fill_char N --min_depth ${min_depth}
+    sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' consensus_pre_rename.fasta > consensus.fasta
     """
     // TODO
     // use --qualities in stitch
@@ -397,7 +399,9 @@ process simple_consensus {
     output:
         tuple val(meta), path("cons.fasta")
     """
-    samtools consensus -a -m simple -c $min_share -d $min_depth -f fasta -o cons.fasta sorted.bam
+    samtools consensus -a -m simple -c $min_share -d $min_depth -f fasta sorted.bam \
+    | sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' \
+    > cons.fasta
     """
 }
 
@@ -414,7 +418,9 @@ process bayesian_consensus {
     output:
         tuple val(meta), path("cons.fasta")
     """
-    samtools consensus -a -m bayesian -d $min_depth -f fasta -o cons.fasta sorted.bam
+    samtools consensus -a -m bayesian -d $min_depth -f fasta sorted.bam \
+    | sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' \
+    > cons.fasta
     """
 }
 
@@ -453,6 +459,64 @@ process concat_mapping_stats {
     """
     echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tCalledNucleobases\tAverageCoverage" > all_stats.tsv
     cat ${collected_stats.join(" ")} >> all_stats.tsv
+    """
+}
+
+
+process concat_targets_and_filters { // TODO: remove, this is integrated into report script instead
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(samplename), val(filters), val(targets)
+    output:
+        tuple val(samplename), path("targets.tsv")
+    """
+    filters=(${filters.join(" ")})
+    targets=(${targets.join(" ")})
+    for i in "\${!filters[@]}"
+    do
+        echo "\${filters[\$i]}\t\${targets[\$i]}" >> targets.tsv
+    done
+    """
+}
+
+
+process concat_read_stats {  // TODO: remove, the files are passed separately to the report script instead
+    label "opr_general"
+    cpus 1
+    input:
+        tuple val(samplename), path(read_stats)
+    output:
+        tuple val(samplename), path("read_stats.tsv")
+    """
+    head -n 1 ${read_stats[0]} > read_stats.tsv
+    for fn in ${read_stats.join(" ")}
+    do
+        tail -n +2 \$fn >> read_stats.tsv
+    done
+    """
+}
+
+
+process sample_report {
+    label "opr_report"
+    cpus 1
+    input:
+        tuple
+            val(samplename),
+            path('clean_stats.tsv'),
+            val(assembly_modes),
+            path(assembly_stats),
+            path(blast_hits),
+            path('mapping_stats.tsv')
+    output:
+        val("${samplename}_report.txt")
+    """
+    python report_sample.py ${samplename}_report.txt \
+        --mapping_stats \
+        --clean_read_stats \
+        --assembly_modes \
+        --blast_hits
     """
 }
 
@@ -541,9 +605,12 @@ workflow pipeline {
         | blast
         | extract_blasthits
 
-        // get unique mapping targets from blast hits stored in .csv files
-        sample_ref = blast_hits
-        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, line.split(',')[2]) }}
+        // get mapping targets from blast hits stored in .csv files
+        blast_hits_list = blast_hits
+        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[2]) }}
+
+        sample_ref = blast_hits_list
+        | map {samplename, target_filter, blast_hit -> [samplename, blast_hit]}
         | unique
 
         // get custom accessions for references given by user
@@ -622,6 +689,12 @@ workflow pipeline {
         // TODO: create & export vcf files
         // TODO: replace header in consensus fasta files! (Do already in consensus step!)
 
+        targets_and_filters = blast_hits_list
+        | concat(custom_refs | map { samplename, ref_id ->  [samplename, "custom", ref_id] })
+        | concat(custom_sample_ref_ids | map { samplename, ref_id ->  [samplename, "custom", ref_id] })
+        | groupTuple(by: 0)
+        | concat_targets_and_filters
+
         // compute the stats for the reads mapped to the different targets and build a big table.
         collected_mapping_stats = mapped_to_ref
         | map {meta, ref, bam, bai -> [meta.alias, meta.consensus_target, meta, ref, bam, bai]}
@@ -633,11 +706,18 @@ workflow pipeline {
         | groupTuple(by: 0)
         | concat_mapping_stats
 
-        // TODO: assemble report - .csv (pandas)
-        // DONE - target mapping -> Done (mapping_stats)
-        // 2 - general sample: mapping to filters, assembly (can define later what is shown)
-        // 1 - merge target mapping and general sample into common stream
+        // collect sample read stats
+        read_stats = cleaned
+        | map {meta, filtered_reads, stats -> [meta.alias, stats]}
+        | concat(assemblies | map {meta, assemblies, stats -> [meta.alias, stats]})
+        | groupTuple(by: 0)
+        | concat_read_stats
+
         // TODO: create html reports
+        // include
+        // - general sample
+        // - targets and filters
+        // - mapping stats
 
         // define output
         ch_to_publish = Channel.empty()
@@ -660,7 +740,9 @@ workflow pipeline {
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
             // Report related output
+            read_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
             collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
+            targets_and_filters | map {alias, stats -> [stats, "$alias/sample_stats", null]}, // TODO: remove this from here and instead join with collected_mapping_stats
             // advanced output
             cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
         )
