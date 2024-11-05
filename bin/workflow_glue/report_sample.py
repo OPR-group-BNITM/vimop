@@ -6,6 +6,7 @@ from dominate.tags import h5, p, span, table, tbody, td, th, thead, tr
 import ezcharts as ezc
 from ezcharts.components.reports import labs
 from ezcharts.layout.snippets.table import DataTable
+from ezcharts.layout.snippets import Tabs
 
 # from pyecharts.charts import Page
 # from pyecharts.components import Table
@@ -97,14 +98,59 @@ def html_report(
             'max_len': 'Longest Read'
         })
         DataTable.from_pandas(df_readcounts[['Stage', 'Reads', 'Mean Length']], use_index=False, export=False)
-    with report.add_section("Consensus Targets", "Consensus Targets"):
-        # TODO: use Tabs to show different information?
-        DataTable.from_pandas(df_mapping_stats, use_index=False, export=True)
         p(
             """
-            Targets used for consensus building.
+            Reads left after each filtering step.
             """
         )
+    with report.add_section("Consensus Targets", "Consensus Targets"):
+        # TODO: use tabs to show another table without description but with more numbers
+        # (e.g. N-count, # bases called, )
+        df_mapstats = df_mapping_stats.copy()
+        df_mapstats['Coverage'] = (
+            df_mapstats['CalledNucleobases']
+            / (df_mapstats['CalledNucleobases'] + df_mapstats['NCount'])
+            * 100
+        ).round(0).astype(int)
+        df_mapstats.rename(
+            inplace=True,
+            columns={
+                'ReferenceLength': 'Length',
+                'NCount': 'Ambiguous positions',
+                'NumberOfMappedReads': 'Mapped reads',
+                'AverageCoverage': 'Average read coverage',
+                'CalledNucleobases': 'Positions called'
+            }
+        )
+        tabs = Tabs()
+        with tabs.add_tab("Overview"):
+            cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
+            DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
+            p(
+                """
+                Targets used for consensus building.
+                Coverage is reported in percent.
+                """
+            )
+        with tabs.add_tab("Details"):
+            cols = [
+                'Reference',
+                'Family',
+                'Organism',
+                'Length',
+                'Coverage',
+                'Positions called',
+                'Ambiguous positions',
+                'Mapped reads',
+                'Average read coverage'
+            ]
+            DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
+            p(
+                """
+                Targets used for consensus building.
+                Coverage is reported in percent.
+                """
+            )
     report.write(fname_out)
 
 
