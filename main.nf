@@ -443,9 +443,9 @@ process compute_mapping_stats {
     ref_len=\$(seqtk size ref.fasta | awk '{print \$2}')
     num_mapped_reads=\$(samtools view -F 4 -c sorted.bam)
     n_count=\$(seqtk comp cons.fasta | awk '{print \$9}')
-    non_n_count=\$(seqtk comp cons.fasta | awk '{print \$2}')
+    cons_length=\$(seqtk comp cons.fasta | awk '{print \$2}')
     avg_coverage=\$(awk '{sum+=\$3} END {if (NR > 0) print sum/NR; else print 0}' depth.txt)
-    echo "\$ref_id\t\$ref_len\t\$num_mapped_reads\t\$n_count\t\$non_n_count\t\$avg_coverage" > mapping_stats.csv
+    echo "\$ref_id\t\$ref_len\t\$num_mapped_reads\t\$n_count\t\$cons_length\t\$avg_coverage" > mapping_stats.csv
     """
 }
 
@@ -458,7 +458,7 @@ process concat_mapping_stats {
     output:
         tuple val(samplename), path('all_stats.tsv')
     """
-    echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tCalledNucleobases\tAverageCoverage" > all_stats.tsv
+    echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tConsensusLength\tAverageCoverage" > all_stats.tsv
     cat collected_stats_*.tsv >> all_stats.tsv
     """
 }
