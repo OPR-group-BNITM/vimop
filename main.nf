@@ -303,10 +303,12 @@ process extract_blasthits {
             try:
                 accession = hit.find('Hit_accession').text
                 fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
-                _, description, family, organism = fasta_header.split('|') 
+                # sometimes, the description contains the | symbol, so we have to split around it.
+                id_and_description, family, organism = fasta_header.rsplit('|', 2)
+                _, description = id_and_description.split('', 1).strip()
                 length = int(hit.find('Hit_len').text)
                 bit_score = float(hit.find(".//Hsp_bit-score").text)
-                rows.append([accession, description, family, organism, length, bit_score])
+                rows.append([accession, description, family.strip(), organism.strip(), length, bit_score])
             except (ValueError, AttributeError):
                 continue
     except ElementTree.ParseError:
