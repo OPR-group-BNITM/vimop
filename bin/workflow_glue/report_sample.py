@@ -9,28 +9,6 @@ from ezcharts.components.reports import labs
 from ezcharts.layout.snippets.table import DataTable
 from ezcharts.layout.snippets import Tabs
 
-# from pyecharts.charts import Page
-# from pyecharts.components import Table
-# from pyecharts.options import ComponentTitleOpts
-
-
-# def html_table(df: pd.DataFrame, title: str) -> Table:
-#     table = Table()
-#     headers = df.columns.tolist()
-#     rows = df.values.tolist()
-#     table.add(headers, rows)
-#     table.set_global_opts(title_opts=ComponentTitleOpts(title=title))
-#     return table
-
-
-# def html_report(
-#         df_mapping_stats,
-#         fname_out
-# ):
-#     page = Page()
-#     page.add(html_table(df_mapping_stats, "Consensus stats"))
-#     page.render(fname_out)
-
 
 def argparser():
     """Argument parser for entrypoint."""
@@ -159,6 +137,7 @@ def main(args):
     """Run the entry point."""
     logger = get_named_logger("Report")
 
+    # TODO: introduce checks of input with meaningful error messages
     # assert len(args.assembly_modes) == len(args.assembly_read_stats)
     # assert len(args.assembly_modes) == len(args.blast_hits)
 
@@ -180,16 +159,3 @@ def main(args):
     # -- parameters chosen (min_readlen, min_)
     # -- succesful or not
     # -- number of contigs found
-
-    # # TODO: replace this!
-    # fnames = [
-    #     args.mapping_stats,
-    #     args.clean_read_stats,
-    #     *args.assembly_read_stats,
-    #     *args.blast_hits
-    # ]
-    # with open(args.report, 'w') as f_report:
-    #     f_report.write(" ".join(fnames) + '\n')
-    #     for fn in fnames:
-    #         with open(fn) as infile:
-    #             f_report.write(infile.read() + '\n')
