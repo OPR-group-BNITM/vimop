@@ -305,7 +305,7 @@ process extract_blasthits {
                 fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
                 # sometimes, the description contains the | symbol, so we have to split around it.
                 id_and_description, family, organism = fasta_header.rsplit('|', 2)
-                _, description = id_and_description.split('', 1).strip()
+                description = id_and_description.split('|', 1)[1].strip()
                 length = int(hit.find('Hit_len').text)
                 bit_score = float(hit.find(".//Hsp_bit-score").text)
                 rows.append([accession, description, family.strip(), organism.strip(), length, bit_score])
@@ -402,12 +402,19 @@ process simple_consensus {
     output:
         tuple val(meta), path("cons.fasta")
     """
-    samtools consensus -a -m simple -c $min_share -d $min_depth -f fasta sorted.bam \
+    samtools consensus \
+    -a --mark-ins --show-del yes --show-ins yes \
+    --mode simple \
+    --min-depth $min_depth \
+    --call-fract $min_share \
+    -f fasta sorted.bam \
     | sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' \
-    > cons.fasta
+    > consensus_draft.fasta
 
-    # TODO: fix the consensus!
-
+    consensus_correction ref.fasta consensus_draft.fasta sorted.bam \
+    --call-fract $min_share \
+    --min-depth $min_depth \
+    --output cons.fasta
     """
 }
 

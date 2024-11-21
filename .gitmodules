@@ -1,0 +1,3 @@
+[submodule "bin/maptools"]
+	path = bin/maptools
+	url = git@github.com:OPR-group-BNITM/maptools.git
