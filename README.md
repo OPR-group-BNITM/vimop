@@ -18,3 +18,5 @@ Todo
     - is there enough disk space?
     - does the machine have given requirements (CPUs, RAM ..)
         - add a flag run_anyways in configs?
+- gzip files when writing to results (e.g. cleaned fasta)
+  - also in between to keep work small?
