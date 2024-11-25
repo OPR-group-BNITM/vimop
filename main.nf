@@ -304,17 +304,37 @@ process extract_blasthits {
                 accession = hit.find('Hit_accession').text
                 fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
                 # sometimes, the description contains the | symbol, so we have to split around it.
-                id_and_description, family, organism = fasta_header.rsplit('|', 2)
+                id_and_description, family, organism, orientation, segment = fasta_header.rsplit('|', 4)
                 description = id_and_description.split('|', 1)[1].strip()
                 length = int(hit.find('Hit_len').text)
                 bit_score = float(hit.find(".//Hsp_bit-score").text)
-                rows.append([accession, description, family.strip(), organism.strip(), length, bit_score])
+                rows.append([
+                    accession,
+                    description,
+                    family.strip(),
+                    organism.strip(),
+                    segment.strip(),
+                    orientation.strip(),
+                    length,
+                    bit_score
+                ])
             except (ValueError, AttributeError):
                 continue
     except ElementTree.ParseError:
         # empty file with no blast hits
         pass
-    hits = pd.DataFrame(rows, columns=['Reference', 'Description', 'Family', 'Organism', 'Length', 'Bitscore'])
+    hits = pd.DataFrame(
+        rows,
+        columns=[
+            'Reference',
+            'Description',
+            'Family',
+            'Organism',
+            'Segment',
+            'Orientation',
+            'Length',
+            'Bitscore'
+        ])
     hits.to_csv('blast-hits-${meta.mapping_target}.csv', header=True, index=False)
     """
 }
@@ -341,7 +361,7 @@ process map_to_ref {
     output:
         tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai")
     """
-    minimap2 -ax map-ont ref.fasta trimmed.fastq -t ${task.cpus} | samtools view -b -o mapped.bam
+    minimap2 -ax map-ont ref.fasta trimmed.fastq -t ${task.cpus} | samtools view -F 4 -b -o mapped.bam
     samtools sort --threads ${task.cpus} -o sorted.bam mapped.bam
     samtools index sorted.bam
     """
@@ -408,10 +428,20 @@ process simple_consensus {
     --min-depth $min_depth \
     --call-fract $min_share \
     -f fasta sorted.bam \
-    | sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' \
     > consensus_draft.fasta
 
-    consensus_correction ref.fasta consensus_draft.fasta sorted.bam \
+    # write a consensus of Ns in case there was nothing mapped at all.
+    if [ ! -s consensus_draft.fasta ]; then
+        header=\$(grep ">" ref.fasta)
+        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 60)
+        echo \$header > consensus_draft.fasta
+        echo \$sequence >> consensus_draft.fasta
+    fi
+
+    sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' consensus_draft.fasta > consensus_draft_header_corrected.fasta
+
+    consensus_correction ref.fasta consensus_draft_header_corrected.fasta sorted.bam \
     --call-fract $min_share \
     --min-depth $min_depth \
     --output cons.fasta
@@ -466,7 +496,8 @@ process sample_report {
             val(assembly_modes),
             path(assembly_stats),
             path(blast_hits),
-            path('mapping_stats.tsv')
+            path('mapping_stats.tsv'),
+            path('virus_db_config.yaml')
     output:
         tuple val(samplename), path("${samplename}.html"), path("${samplename}_consensus_stats.tsv")
     """
@@ -477,7 +508,8 @@ process sample_report {
         --clean-read-stats clean_stats.tsv \
         --assembly-modes ${assembly_modes.join(" ")} \
         --assembly-read-stats ${assembly_stats.join(" ")} \
-        --blast-hits ${blast_hits.join(" ")}
+        --blast-hits ${blast_hits.join(" ")} \
+        --virus-db-config virus_db_config.yaml
     """
 }
 
@@ -518,7 +550,7 @@ workflow pipeline {
 
         // metagenomic read classification with centrifuge
         classification = trimmed
-        | combine(Channel.of(params.virus_db))
+        | combine(Channel.of(params.classification_db))
         | combine(Channel.from(params.centrifuge_classification_libraries))
         | classify_centrifuge
 
@@ -563,7 +595,7 @@ workflow pipeline {
         blast_query_lengths = blast_queries | contigs_readlengths
     
         blast_hits = blast_queries
-        | map { meta, contigs -> [meta, contigs, params.virus_db, params.all_target] }
+        | map { meta, contigs -> [meta, contigs, params.blast_db, params.all_target] }
         | blast
         | extract_blasthits
 
@@ -584,7 +616,7 @@ workflow pipeline {
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
         | unique
-        | map { ref_id -> [ref_id, params.virus_db, params.all_target]}
+        | map { ref_id -> [ref_id, params.blast_db, params.all_target]}
         | get_ref_fasta
 
         // add custom reference files here
@@ -675,6 +707,7 @@ workflow pipeline {
         | join(collected_assembly_stats, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
+        | combine(Channel.of(params.virus_db_config))
         | sample_report
 
         // define output
