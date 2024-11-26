@@ -159,7 +159,9 @@ process assemble_canu {
             val(genome_size),
             val(cor_out_coverage)
     output:
-        tuple val(meta), path("assemblies.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
+        tuple val(meta),
+            path("assemblies.fasta"),
+            path("assembly_stats_${meta.mapping_target}.tsv")
     """
     subsampling_sizes=(${subsampling_sizes.join(" ")})
     min_readlengths=(${min_readlengths.join(" ")})
@@ -240,30 +242,59 @@ process prepare_blast_search {
 }
 
 
-process contigs_stats {
+process canu_contig_info {
     label "opr_general"
     cpus 1
     input:
-        tuple val(meta), path("sorted-contigs.fasta")
+        tuple val(meta), path("contigs.fasta")
     output:
-        tuple val(meta), path("stats.tsv")
+        tuple val(meta), path("contig-info-${meta.mapping_target}.tsv")
     """
-    seqkit stats sorted-contigs.fasta > stats.tsv
+    #!/usr/bin/env python
+    import pandas as pd
+    with open('contigs.fasta') as f_in:
+        fasta_headers = [
+            line[1:].strip().split()
+            for line in f_in
+            if line.startswith('>')
+        ]
+    info = [
+        {
+            'WorkflowMappingTarget': '${meta.mapping_target}',
+            'Contig': header[0],
+            **dict(entry.split('=') for entry in header[1:])
+        }
+        for header in fasta_headers
+    ]
+    pd.DataFrame(info).to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
     """
 }
 
 
-process contigs_readlengths {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("sorted-contigs.fasta")
-    output:
-        tuple val(meta), path("readlengths.txt")
-    """
-    readlength.sh qin=33 in=sorted-contigs.fasta bin=1 out=readlengths.txt
-    """
-}
+// process contigs_stats {
+//     label "opr_general"
+//     cpus 1
+//     input:
+//         tuple val(meta), path("sorted-contigs.fasta")
+//     output:
+//         tuple val(meta), path("stats.tsv")
+//     """
+//     seqkit stats sorted-contigs.fasta > stats.tsv
+//     """
+// }
+
+
+// process contigs_readlengths {
+//     label "opr_general"
+//     cpus 1
+//     input:
+//         tuple val(meta), path("sorted-contigs.fasta")
+//     output:
+//         tuple val(meta), path("readlengths.txt")
+//     """
+//     readlength.sh qin=33 in=sorted-contigs.fasta bin=1 out=readlengths.txt
+//     """
+// }
 
 
 process blast {
@@ -299,42 +330,52 @@ process extract_blasthits {
     rows = []
     try:
         root = ElementTree.parse('blast-results.xml').getroot()
-        for hit in root.findall(".//Hit[Hit_num='1']"):
-            try:
-                accession = hit.find('Hit_accession').text
-                fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
-                # sometimes, the description contains the | symbol, so we have to split around it.
-                id_and_description, family, organism, orientation, segment = fasta_header.rsplit('|', 4)
-                description = id_and_description.split('|', 1)[1].strip()
-                length = int(hit.find('Hit_len').text)
-                bit_score = float(hit.find(".//Hsp_bit-score").text)
-                rows.append([
-                    accession,
-                    description,
-                    family.strip(),
-                    organism.strip(),
-                    segment.strip(),
-                    orientation.strip(),
-                    length,
-                    bit_score
-                ])
-            except (ValueError, AttributeError):
-                continue
+        for iteration in root.findall(".//Iteration"):
+            query_name = iteration.find('Iteration_query-def').text.split()[0]
+            hit = iteration.find("./Iteration_hits/Hit[Hit_num='1']")
+            if hit is not None:
+                try:
+                    accession = hit.find('Hit_accession').text
+                    fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
+                    # sometimes, the description contains the | symbol, so we have to split around it.
+                    id_and_description, family, organism, orientation, segment = fasta_header.rsplit('|', 4)
+                    description = id_and_description.split('|', 1)[1]
+                    hit_length = int(hit.find('Hit_len').text)
+                    hsp = hit.find("./Hit_hsps/Hsp[Hsp_num='1']")
+                    if hsp is not None:
+                        bit_score = float(hsp.find("Hsp_bit-score").text)
+                        query_from = int(hsp.find("Hsp_query-from").text)
+                        query_to = int(hsp.find("Hsp_query-to").text)
+                        hit_from = int(hsp.find("Hsp_hit-from").text)
+                        hit_to = int(hsp.find("Hsp_hit-to").text)
+                        identity = int(hsp.find("Hsp_identity").text)
+                        alignment_length = int(hsp.find("Hsp_align-len").text)
+                        gaps = int(hsp.find("Hsp_gaps").text)
+                        rows.append({
+                            'Query': query_name.strip(),
+                            'Reference': accession.strip(),
+                            'Description': description.strip(),
+                            'Family': family.strip(),
+                            'Organism': organism.strip(),
+                            'Segment': segment.strip(),
+                            'Orientation': orientation.strip(),
+                            'HitLength': hit_length,
+                            'Bitscore': bit_score,
+                            'QueryFrom': query_from,
+                            'QueryTo': query_to,
+                            'HitFrom': hit_from,
+                            'HitTo': hit_to,
+                            'IdenticalPositions': identity,
+                            'AlignmentLength': alignment_length,
+                            'Gaps': gaps,
+                            'WorkflowMappingTarget': '${meta.mapping_target}',
+                        })
+                except (ValueError, AttributeError):
+                    continue
     except ElementTree.ParseError:
         # empty file with no blast hits
         pass
-    hits = pd.DataFrame(
-        rows,
-        columns=[
-            'Reference',
-            'Description',
-            'Family',
-            'Organism',
-            'Segment',
-            'Orientation',
-            'Length',
-            'Bitscore'
-        ])
+    hits = pd.DataFrame(rows)
     hits.to_csv('blast-hits-${meta.mapping_target}.csv', header=True, index=False)
     """
 }
@@ -497,6 +538,7 @@ process sample_report {
             path(assembly_stats),
             path(blast_hits),
             path('mapping_stats.tsv'),
+            path(contig_infos),
             path('virus_db_config.yaml')
     output:
         tuple val(samplename), path("${samplename}.html"), path("${samplename}_consensus_stats.tsv")
@@ -509,6 +551,7 @@ process sample_report {
         --assembly-modes ${assembly_modes.join(" ")} \
         --assembly-read-stats ${assembly_stats.join(" ")} \
         --blast-hits ${blast_hits.join(" ")} \
+        --contig-info ${contig_infos.join(" ")} \
         --virus-db-config virus_db_config.yaml
     """
 }
@@ -591,9 +634,14 @@ workflow pipeline {
 
         // database search for references using blast
         blast_queries = assemblies | map { meta, contigs, stats -> [meta, contigs] } | prepare_blast_search
-        blast_query_stats = blast_queries | contigs_stats
-        blast_query_lengths = blast_queries | contigs_readlengths
-    
+        // blast_query_stats = blast_queries | contigs_stats
+        //blast_query_lengths = blast_queries | contigs_readlengths
+
+        collected_contigs_infos = blast_queries
+        | canu_contig_info
+        | map { meta, contig_info -> [meta.alias, contig_info]}
+        | groupTuple(by: 0)
+
         blast_hits = blast_queries
         | map { meta, contigs -> [meta, contigs, params.blast_db, params.all_target] }
         | blast
@@ -601,7 +649,7 @@ workflow pipeline {
 
         // get mapping targets from blast hits stored in .csv files
         sample_ref = blast_hits
-        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[0]) }}
+        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[1]) }}
         | map {samplename, target_filter, blast_hit -> [samplename, blast_hit]}
         | unique
 
@@ -707,6 +755,7 @@ workflow pipeline {
         | join(collected_assembly_stats, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
+        | join(collected_contigs_infos, by: 0)
         | combine(Channel.of(params.virus_db_config))
         | sample_report
 
@@ -723,8 +772,8 @@ workflow pipeline {
             assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
             assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
             blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
+            // blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
+            //blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },

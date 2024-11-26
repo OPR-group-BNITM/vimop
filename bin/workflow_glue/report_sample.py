@@ -36,7 +36,12 @@ def argparser():
     )
     parser.add_argument(
         "--blast-hits",
-        help="csv files with argets by filtering method (need to match assembly modes).",
+        help="csv files with targets by filtering method (need to match assembly modes).",
+        nargs='*'
+    )
+    parser.add_argument(
+        "--contig-info",
+        help="Tab-separated file with contig stats.",
         nargs='*'
     )
     parser.add_argument(
@@ -46,27 +51,44 @@ def argparser():
     return parser
 
 
-def read_unique_blast_hits(*fnames):
-    """Get all targets found with blast but drop the duplicates.
-    """
-    cols = ['Reference', 'Description', 'Family', 'Organism', 'Segment', 'Orientation']
-    blast_hits = pd.concat([
-        pd.read_csv(fname, sep=',')[cols]
-        for fname in fnames
-    ]).drop_duplicates()
-    return blast_hits
+def df_read_and_merge(fnames, sep='\t'):
+    return pd.concat([pd.read_csv(fname, sep=sep) for fname in fnames])
 
 
-def rename_columns_extend_mapstats(df_mapping_stats):
-    df_mapstats = df_mapping_stats.copy()
-    df_mapstats.fillna({'ConsensusLength': 0, 'NCount': 0, 'Family': ''}, inplace=True)
-    df_mapstats['CalledNucleobases'] = df_mapstats['ConsensusLength'] - df_mapstats['NCount']
-    df_mapstats['Coverage'] = np.where(
-        df_mapstats['ConsensusLength'] == 0,
+def merge_mapstats_blasthits(mapstats, blasthits, virus_db_config):
+
+    # Reduce blast hits to unique hits
+    blast_cols = ['Reference', 'Description', 'Family', 'Organism', 'Segment', 'Orientation']
+    unique_blast_hits = blasthits[blast_cols].drop_duplicates()
+
+    merged = mapstats.copy()
+
+    # Removing the '.1', '.2', etc. from the 'Reference' column and then merge
+    merged['Reference'] = merged['Reference'].str.replace(r'\.\d+$', '', regex=True)
+    merged = pd.merge(merged, unique_blast_hits, on='Reference')
+
+    # add information about curated virus database entries
+    curated_organisms = {
+        org.lower(): feats['name']
+        for _, feats in virus_db_config['curated'].items()
+        for org in feats['organisms']
+    }
+    merged['Curated'] = merged['Organism'].str.lower().isin(curated_organisms.keys())
+    merged['Organism'] = merged['Organism'].map(curated_organisms).fillna(merged['Organism'])
+
+    # Fill missing values
+    merged.fillna({'ConsensusLength': 0, 'NCount': 0, 'Family': ''}, inplace=True)
+    
+    # Add columns about called nucleobases and coverage
+    merged['CalledNucleobases'] = merged['ConsensusLength'] - merged['NCount']
+    merged['Coverage'] = np.where(
+        merged['ConsensusLength'] == 0,
         0,
-        df_mapstats['CalledNucleobases'] / df_mapstats['ConsensusLength'] * 100
+        merged['CalledNucleobases'] / merged['ConsensusLength'] * 100
     ).round(0).astype(int)
-    df_mapstats.rename(
+
+    # rename columns
+    merged.rename(
         inplace=True,
         columns={
             'ReferenceLength': 'Length',
@@ -76,31 +98,64 @@ def rename_columns_extend_mapstats(df_mapping_stats):
             'CalledNucleobases': 'Positions called',
         }
     )
-    return df_mapstats
+
+    return merged
 
 
-def read_mapping_stats(fname_mapstats, fnames_blast_hits, virus_db_config):
-    unique_blast_hits = read_unique_blast_hits(*fnames_blast_hits)
-    mapping_stats = pd.read_csv(fname_mapstats, sep='\t')
-    # Removing the '.1', '.2', etc. from the 'Reference' column
-    mapping_stats['Reference'] = mapping_stats['Reference'].str.replace(r'\.\d+$', '', regex=True)
-    mapping_stats = pd.merge(mapping_stats, unique_blast_hits, on='Reference')
-    mapping_stats = rename_columns_extend_mapstats(mapping_stats)
+def merge_contigs_blasthits(contig_infos, blast_hits):
 
-    curated_organisms = {
-        org.lower(): feats['name']
-        for _, feats in virus_db_config['curated'].items()
-        for org in feats['organisms']
+    cols_contigs = ['Contig', 'WorkflowMappingTarget', 'len', 'reads']
+    contigs = contig_infos[cols_contigs]
+
+    # Merge the contig info with the blast hits
+    merged = pd.merge(
+        contigs,
+        blast_hits,
+        how='left',
+        left_on=['Contig', 'WorkflowMappingTarget'],
+        right_on=['Query', 'WorkflowMappingTarget'],
+        suffixes=('_contig', '_blast')
+    )
+
+    # Compute coverages and sequence identity
+    merged['Contig alignment coverage'] = ((merged['QueryFrom'] - merged['QueryTo']).abs() + 1) / merged['len']
+    merged['Reference alignment coverage'] = ((merged['HitFrom'] - merged['HitTo']).abs() + 1) / merged['HitLength']
+    merged['Sequence Identity'] = merged['IdenticalPositions'] / merged['AlignmentLength']
+
+    # Rename and filter columns
+    cols = {
+        'WorkflowMappingTarget': 'Filter',
+        'Contig': 'Contig',
+        'len': 'Length',
+        'reads': 'Number of reads',
+        'Reference': 'Blast Hit',
+        'Organism': 'Organism',
+        'HitLength': 'Hit length',
+        'Contig alignment coverage': 'Contig alignment coverage',
+        'Hit alignment coverage': 'Reference alignment coverage',
+        'Sequence Identity': 'Sequence Identity',
     }
-    mapping_stats['Curated'] = mapping_stats['Organism'].str.lower().isin(curated_organisms.keys())
-    mapping_stats['Organism'] = mapping_stats['Organism'].map(curated_organisms).fillna(mapping_stats['Organism'])
-
-    return mapping_stats
+    merged.rename(columns=cols, inplace=True)
+    filtered = merged[cols.values()]
+    # Fill empty values for contigs with no Blast hits
+    filtered.fillna(
+        {
+            'Blast Hit': 'Not found',
+            'Organism': '',
+            'Hit length': 0,
+            'Contig alignment coverage': 0,
+            'Reference alignment coverage': 0,
+            'Sequence Identity': 0,
+        },
+        inplace=True
+    )
+    return filtered.astype({'Hit length': int})
 
 
 def html_report(
         df_mapping_stats,
         df_clean_read_stats,
+        df_contig_stats,
         virus_db_config,
         fname_out 
 ):
@@ -225,6 +280,28 @@ def html_report(
                 Coverage is reported in percent.
                 """
             )
+
+    section_name = "Contigs"
+    with report.add_section(section_name, section_name):
+        # TODO: add tabs for overview and table?
+        cols = [
+            'Filter',
+            'Contig',
+            'Length',
+            'Number of reads',
+            'Blast Hit',
+            'Organism',
+            'Hit length',
+            'Contig alignment coverage',
+            'Reference alignment coverage',
+            'Sequence Identity',
+        ]
+        digits = {
+            'Contig alignment coverage': 2,
+            'Reference alignment coverage': 2,
+            'Sequence Identity': 2,
+        }
+        DataTable.from_pandas(df_contig_stats.round(digits)[cols], use_index=False, export=True)
     report.write(fname_out)
 
 
@@ -232,25 +309,40 @@ def main(args):
     """Run the entry point."""
     logger = get_named_logger("Report")
 
+    os.makedirs(args.outdir, exist_ok=True)
+
+    # read input
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
+    blast_hits = df_read_and_merge(args.blast_hits, sep=',')
+    contigs = df_read_and_merge(args.contig_info)
+    mapstats = pd.read_csv(args.mapping_stats, sep='\t')
+    clean_read_stats = pd.read_csv(args.clean_read_stats, sep='\t')
 
-    os.makedirs(args.outdir, exist_ok=True)
-    df_mapping_stats = read_mapping_stats(args.mapping_stats, args.blast_hits, virus_db_config)
-    df_mapping_stats.to_csv(os.path.join(args.outdir, f'{args.prefix}_consensus_stats.tsv'), sep='\t')
-    df_clean_read_stats = pd.read_csv(args.clean_read_stats, sep='\t')
+    # merge tables
+    consensus_stats = merge_mapstats_blasthits(mapstats, blast_hits, virus_db_config)
+    contigs_stats = merge_contigs_blasthits(contigs, blast_hits)
 
+    # write output
+    consensus_stats.to_csv(
+        os.path.join(args.outdir, f'{args.prefix}_consensus_stats.tsv'),
+        sep='\t'
+    )
+
+    # html report
+    fname_html_out = os.path.join(args.outdir, f'{args.prefix}.html')
     html_report(
-        df_mapping_stats,
-        df_clean_read_stats,
+        consensus_stats,
+        clean_read_stats,
+        contigs_stats,
         virus_db_config,
-        os.path.join(args.outdir, f'{args.prefix}.html')
+        fname_html_out,
     )
 
     # TODO
-    # - include assembly report
+    # - include assembly overview report
     # - per filter
-    # -- number of reads
-    # -- parameters chosen (min_readlen, min_)
+    # -- number of reads input/used
+    # -- parameters chosen (min_readlen, sampling?)
     # -- succesful or not
     # -- number of contigs found
