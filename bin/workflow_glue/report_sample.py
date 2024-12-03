@@ -51,6 +51,39 @@ def argparser():
     return parser
 
 
+
+def read_clean_stats(fname):
+    stats = pd.read_csv(fname, sep='\t')[['step', 'num_seqs', 'sum_len']]
+    n_rows, _ = stats.shape
+    entries = [
+        {
+            'Stage': 'Unfiltered',
+            'Reads': stats.loc[0]['num_seqs'],
+            'Nucleobases': stats.loc[0]['sum_len'],
+        },
+        *[
+            {
+                'Stage': stats.loc[i]['step'],
+                'Reads': stats.loc[i-1]['num_seqs'] - stats.loc[i]['num_seqs'],
+                'Nucleobases': stats.loc[i-1]['sum_len'] - stats.loc[i]['sum_len'],
+            }
+            for i in range(1, n_rows)
+        ],
+        {
+            'Stage': 'Filtered',
+            'Reads': stats.loc[n_rows-1]['num_seqs'],
+            'Nucleobases': stats.loc[n_rows-1]['sum_len'],
+        }
+    ]
+    stats_new = pd.DataFrame(entries)
+    stats_new['Mean length'] = np.where(
+        stats_new['Reads'] == 0,
+        0,
+        stats_new['Nucleobases'] / stats_new['Reads']
+    )
+    return stats_new
+
+
 def df_read_and_merge(fnames, sep='\t'):
     return pd.concat([pd.read_csv(fname, sep=sep) for fname in fnames])
 
@@ -161,16 +194,8 @@ def html_report(
 ):
     report = labs.BasicReport(report_title="Virus metagenommics sequencing")
     with report.add_section("Read Statistics", "Read Statistics"):
-        df_readcounts = df_clean_read_stats.rename(columns={
-            'step': 'Stage',
-            'num_seqs': 'Reads passing the filter',
-            'sum_len': 'Total Nucleotides',
-            'min_len': 'Shortest Read',
-            'avg_len': 'Mean Length',
-            'max_len': 'Longest Read'
-        })
         DataTable.from_pandas(
-            df_readcounts[['Stage', 'Reads passing the filter', 'Mean Length']],
+            df_clean_read_stats[['Stage', 'Reads', 'Mean length']].round({'Mean length': 0}).astype({'Mean length': int}),
             use_index=False,
             export=False
         )
@@ -224,6 +249,7 @@ def html_report(
                 'Mapped reads': 0,
                 'Average read coverage': 0,
             }
+            round = {'Average read coverage': 1}
             missing_segments = sorted(set(segments[organism.lower()]) - set(mapstats_segments['Segment'].values))
             missing_segments_rows = pd.DataFrame([{**{'Segment': seg}, **missing_segment_defaults} for seg in missing_segments])
             mapstats_segments = pd.concat(
@@ -240,7 +266,7 @@ def html_report(
                     """
                 )
             with tabs.add_tab("Details"):
-                DataTable.from_pandas(mapstats_segments[cols_details], use_index=False, export=True)
+                DataTable.from_pandas(mapstats_segments[cols_details].round(round), use_index=False, export=True)
                 p(
                     """
                     Targets used for consensus building.
@@ -273,7 +299,8 @@ def html_report(
                 'Mapped reads',
                 'Average read coverage'
             ]
-            DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
+            round = {'Average read coverage': 1}
+            DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
             p(
                 """
                 Targets used for consensus building.
@@ -317,7 +344,7 @@ def main(args):
     blast_hits = df_read_and_merge(args.blast_hits, sep=',')
     contigs = df_read_and_merge(args.contig_info)
     mapstats = pd.read_csv(args.mapping_stats, sep='\t')
-    clean_read_stats = pd.read_csv(args.clean_read_stats, sep='\t')
+    clean_read_stats = read_clean_stats(args.clean_read_stats)
 
     # merge tables
     consensus_stats = merge_mapstats_blasthits(mapstats, blast_hits, virus_db_config)
