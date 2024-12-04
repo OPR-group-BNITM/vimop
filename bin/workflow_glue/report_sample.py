@@ -101,13 +101,19 @@ def merge_mapstats_blasthits(mapstats, blasthits, virus_db_config):
     merged = pd.merge(merged, unique_blast_hits, on='Reference')
 
     # add information about curated virus database entries
-    curated_organisms = {
-        org.lower(): feats['name']
-        for _, feats in virus_db_config['curated'].items()
+    curated_organisms_labels = {
+        org.lower(): organism_label
+        for organism_label, feats in virus_db_config['curated'].items()
         for org in feats['organisms']
     }
-    merged['Curated'] = merged['Organism'].str.lower().isin(curated_organisms.keys())
-    merged['Organism'] = merged['Organism'].map(curated_organisms).fillna(merged['Organism'])
+    curated_organisms_names = {
+        label: feats['name']
+        for label, feats in virus_db_config['curated'].items()
+    }
+
+    merged['Curated'] = merged['Organism'].str.lower().isin(curated_organisms_labels.keys())
+    merged['Organism Label'] = merged['Organism'].str.lower().map(curated_organisms_labels).fillna('Non-Curated')
+    merged['Organism'] = merged['Organism'].map(curated_organisms_names).fillna(merged['Organism'])
 
     # Fill missing values
     merged.fillna({'ConsensusLength': 0, 'NCount': 0, 'Family': ''}, inplace=True)
@@ -169,9 +175,8 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
         'Sequence Identity': 'Sequence Identity',
     }
     merged.rename(columns=cols, inplace=True)
-    filtered = merged[cols.values()]
     # Fill empty values for contigs with no Blast hits
-    filtered.fillna(
+    merged.fillna(
         {
             'Blast Hit': 'Not found',
             'Organism': '',
@@ -182,6 +187,8 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
         },
         inplace=True
     )
+    filtered = merged[cols.values()]
+
     return filtered.astype({'Hit length': int})
 
 
@@ -207,58 +214,84 @@ def html_report(
 
     mapstats_curated = df_mapping_stats[df_mapping_stats['Curated'] == True]
     segments = {
-        feats['name'].lower(): feats['segments'] 
-        for _, feats in virus_db_config['curated'].items()
+        label: feats['segments'] 
+        for label, feats in virus_db_config['curated'].items()
     }
-    for organism, mapstats in mapstats_curated.groupby("Organism"):
-        section_name = organism
-        with report.add_section(section_name, section_name):
-            cols_overview = [
-                'Reference',
-                'Family',
-                'Organism',
-                'Segment',
-                'Length',
-                'Coverage',
-                'Description'
-            ]
-            cols_details = [
-                'Reference',
-                'Family',
-                'Organism',
-                'Segment',
-                'Length',
-                'Coverage',
-                'Positions called',
-                'Ambiguous positions',
-                'Mapped reads',
-                'Average read coverage'
-            ]
-            cols_all = list(set(cols_overview + cols_details))
-            mapstats_segments = mapstats.loc[mapstats.groupby('Segment')['Positions called'].idxmax()][cols_all]
-            mapstats_segments.reset_index(drop=True, inplace=True)
-            missing_segment_defaults = {
-                'Reference': 'Not found',
-                'Family': '',
-                'Organism': organism,
-                'Length': 0,
-                'Coverage': 0,
-                'Description': 'No hit found',
-                'Positions called': 0,
-                'Ambiguous positions': 0,
-                'Mapped reads': 0,
-                'Average read coverage': 0,
-            }
-            round = {'Average read coverage': 1}
-            missing_segments = sorted(set(segments[organism.lower()]) - set(mapstats_segments['Segment'].values))
-            missing_segments_rows = pd.DataFrame([{**{'Segment': seg}, **missing_segment_defaults} for seg in missing_segments])
-            mapstats_segments = pd.concat(
-                [mapstats_segments, missing_segments_rows],
-                ignore_index=True
-            )
+
+    section_name = 'Consensus'
+    with report.add_section(section_name, section_name):
+        tabs_consensus = Tabs()
+        for organism_label, mapstats in mapstats_curated.groupby("Organism Label"):
+            with tabs_consensus.add_tab(organism_label):
+                cols_overview = [
+                    'Reference',
+                    'Family',
+                    'Organism',
+                    'Segment',
+                    'Length',
+                    'Coverage',
+                    'Description'
+                ]
+                cols_details = [
+                    'Reference',
+                    'Family',
+                    'Organism',
+                    'Segment',
+                    'Length',
+                    'Coverage',
+                    'Positions called',
+                    'Ambiguous positions',
+                    'Mapped reads',
+                    'Average read coverage'
+                ]
+                cols_all = list(set(cols_overview + cols_details))
+                mapstats_segments = mapstats.loc[mapstats.groupby('Segment')['Positions called'].idxmax()][cols_all]
+                mapstats_segments.reset_index(drop=True, inplace=True)
+                missing_segment_defaults = {
+                    'Reference': 'Not found',
+                    'Family': '',
+                    'Organism': virus_db_config['curated'][organism_label]['name'],
+                    'Length': 0,
+                    'Coverage': 0,
+                    'Description': 'No hit found',
+                    'Positions called': 0,
+                    'Ambiguous positions': 0,
+                    'Mapped reads': 0,
+                    'Average read coverage': 0,
+                }
+                round = {'Average read coverage': 1}
+                missing_segments = sorted(set(segments[organism_label]) - set(mapstats_segments['Segment'].values))
+                missing_segments_rows = pd.DataFrame([
+                    {**{'Segment': seg}, **missing_segment_defaults}
+                    for seg in missing_segments
+                ])
+                mapstats_segments = pd.concat(
+                    [mapstats_segments, missing_segments_rows],
+                    ignore_index=True
+                )
+                tabs = Tabs()
+                with tabs.add_tab("Overview"):
+                    DataTable.from_pandas(mapstats_segments[cols_overview], use_index=False, export=True)
+                    p(
+                        """
+                        Targets used for consensus building.
+                        Coverage is reported in percent.
+                        """
+                    )
+                with tabs.add_tab("Details"):
+                    DataTable.from_pandas(mapstats_segments[cols_details].round(round), use_index=False, export=True)
+                    p(
+                        """
+                        Targets used for consensus building.
+                        Coverage is reported in percent.
+                        """
+                    )
+        with tabs_consensus.add_tab("Non-Curated"):
+            df_mapstats = df_mapping_stats[df_mapping_stats['Curated'] == False]
             tabs = Tabs()
             with tabs.add_tab("Overview"):
-                DataTable.from_pandas(mapstats_segments[cols_overview], use_index=False, export=True)
+                cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
+                DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
                 p(
                     """
                     Targets used for consensus building.
@@ -266,47 +299,25 @@ def html_report(
                     """
                 )
             with tabs.add_tab("Details"):
-                DataTable.from_pandas(mapstats_segments[cols_details].round(round), use_index=False, export=True)
+                cols = [
+                    'Reference',
+                    'Family',
+                    'Organism',
+                    'Length',
+                    'Coverage',
+                    'Positions called',
+                    'Ambiguous positions',
+                    'Mapped reads',
+                    'Average read coverage'
+                ]
+                round = {'Average read coverage': 1}
+                DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
                 p(
                     """
                     Targets used for consensus building.
                     Coverage is reported in percent.
                     """
                 )
-
-    section_name = "Non-Curated"
-    with report.add_section(section_name, section_name):
-        df_mapstats = df_mapping_stats[df_mapping_stats['Curated'] == False]
-        tabs = Tabs()
-        with tabs.add_tab("Overview"):
-            cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
-            DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
-            p(
-                """
-                Targets used for consensus building.
-                Coverage is reported in percent.
-                """
-            )
-        with tabs.add_tab("Details"):
-            cols = [
-                'Reference',
-                'Family',
-                'Organism',
-                'Length',
-                'Coverage',
-                'Positions called',
-                'Ambiguous positions',
-                'Mapped reads',
-                'Average read coverage'
-            ]
-            round = {'Average read coverage': 1}
-            DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
-            p(
-                """
-                Targets used for consensus building.
-                Coverage is reported in percent.
-                """
-            )
 
     section_name = "Contigs"
     with report.add_section(section_name, section_name):
