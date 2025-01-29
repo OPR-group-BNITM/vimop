@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - medaka=1.11.3
+  - medaka=2.0.1

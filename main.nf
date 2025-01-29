@@ -369,23 +369,14 @@ process medaka_consensus {
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path("model.hdf5"),
+            path(model),
             val(min_depth)
     output:
         tuple val(meta), path('consensus.fasta')
     """
-    medaka consensus sorted.bam consensus.hdf --threads ${task.cpus} --model model.hdf5
-    medaka stitch consensus.hdf ref.fasta consensus_pre_rename.fasta --fill_char N --min_depth ${min_depth}
-    sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' consensus_pre_rename.fasta > consensus.fasta
+    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
+    medaka sequence consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
     """
-    // TODO
-    // use --qualities in stitch
-    // then filter mask based on the quality: seqtk seq -q20 -n N input.fastq > output.fastq
-    // make a quality list?
-    // export as fasta file finally? or as fastq? (then it could be shown annotated, e.g. with colors)
-    // TODO
-    // also get variants?
-    // medaka variant --threads ${task.cpus} --ref ref.fasta consensus.hdf consensus.vcf
 }
 
 
