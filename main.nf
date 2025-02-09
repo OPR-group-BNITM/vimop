@@ -618,15 +618,14 @@ workflow pipeline {
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        assemblies = to_assemble_notarget | mix(to_assemble_targeted) | assemble_canu
-
-        // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
-        // read in old pipeline!
+        assemblies = to_assemble_notarget
+        | mix(to_assemble_targeted)
+        | assemble_canu
 
         // database search for references using blast
-        blast_queries = assemblies | map { meta, contigs, stats -> [meta, contigs] } | prepare_blast_search
-        // blast_query_stats = blast_queries | contigs_stats
-        //blast_query_lengths = blast_queries | contigs_readlengths
+        blast_queries = assemblies
+        | map { meta, contigs, stats -> [meta, contigs] }
+        | prepare_blast_search
 
         collected_contigs_infos = blast_queries
         | canu_contig_info
@@ -713,7 +712,7 @@ workflow pipeline {
             | medaka_consensus
         }
 
-        // TODO: create & export vcf files
+        // TODO: create & export vcf files?
         // TODO: replace header in consensus fasta files! (Do already in consensus step!)
 
         // compute the stats for the reads mapped to the different targets and build a big table.
@@ -763,8 +762,6 @@ workflow pipeline {
             assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
             assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
             blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            // blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            //blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
@@ -774,7 +771,6 @@ workflow pipeline {
             collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
             sample_reports | map { alias, html_report, consensus_stats -> [html_report, "$alias/report", null]},
             sample_reports | map { alias, html_report, consensus_stats -> [consensus_stats, "$alias/report", null]},
-            // targets_and_filters | map {alias, stats -> [stats, "$alias/sample_stats", null]}, // TODO: remove this from here and instead join with collected_mapping_stats
             // advanced output
             cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
         )
