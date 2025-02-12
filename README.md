@@ -20,3 +20,11 @@ Todo
         - add a flag run_anyways in configs?
 - gzip files when writing to results (e.g. cleaned fasta)
   - also in between to keep work small?
+
+- assembly
+  - exclude bubbles
+- Report
+  - separate tsv writing and html report
+  - read length and read qualities distribution histogram
+- Output structure
+  - fasta files in accessible folder structure

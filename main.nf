@@ -271,32 +271,6 @@ process canu_contig_info {
 }
 
 
-// process contigs_stats {
-//     label "opr_general"
-//     cpus 1
-//     input:
-//         tuple val(meta), path("sorted-contigs.fasta")
-//     output:
-//         tuple val(meta), path("stats.tsv")
-//     """
-//     seqkit stats sorted-contigs.fasta > stats.tsv
-//     """
-// }
-
-
-// process contigs_readlengths {
-//     label "opr_general"
-//     cpus 1
-//     input:
-//         tuple val(meta), path("sorted-contigs.fasta")
-//     output:
-//         tuple val(meta), path("readlengths.txt")
-//     """
-//     readlength.sh qin=33 in=sorted-contigs.fasta bin=1 out=readlengths.txt
-//     """
-// }
-
-
 process blast {
     label "opr_general"
     cpus 4
@@ -519,6 +493,47 @@ process concat_mapping_stats {
 }
 
 
+process collect_reference_info {
+    label "opr_general"
+    cpus 1
+    input:
+        path('ref_*.fasta')
+    output:
+        path('reference_info.tsv')
+    """
+    #!/usr/bin/env python
+    import pandas as pd
+    import glob
+    data = []
+    empty = ''
+    for fname in glob.glob("ref_*.fasta"):
+        with open(fname) as f:
+            header = f.readline().lstrip('>').strip()
+            try:
+                id, rest = header.split('|', 1)
+                descr, fam, org, orient, seg = map(str.strip, rest.rsplit('|', 4))
+                data.append({
+                    'Reference': id,
+                    'Description': descr,
+                    'Family': fam,
+                    'Organism': org,
+                    'Orientation': orient,
+                    'Segment': seg,
+                })
+            except ValueError:
+                data.append({
+                    'Reference': header.split('|')[0],
+                    'Description': empty,
+                    'Family': empty,
+                    'Organism': empty,
+                    'Orientation': empty,
+                    'Segment': empty,
+                })
+    pd.DataFrame(data).to_csv('reference_info.tsv', sep='\t')
+    """
+}
+
+
 process sample_report {
     label "wf_common"
     cpus 1
@@ -530,7 +545,8 @@ process sample_report {
             path(blast_hits),
             path('mapping_stats.tsv'),
             path(contig_infos),
-            path('virus_db_config.yaml')
+            path('virus_db_config.yaml'),
+            path('reference_info.tsv')
     output:
         tuple val(samplename), path("${samplename}.html"), path("${samplename}_consensus_stats.tsv")
     """
@@ -543,7 +559,8 @@ process sample_report {
         --assembly-read-stats ${assembly_stats.join(" ")} \
         --blast-hits ${blast_hits.join(" ")} \
         --contig-info ${contig_infos.join(" ")} \
-        --virus-db-config virus_db_config.yaml
+        --virus-db-config virus_db_config.yaml \
+        --reference-info reference_info.tsv
     """
 }
 
@@ -597,7 +614,7 @@ workflow pipeline {
         // mapping reads to given virus targets to filter them
         mapped_to_virus_target = cleaned
         | combine(Channel.from(params.targets))
-        | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
+        | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db] }
         | filter_virus_target
 
         // assembly to get queries to find references
@@ -712,6 +729,11 @@ workflow pipeline {
             | medaka_consensus
         }
 
+        reference_info = extended_ref_seqs
+        | map {refid, refseq -> refseq}
+        | collect
+        | collect_reference_info
+
         // TODO: create & export vcf files?
         // TODO: replace header in consensus fasta files! (Do already in consensus step!)
 
@@ -747,6 +769,7 @@ workflow pipeline {
         | join(collected_mapping_stats, by: 0)
         | join(collected_contigs_infos, by: 0)
         | combine(Channel.of(params.virus_db_config))
+        | combine(reference_info)
         | sample_report
 
         // define output

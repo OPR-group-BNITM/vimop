@@ -48,8 +48,11 @@ def argparser():
         "--virus-db-config",
         help="Config file of the virus data base (yaml)."
     )
+    parser.add_argument(
+        "--reference-info",
+        help='.tsv file with information about the reference genomes.'
+    )
     return parser
-
 
 
 def read_clean_stats(fname):
@@ -88,11 +91,11 @@ def df_read_and_merge(fnames, sep='\t'):
     return pd.concat([pd.read_csv(fname, sep=sep) for fname in fnames])
 
 
-def merge_mapstats_blasthits(mapstats, blasthits, virus_db_config):
+def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
 
     # Reduce blast hits to unique hits
-    blast_cols = ['Reference', 'Description', 'Family', 'Organism', 'Segment', 'Orientation']
-    unique_blast_hits = blasthits[blast_cols].drop_duplicates()
+    reference_info_cols = ['Reference', 'Description', 'Family', 'Organism', 'Segment', 'Orientation']
+    unique_blast_hits = reference_info[reference_info_cols].drop_duplicates()
 
     merged = mapstats.copy()
 
@@ -106,14 +109,9 @@ def merge_mapstats_blasthits(mapstats, blasthits, virus_db_config):
         for organism_label, feats in virus_db_config['curated'].items()
         for org in feats['organisms']
     }
-    curated_organisms_names = {
-        label: feats['name']
-        for label, feats in virus_db_config['curated'].items()
-    }
 
     merged['Curated'] = merged['Organism'].str.lower().isin(curated_organisms_labels.keys())
     merged['Organism Label'] = merged['Organism'].str.lower().map(curated_organisms_labels).fillna('Non-Curated')
-    merged['Organism'] = merged['Organism'].map(curated_organisms_names).fillna(merged['Organism'])
 
     # Fill missing values
     merged.fillna({'ConsensusLength': 0, 'NCount': 0, 'Family': ''}, inplace=True)
@@ -352,13 +350,17 @@ def main(args):
     # read input
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
+
+    reference_info = pd.read_csv(args.reference_info, sep='\t').fillna('')
+    mapstats = pd.read_csv(args.mapping_stats, sep='\t')
+
     blast_hits = df_read_and_merge(args.blast_hits, sep=',')
     contigs = df_read_and_merge(args.contig_info)
-    mapstats = pd.read_csv(args.mapping_stats, sep='\t')
+
     clean_read_stats = read_clean_stats(args.clean_read_stats)
 
     # merge tables
-    consensus_stats = merge_mapstats_blasthits(mapstats, blast_hits, virus_db_config)
+    consensus_stats = merge_mapstats_reference_info(mapstats, reference_info, virus_db_config)
     contigs_stats = merge_contigs_blasthits(contigs, blast_hits)
 
     # write output
@@ -366,6 +368,10 @@ def main(args):
         os.path.join(args.outdir, f'{args.prefix}_consensus_stats.tsv'),
         sep='\t'
     )
+
+    # TODO: READ MERGED STATS INSTEAD !!!
+    # - write contig stats
+    # - write clean_read_stats
 
     # html report
     fname_html_out = os.path.join(args.outdir, f'{args.prefix}.html')
