@@ -17,33 +17,6 @@ process trim {
 }
 
 
-process seqtk_stats {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("seqs.fastq")
-    output:
-        tuple val(meta), path("stats.txt")
-    """
-    seqkit stats -T seqs.fastq > stats.txt
-    """
-}
-
-
-process fastqc {
-    label "opr_general"
-    cpus 4
-    input:
-        tuple val(meta), path("seqs.fastq")
-    output:
-        tuple val(meta), path("fastqc")
-    """
-    mkdir -p fastqc
-    fastqc -q -t ${task.cpus} -o fastqc seqs.fastq
-    """
-}
-
-
 process classify_centrifuge {
     label "opr_centrifuge"
     cpus 1
@@ -407,10 +380,25 @@ process medaka_consensus {
             path(model),
             val(min_depth)
     output:
-        tuple val(meta), path('consensus.fasta')
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
     medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
-    medaka sequence consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
+    medaka sequence consensus.hdf ref.fasta consensus_draft.fasta --fill_char N --min_depth ${min_depth}
+
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+
+    # write a consensus of Ns in case there was nothing mapped at all.
+    if [ ! -s consensus_draft.fasta ]
+    then
+        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
+        echo "\$sequence" >> consensus.fasta
+    else
+        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
+    fi
+
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
     """
 }
 
@@ -426,7 +414,7 @@ process simple_consensus {
             val(min_depth),
             val(min_share)
     output:
-        tuple val(meta), path("cons.fasta")
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
     samtools consensus \
     -a --mark-ins --show-del yes --show-ins yes \
@@ -436,21 +424,23 @@ process simple_consensus {
     -f fasta sorted.bam \
     > consensus_draft.fasta
 
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+
     # write a consensus of Ns in case there was nothing mapped at all.
-    if [ ! -s consensus_draft.fasta ]; then
-        header=\$(grep ">" ref.fasta)
+    if [ ! -s consensus_draft.fasta ]
+    then
         seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
-        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 60)
-        echo \$header > consensus_draft.fasta
-        echo \$sequence >> consensus_draft.fasta
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
+        echo "\$sequence" >> consensus.fasta
+    else
+        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
     fi
 
-    sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' consensus_draft.fasta > consensus_draft_header_corrected.fasta
-
-    consensus_correction ref.fasta consensus_draft_header_corrected.fasta sorted.bam \
+    consensus_correction ref.fasta consensus.fasta sorted.bam \
     --call-fract $min_share \
     --min-depth $min_depth \
-    --output cons.fasta
+    --output consensus.${meta.consensus_target}.fasta
     """
 }
 
@@ -548,12 +538,10 @@ process sample_report {
             path('virus_db_config.yaml'),
             path('reference_info.tsv')
     output:
-        tuple val(samplename),
-            path('report.html'),
-            path('stats_reads.tsv'),
-            path('stats_contigs.tsv'),
-            path('stats_consensus.tsv')
-            // TODO: - use assembly_stats and assembly_modes to make contigs overview.
+        tuple val(samplename), path('report.html'), emit: report
+        tuple val(samplename), path('stats_reads.tsv'), emit: read_stats
+        tuple val(samplename), path('stats_contigs.tsv'), emit: contig_stats
+        tuple val(samplename), path('stats_consensus.tsv'), emit: consensus_stats
     """
     workflow-glue mergestats_reads \
         --clean-read-stats clean_stats.tsv \
@@ -576,6 +564,22 @@ process sample_report {
         --contigs-stats stats_contigs.tsv \
         --consensus-stats stats_consensus.tsv \
         --out report.html
+    """
+}
+
+
+process get_best_consensus_files {
+    label "wf_common"
+    cpus 1
+    input:
+        tuple val(samplename), path('consensus_stats.tsv'), path('cons_*.fasta')
+    output:
+        tuple val(samplename), path('out')
+    """
+    workflow-glue get_curated_consensus_genomes \
+        --consensus-stats consensus_stats.tsv \
+        --consensus-files cons_*.fasta \
+        --out-dir out
     """
 }
 
@@ -611,8 +615,6 @@ workflow pipeline {
     main:
         // trimming
         trimmed = samples | map{ meta, reads, stats -> [meta, reads] } | trim
-        trim_stats = trimmed | seqtk_stats
-        trim_fastqc = trimmed | fastqc
 
         // metagenomic read classification with centrifuge
         classification = trimmed
@@ -750,7 +752,6 @@ workflow pipeline {
         | collect_reference_info
 
         // TODO: create & export vcf files?
-        // TODO: replace header in consensus fasta files! (Do already in consensus step!)
 
         // compute the stats for the reads mapped to the different targets and build a big table.
         collected_mapping_stats = mapped_to_ref
@@ -777,7 +778,7 @@ workflow pipeline {
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
 
-        sample_reports = collected_clean_stats
+        sample_results = collected_clean_stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
         | join(collected_blast_hits, by: 0)
@@ -787,29 +788,37 @@ workflow pipeline {
         | combine(reference_info)
         | sample_report
 
+        collected_consensi = consensi
+        | map {meta, consensus -> [meta.alias, consensus]}
+        | groupTuple(by: 0)
+
+        best_consensi = sample_results.consensus_stats
+        | join(collected_consensi, by: 0)
+        | get_best_consensus_files
+
         // define output
         ch_to_publish = Channel.empty()
         | mix(
-            trim_stats | map { meta, stats -> [stats, "$meta.alias/trim_stats", null] },  // TODO: remove?
-            trim_fastqc | map { meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null] },  // TODO: remove?
             // centrifuge classification
             classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },  // TODO: all necessary as output?
             classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
-            // assemblies
-            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly", "${meta.mapping_target}_contigs.fasta"] },
+            // contigs
+            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly", "${meta.mapping_target}_contigs.fasta"] },
             // consensus
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
-            // Report and tables
-            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [html_report, "$alias", "report_${alias}.html"]},
-            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [read_stats, "$alias/tables", "reads.tsv"]},
-            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [contig_stats, "$alias/tables", "contigs.tsv"]},
-            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"]},
+            // selected consensi
+            best_consensi | map { alias, consensus_dir -> [consensus_dir, "$alias", "selected_consensus"] },
+            // report and tables
+            sample_results.report | map { alias, report -> [report, "$alias", "report_${alias}.html"] },
+            sample_results.read_stats | map { alias, read_stats -> [read_stats, "$alias/tables", "reads.tsv"] },
+            sample_results.contig_stats | map { alias, contig_stats -> [contig_stats, "$alias/tables", "contigs.tsv"] },
+            sample_results.consensus_stats | map { alias, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"] },
             // advanced output
             cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] }
         )

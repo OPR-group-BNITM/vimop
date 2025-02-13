@@ -59,7 +59,7 @@ def html_report(
             """
         )
 
-    mapstats_curated = df_mapping_stats[df_mapping_stats['Curated'] == True]
+    mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {
         label: feats['segments'] 
         for label, feats in virus_db_config['curated'].items()
@@ -92,7 +92,7 @@ def html_report(
                     'Average read coverage'
                 ]
                 cols_all = list(set(cols_overview + cols_details))
-                mapstats_segments = mapstats.loc[mapstats.groupby('Segment')['Positions called'].idxmax()][cols_all]
+                mapstats_segments = mapstats[cols_all]
                 mapstats_segments.reset_index(drop=True, inplace=True)
                 missing_segment_defaults = {
                     'Reference': 'Not found',

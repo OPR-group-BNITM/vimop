@@ -28,7 +28,7 @@ def argparser():
     return parser
 
 
-def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config, logger):
+def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
 
     # Reduce blast hits to unique hits
     reference_info_cols = ['Reference', 'Description', 'Family', 'Organism', 'Segment', 'Orientation']
@@ -58,6 +58,11 @@ def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config, log
         merged['CalledNucleobases'] / merged['ConsensusLength'] * 100
     ).round(0).astype(int)
 
+    # Get the best representative for each curated organism + segment combination
+    merged['IsBest'] = False
+    max_indices = merged[merged['Curated']].groupby(['Organism Label', 'Segment'])['CalledNucleobases'].idxmax()
+    merged.loc[max_indices, 'IsBest'] = True
+
     # rename columns
     merged.rename(
         inplace=True,
@@ -83,7 +88,6 @@ def main(args):
     mapstats = pd.read_csv(args.mapping_stats, sep='\t')
 
     consensus_stats = merge_mapstats_reference_info(
-        mapstats, reference_info, virus_db_config,
-        logger   
+        mapstats, reference_info, virus_db_config   
     )
     consensus_stats.to_csv(args.out, sep='\t')
