@@ -2,11 +2,13 @@ from .util import get_named_logger, wf_parser  # noqa: ABS101
 import pandas as pd
 import yaml
 
+from bokeh.models import Title
 from dominate.tags import h5, p, span, table, tbody, td, th, thead, tr
 import ezcharts as ezc
 from ezcharts.components.reports import labs
 from ezcharts.layout.snippets.table import DataTable
-from ezcharts.layout.snippets import Tabs
+from ezcharts.layout.snippets import Tabs, Grid
+from ezcharts.components.ezchart import EZChart
 
 
 def argparser():
@@ -32,6 +34,16 @@ def argparser():
         required=True,
     )
     parser.add_argument(
+        '--trimmed-read-distribution',
+        help='.tsv file with lengths and qualities of the trimmed reads.',
+        required=True,
+    )
+    parser.add_argument(
+        '--cleaned-read-distribution',
+        help='.tsv file with lengths and qualities of the trimmed reads.',
+        required=True,
+    )
+    parser.add_argument(
         '--out',
         help='Output filename',
         default='report.html'
@@ -39,25 +51,66 @@ def argparser():
     return parser
 
 
+def histogram_plot(data, title, xaxis_label):
+
+    nbins = 300
+    min_val = data.min()
+    max_val = data.max()
+    bin_width = (max_val - min_val) / nbins
+    mean = data.mean()
+    median = data.median()
+
+    plot = ezc.histplot(
+        data=data,
+        binwidth=bin_width,
+        binrange=(min_val, max_val),
+        color=None
+    )
+    subtitle = f"Mean: {mean:.1f}. Median: {median:.1f}"
+
+    plot._fig.xaxis.axis_label = xaxis_label
+    plot._fig.add_layout(Title(text=subtitle, text_font_size="0.8em"), 'above')
+    plot._fig.add_layout(Title(text=title, text_font_size="1.5em"), 'above')
+    
+    plot._fig.x_range.start = min_val
+    plot._fig.x_range.end = max_val
+
+    plot._fig.yaxis.axis_label = 'Number of reads'
+
+    return plot
+
+
 def html_report(
         df_mapping_stats,
         df_clean_read_stats,
         df_contig_stats,
+        df_lenqual_trim,
+        df_lenqual_clean,
         virus_db_config,
         fname_out 
 ):
     report = labs.BasicReport(report_title="Virus metagenommics sequencing")
     with report.add_section("Read Statistics", "Read Statistics"):
-        DataTable.from_pandas(
-            df_clean_read_stats[['Stage', 'Reads', 'Mean length']].round({'Mean length': 0}).astype({'Mean length': int}),
-            use_index=False,
-            export=False
-        )
-        p(
-            """
-            Reads left after each filtering step.
-            """
-        )
+        tabs_readstats = Tabs()
+        with tabs_readstats.add_tab("Table"):
+            DataTable.from_pandas(
+                df_clean_read_stats[['Stage', 'Reads', 'Mean length']].round({'Mean length': 0}).astype({'Mean length': int}),
+                use_index=False,
+                export=False
+            )
+            p(
+                """
+                Reads left after each filtering step.
+                """
+            )
+        with tabs_readstats.add_tab("Distributions trimmed"):
+            with Grid(columns=2):
+                EZChart(histogram_plot(df_lenqual_trim['Length'], 'Length', 'Base pairs'))
+                EZChart(histogram_plot(df_lenqual_trim['Quality'], 'Quality', 'Avgerage quality score per read'))
+        with tabs_readstats.add_tab("Distributions cleaned"):
+            with Grid(columns=2):
+                EZChart(histogram_plot(df_lenqual_clean['Length'], 'Length', 'Base pairs'))
+                EZChart(histogram_plot(df_lenqual_clean['Quality'], 'Quality', 'Avgerage quality score per read'))
 
     mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {
@@ -191,13 +244,12 @@ def html_report(
 
 
 def read_tsv(fname):
-    return pd.read_csv(fname, sep='\t')
+    return pd.read_csv(fname, sep='\t').fillna('')
 
 
 def main(args):
     logger = get_named_logger("Report")
 
-    # read input
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
 
@@ -205,11 +257,15 @@ def main(args):
     clean_read_stats = read_tsv(args.reads_stats)
     contigs_stats = read_tsv(args.contigs_stats)
 
-    # html report
+    lenqual_trim = read_tsv(args.trimmed_read_distribution)
+    lenqual_clean = read_tsv(args.cleaned_read_distribution)
+
     html_report(
         consensus_stats,
         clean_read_stats,
         contigs_stats,
+        lenqual_trim,
+        lenqual_clean,
         virus_db_config,
         args.out,
     )

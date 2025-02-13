@@ -2,6 +2,10 @@ import groovy.json.JsonBuilder
 nextflow.enable.dsl = 2
 
 include { fastq_ingress } from './lib/ingress'
+include {
+    lengths_and_qualities as lengths_and_qualities_trimmed;
+    lengths_and_qualities as lengths_and_qualities_cleaned;
+} from './lib/processes.nf'
 
 
 process trim {
@@ -52,7 +56,8 @@ process filter_contaminants {
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
-        tuple val(meta), path('filtered.fastq'), path("clean_stats.tsv")
+        tuple val(meta), path('filtered.fastq'), emit: reads
+        tuple val(meta.alias), path("clean_stats.tsv"), emit: stats
     """
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
@@ -525,7 +530,7 @@ process collect_reference_info {
 
 
 process sample_report {
-    label "wf_common"
+    label "opr_report"
     cpus 1
     input:
         tuple val(samplename),
@@ -535,6 +540,8 @@ process sample_report {
             path(blast_hits),
             path('mapping_stats.tsv'),
             path(contig_infos),
+            path('trimmed_read_stats.tsv'),
+            path('cleaned_read_stats.tsv'),
             path('virus_db_config.yaml'),
             path('reference_info.tsv')
     output:
@@ -563,13 +570,15 @@ process sample_report {
         --reads-stats stats_reads.tsv \
         --contigs-stats stats_contigs.tsv \
         --consensus-stats stats_consensus.tsv \
+        --trimmed-read-distribution trimmed_read_stats.tsv \
+        --cleaned-read-distribution cleaned_read_stats.tsv \
         --out report.html
     """
 }
 
 
 process get_best_consensus_files {
-    label "wf_common"
+    label "opr_report"
     cpus 1
     input:
         tuple val(samplename), path('consensus_stats.tsv'), path('cons_*.fasta')
@@ -614,7 +623,9 @@ workflow pipeline {
         samples
     main:
         // trimming
-        trimmed = samples | map{ meta, reads, stats -> [meta, reads] } | trim
+        trimmed = samples
+        | map{ meta, reads, stats -> [meta, reads] }
+        | trim
 
         // metagenomic read classification with centrifuge
         classification = trimmed
@@ -628,10 +639,19 @@ workflow pipeline {
         | map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
         | filter_contaminants
 
+        // get readstats
+        lenquals_trim = trimmed
+        | map {meta, reads -> [meta.alias, reads]}
+        | lengths_and_qualities_trimmed
+    
+        lenquals_clean = cleaned.reads
+        | map {meta, reads -> [meta.alias, reads]}
+        | lengths_and_qualities_cleaned
+
         // mapping reads to given virus targets to filter them
-        mapped_to_virus_target = cleaned
+        mapped_to_virus_target = cleaned.reads
         | combine(Channel.from(params.targets))
-        | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db] }
+        | map{ meta, reads, target -> [meta + ["mapping_target": target], reads, params.virus_db] }
         | filter_virus_target
 
         // assembly to get queries to find references
@@ -647,8 +667,8 @@ workflow pipeline {
         | map { meta, reads -> [meta, reads] + assembly_params }
 
         if (params.assemble_notarget) {
-            to_assemble_notarget = cleaned
-            | map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+            to_assemble_notarget = cleaned.reads
+            | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
@@ -731,10 +751,13 @@ workflow pipeline {
         | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
         // Map against references
-        mapped_to_ref = reads_and_ref | map_to_ref
+        mapped_to_ref = reads_and_ref
+        | map_to_ref
 
         // get coverages
-        coverage = mapped_to_ref | map { meta, ref, bam, bai -> [meta, bam, bai]} | calc_coverage
+        coverage = mapped_to_ref
+        | map { meta, ref, bam, bai -> [meta, bam, bai]}
+        | calc_coverage
 
         if (params.consensus_method == 'simple') {
             consensi = mapped_to_ref
@@ -764,10 +787,7 @@ workflow pipeline {
         | groupTuple(by: 0)
         | concat_mapping_stats
 
-        // Create the report.
-        collected_clean_stats = cleaned
-        | map { meta, reads, stats -> [meta.alias, stats] }
-
+        // Create the report
         assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
 
         collected_assembly_stats = assemblies
@@ -778,12 +798,14 @@ workflow pipeline {
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
 
-        sample_results = collected_clean_stats
+        sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
         | join(collected_contigs_infos, by: 0)
+        | join(lenquals_trim, by: 0)
+        | join(lenquals_clean, by: 0)
         | combine(Channel.of(params.virus_db_config))
         | combine(reference_info)
         | sample_report
@@ -820,7 +842,7 @@ workflow pipeline {
             sample_results.contig_stats | map { alias, contig_stats -> [contig_stats, "$alias/tables", "contigs.tsv"] },
             sample_results.consensus_stats | map { alias, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"] },
             // advanced output
-            cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] }
+            cleaned.reads | filter { params.advanced_output.cleaned_reads } | map { meta, reads -> [reads, "$meta.alias/clean", null] }
         )
 
     emit:
