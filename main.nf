@@ -510,7 +510,7 @@ process collect_reference_info {
         with open(fname) as f:
             header = f.readline().lstrip('>').strip()
             try:
-                id, rest = header.split('|', 1)
+                id, rest = map(str.strip, header.split('|', 1))
                 descr, fam, org, orient, seg = map(str.strip, rest.rsplit('|', 4))
                 data.append({
                     'Reference': id,
@@ -548,19 +548,35 @@ process sample_report {
             path('virus_db_config.yaml'),
             path('reference_info.tsv')
     output:
-        tuple val(samplename), path("${samplename}.html"), path("${samplename}_consensus_stats.tsv")
+        tuple val(samplename),
+            path('report.html'),
+            path('stats_consensus.tsv')
+            // TODO: 
+            // - remove assembly_stats and assembly_modes?
+            //   (or keep for overview over assemblies?
+            // - remove the samplename from the variable names
     """
-    workflow-glue report_sample \
-        --prefix ${samplename} \
-        --outdir . \
-        --mapping-stats mapping_stats.tsv \
+    workflow-glue mergestats_reads \
         --clean-read-stats clean_stats.tsv \
-        --assembly-modes ${assembly_modes.join(" ")} \
-        --assembly-read-stats ${assembly_stats.join(" ")} \
+        --out stats_reads.tsv
+
+    workflow-glue mergestats_contig \
         --blast-hits ${blast_hits.join(" ")} \
         --contig-info ${contig_infos.join(" ")} \
+        --out stats_contigs.tsv
+
+    workflow-glue mergestats_consensus \
         --virus-db-config virus_db_config.yaml \
-        --reference-info reference_info.tsv
+        --mapping-stats mapping_stats.tsv \
+        --reference-info reference_info.tsv \
+        --out stats_consensus.tsv
+
+    workflow-glue sample_html_report \
+        --virus-db-config virus_db_config.yaml \
+        --reads-stats stats_reads.tsv \
+        --contigs-stats stats_contigs.tsv \
+        --consensus-stats stats_consensus.tsv \
+        --out report.html
     """
 }
 
@@ -792,7 +808,7 @@ workflow pipeline {
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
             // Report related output
             collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
-            sample_reports | map { alias, html_report, consensus_stats -> [html_report, "$alias/report", null]},
+            sample_reports | map { alias, html_report, consensus_stats -> [html_report, "$alias", "report_${alias}.html"]},
             sample_reports | map { alias, html_report, consensus_stats -> [consensus_stats, "$alias/report", null]},
             // advanced output
             cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
