@@ -24,24 +24,24 @@ process classify_centrifuge {
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
         tuple val(meta),
-            path("classification-${target_db}.tsv"),
-            path("classification-report-${target_db}.tsv"),
-            path("classification-kraken-${target_db}.tsv"),
-            path("classification-${target_db}.html")
+            path("classification_${target_db}.tsv"),
+            path("classification_report_${target_db}.tsv"),
+            path("classification_kraken_${target_db}.tsv"),
+            path("classification_${target_db}.html")
     """
     centrifuge \
         --mm \
         -x ${db_path}/${target_db} \
         -U seqs.fastq \
-        --report-file classification-report-${target_db}.tsv \
-        -S classification-${target_db}.tsv
+        --report-file classification_report_${target_db}.tsv \
+        -S classification_${target_db}.tsv
     centrifuge-kreport \
-        -x ${db_path}/${target_db} classification-${target_db}.tsv > classification-kraken-${target_db}.tsv
+        -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
     ktImportTaxonomy \
         -tax ${db_path}/taxonomy \
         -m 3 -t 5 \
-        classification-kraken-${target_db}.tsv \
-        -o classification-${target_db}.html
+        classification_kraken_${target_db}.tsv \
+        -o classification_${target_db}.html
     """
 }
 
@@ -805,7 +805,7 @@ workflow pipeline {
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
             // contigs
-            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly", "${meta.mapping_target}_contigs.fasta"] },
+            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
             // consensus
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
