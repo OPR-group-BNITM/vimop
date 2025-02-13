@@ -550,11 +550,10 @@ process sample_report {
     output:
         tuple val(samplename),
             path('report.html'),
+            path('stats_reads.tsv'),
+            path('stats_contigs.tsv'),
             path('stats_consensus.tsv')
-            // TODO: 
-            // - remove assembly_stats and assembly_modes?
-            //   (or keep for overview over assemblies?
-            // - remove the samplename from the variable names
+            // TODO: - use assembly_stats and assembly_modes to make contigs overview.
     """
     workflow-glue mergestats_reads \
         --clean-read-stats clean_stats.tsv \
@@ -791,27 +790,28 @@ workflow pipeline {
         // define output
         ch_to_publish = Channel.empty()
         | mix(
-            trim_stats | map { meta, stats -> [stats, "$meta.alias/trim_stats", null] },
-            trim_fastqc | map { meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null] },
-            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
+            trim_stats | map { meta, stats -> [stats, "$meta.alias/trim_stats", null] },  // TODO: remove?
+            trim_fastqc | map { meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null] },  // TODO: remove?
+            // centrifuge classification
+            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },  // TODO: all necessary as output?
             classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
-            cleaned | map { meta, reads, stats -> [stats, "$meta.alias/clean", null] },
-            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
-            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
-            blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
-            consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
-            coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
-            // Report related output
-            collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
-            sample_reports | map { alias, html_report, consensus_stats -> [html_report, "$alias", "report_${alias}.html"]},
-            sample_reports | map { alias, html_report, consensus_stats -> [consensus_stats, "$alias/report", null]},
+            // assemblies
+            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly", "${meta.mapping_target}_contigs.fasta"] },
+            // consensus
+            mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
+            consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
+            coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
+            // Report and tables
+            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [html_report, "$alias", "report_${alias}.html"]},
+            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [read_stats, "$alias/tables", "reads.tsv"]},
+            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [contig_stats, "$alias/tables", "contigs.tsv"]},
+            sample_reports | map { alias, html_report, read_stats, contig_stats, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"]},
             // advanced output
-            cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
+            cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] }
         )
 
     emit:
