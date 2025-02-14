@@ -107,11 +107,20 @@ def html_report(
             with Grid(columns=2):
                 EZChart(histogram_plot(df_lenqual_trim['Length'], 'Length', 'Base pairs'))
                 EZChart(histogram_plot(df_lenqual_trim['Quality'], 'Quality', 'Avgerage quality score per read'))
+            p(
+                """
+                The distributions of the reads after trimming. They still contain host reads.
+                """
+            )
         with tabs_readstats.add_tab("Distributions cleaned"):
             with Grid(columns=2):
                 EZChart(histogram_plot(df_lenqual_clean['Length'], 'Length', 'Base pairs'))
                 EZChart(histogram_plot(df_lenqual_clean['Quality'], 'Quality', 'Avgerage quality score per read'))
-
+            p(
+                """
+                The distributions of the reads after cleaning. Host reads and technical contaminants are removed.
+                """
+            )
     mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {
         label: feats['segments'] 

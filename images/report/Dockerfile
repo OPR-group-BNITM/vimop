@@ -1,6 +1,12 @@
 # Start from a base image that includes Miniconda
 FROM continuumio/miniconda3
 
+# Create a directory for the Matplotlib config
+RUN mkdir -p /opt/matplotlib_config && chmod -R 777 /opt/matplotlib_config
+
+# Set the environment variable to point to this directory
+ENV MPLCONFIGDIR=/opt/matplotlib_config
+
 # Set the working directory
 WORKDIR /app
 

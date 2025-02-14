@@ -599,7 +599,7 @@ process get_best_consensus_files {
 // put the file into. If the latter is `null`, puts it into the top-level directory.
 process output {
     // publish inputs to output directory
-    label "wf_common"
+    label "opr_general"
     cpus 1
     publishDir (
         params.out_dir,
