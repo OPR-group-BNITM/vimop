@@ -147,7 +147,7 @@ process filter_virus_target {
 
 process assemble_canu {
     label "opr_draft_assembly"
-    cpus 8
+    cpus 16
     memory '30.GB'
     input:
         tuple val(meta),
@@ -157,9 +157,10 @@ process assemble_canu {
             val(read_sampling_bias),
             val(genome_size),
             val(cor_out_coverage),
-            val(stop_on_low_coverage)
+            val(stop_on_low_coverage),
+            val(stop_on_read_quality)
     output:
-        tuple val(meta), path("asm.contigs.fasta"), path("assembly_stats_${meta.mapping_target}.tsv"), path("asm.correctedReads.fasta")
+        tuple val(meta), path("asm.contigs.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
     """        
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
     echo -n "all_${meta.mapping_target}\t" >> stats.tsv
@@ -171,11 +172,12 @@ process assemble_canu {
         -p asm \
         -d \$outdir \
         genomeSize=$genome_size \
-        minReadLength=$min_readlength \
-        minOverlapLength=$min_overlap \
+        minReadLength=$min_read_length  \
+        minOverlapLength=$min_overlap_length \
         corOutCoverage=$cor_out_coverage \
         readSamplingBias=$read_sampling_bias \
         stopOnLowCoverage=$stop_on_low_coverage \
+        stopOnReadQuality=$stop_on_read_quality \
         maxThreads=${task.cpus} \
         maxMemory=${task.memory.toGiga()}g \
 
@@ -497,7 +499,8 @@ workflow pipeline {
             params.canu_read_sampling_bias,
             params.canu_genome_size,
             params.canu_cor_out_coverage,
-            params.canu_stop_on_low_coverage
+            params.canu_stop_on_low_coverage,
+            params.canu_stop_on_read_quality
         ]
 
         to_assemble_targeted = mapped_to_virus_target
