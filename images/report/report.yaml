@@ -1,0 +1,5 @@
+name: report
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
