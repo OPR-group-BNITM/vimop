@@ -5,3 +5,5 @@ channels:
   - defaults
 dependencies:
   - medaka=2.0.1
+  - seqkit=2.7.0
+  - bbmap=38.79
