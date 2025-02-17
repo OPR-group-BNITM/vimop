@@ -345,7 +345,12 @@ process map_to_ref {
     output:
         tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai")
     """
-    minimap2 -ax map-ont ref.fasta trimmed.fastq -t ${task.cpus} | samtools view -F 4 -b -o mapped.bam
+    minimap2 -ax map-ont ref.fasta trimmed.fastq \
+        -t ${task.cpus} --secondary=no \
+        -w ${params.map_to_target_minimap_window_size} \
+        -k ${params.map_to_target_minimap_kmer_size} \
+    | samtools view -F 4 -b -o mapped.bam
+
     samtools sort --threads ${task.cpus} -o sorted.bam mapped.bam
     samtools index sorted.bam
     """
