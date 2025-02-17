@@ -136,7 +136,7 @@ process assemble_canu {
             val(genome_size),
             val(cor_out_coverage),
             val(stop_on_low_coverage),
-            val(stop_on_read_quality)
+            val(min_input_coverage)
     output:
         tuple val(meta), path("asm.contigs.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
     """        
@@ -155,7 +155,7 @@ process assemble_canu {
         corOutCoverage=$cor_out_coverage \
         readSamplingBias=$read_sampling_bias \
         stopOnLowCoverage=$stop_on_low_coverage \
-        stopOnReadQuality=$stop_on_read_quality \
+        minInputCoverage=$min_input_coverage \
         maxThreads=${task.cpus} \
         maxMemory=${task.memory.toGiga()}g \
 
@@ -627,7 +627,7 @@ workflow pipeline {
             params.canu_genome_size,
             params.canu_cor_out_coverage,
             params.canu_stop_on_low_coverage,
-            params.canu_stop_on_read_quality
+            params.canu_min_input_coverage
         ]
 
         to_assemble_targeted = mapped_to_virus_target
