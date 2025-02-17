@@ -209,7 +209,14 @@ process canu_contig_info {
         }
         for header in fasta_headers
     ]
-    pd.DataFrame(info).to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
+    columns = [
+        'WorkflowMappingTarget',
+        'Contig',
+        'len',
+        'reads',
+    ]
+    df = pd.DataFrame(info, columns=columns)
+    df.to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
     """
 }
 
@@ -289,10 +296,29 @@ process extract_blasthits {
                         })
                 except (ValueError, AttributeError):
                     continue
+        hits = pd.DataFrame(rows)
     except ElementTree.ParseError:
         # empty file with no blast hits
-        pass
-    hits = pd.DataFrame(rows)
+        column_names = [
+            'Query',
+            'Reference',
+            'Description',
+            'Family',
+            'Organism',
+            'Segment',
+            'Orientation',
+            'HitLength',
+            'Bitscore',
+            'QueryFrom',
+            'QueryTo',
+            'HitFrom',
+            'HitTo',
+            'IdenticalPositions',
+            'AlignmentLength',
+            'Gaps',
+            'WorkflowMappingTarget',
+        ]
+        hits = pd.DataFrame(columns=column_names)
     hits.to_csv('blast-hits-${meta.mapping_target}.csv', header=True, index=False)
     """
 }
