@@ -143,7 +143,11 @@ process assemble_canu {
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
     echo -n "all_${meta.mapping_target}\t" >> stats.tsv
     seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    
     outdir=.
+
+    set +e
+
     canu \
         -nanopore-raw seqs.fastq \
         -fast \
@@ -157,11 +161,17 @@ process assemble_canu {
         stopOnLowCoverage=$stop_on_low_coverage \
         minInputCoverage=$min_input_coverage \
         maxThreads=${task.cpus} \
-        maxMemory=${task.memory.toGiga()}g \
+        maxMemory=${task.memory.toGiga()}g
 
-    # creates empty file if not exist
-    touch asm.contigs.fasta
-    touch asm.correctedReads.fasta
+    canu_status=\$?  # Capture Canu's exit code
+
+    set -e
+
+    if [[ \$canu_status -ne 0 ]]; then
+        echo "Canu failed, creating empty assembly..."
+        touch asm.contigs.fasta
+        touch asm.correctedReads.fasta
+    fi
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
     seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
@@ -169,6 +179,8 @@ process assemble_canu {
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
     """
 }
+
+
 
 
 process prepare_blast_search {
