@@ -115,87 +115,63 @@ process filter_virus_target {
     """
 }
 
-
 process assemble_canu {
     label "opr_draft_assembly"
-    cpus 8
-    memory '30.GB'
+    cpus 16
+    memory '32.GB'
     input:
         tuple val(meta),
             path("seqs.fastq"),
-            val(subsampling_sizes),
-            val(min_readlengths),
-            val(min_overlaps),
+            val(min_read_length),
+            val(min_overlap_length),
+            val(read_sampling_bias),
             val(genome_size),
-            val(cor_out_coverage)
+            val(cor_out_coverage),
+            val(stop_on_low_coverage),
+            val(min_input_coverage)
     output:
-        tuple val(meta),
-            path("assemblies.fasta"),
-            path("assembly_stats_${meta.mapping_target}.tsv")
-    """
-    subsampling_sizes=(${subsampling_sizes.join(" ")})
-    min_readlengths=(${min_readlengths.join(" ")})
-    min_overlaps=(${min_overlaps.join(" ")})
-
+        tuple val(meta), path("asm.contigs.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
+    """        
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
     echo -n "all_${meta.mapping_target}\t" >> stats.tsv
     seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    
+    outdir=.
 
-    for i in "\${!subsampling_sizes[@]}"
-    do
-        n_reads=\${subsampling_sizes[\$i]}
-        min_readlen=\${min_readlengths[\$i]}
-        min_overlap=\${min_overlaps[\$i]}
+    set +e
 
-        # check if the subsampled file exists, else subsample
-        fname_minlen=minlen_\${min_readlen}.fastq
-        if [ ! -f \$fname_minlen ]; then
-            reformat.sh qin=33 ow=t in=seqs.fastq out=\$fname_minlen minlen=\$min_readlen
-            echo -n "minlen_\${min_readlen}\t" >> stats.tsv
-            seqkit stats -T \$fname_minlen | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-        fi
-        fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}.fastq
-        if [ ! -f \$fname_subsampled ]; then
-            reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=\$fname_minlen out=\$fname_subsampled
-            echo -n "subsample_\${n_reads}_minlen_\${min_readlen}\t" >> stats.tsv
-            seqkit stats -T \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-        fi
+    canu \
+        -nanopore-raw seqs.fastq \
+        -fast \
+        -p asm \
+        -d \$outdir \
+        genomeSize=$genome_size \
+        minReadLength=$min_read_length  \
+        minOverlapLength=$min_overlap_length \
+        corOutCoverage=$cor_out_coverage \
+        readSamplingBias=$read_sampling_bias \
+        stopOnLowCoverage=$stop_on_low_coverage \
+        minInputCoverage=$min_input_coverage \
+        maxThreads=${task.cpus} \
+        maxMemory=${task.memory.toGiga()}g
 
-        outdir=attempt_\$i
-        prefix=attempt_\$i
-        fname_contigs=\${outdir}/\${prefix}.contigs.fasta
+    canu_status=\$?  # Capture Canu's exit code
 
-        set +e
-        canu \
-            -nanopore-raw \$fname_subsampled \
-            -fast \
-            -d \$outdir \
-            -p \$prefix \
-            genomeSize=$genome_size \
-            minReadLength=\$min_readlen \
-            minOverlapLength=\$min_overlap \
-            corOutCoverage=$cor_out_coverage \
-            maxThreads=$task.cpus \
-            maxMemory=${task.memory.toGiga()}g
+    set -e
 
-        canu_status=\$?
-        set -e
-        if [[ \$canu_status -eq 0 ]] && [[ -f \$fname_contigs ]] && [[ -s \$fname_contigs ]]; then
-            mv \$fname_contigs assemblies.fasta
-            break
-        else
-            continue
-        fi
-    done
+    if [[ \$canu_status -ne 0 ]]; then
+        touch asm.contigs.fasta
+        touch asm.correctedReads.fasta
+    fi
 
-    # remove potentially large fastq files.
-    rm minlen_*.fastq
+    echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
+    seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
 
-    # creates empty file if not exist
-    touch assemblies.fasta
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
     """
 }
+
+
 
 
 process prepare_blast_search {
@@ -818,11 +794,13 @@ workflow pipeline {
 
         // assembly to get queries to find references
         def assembly_params = [
-            params.assembly_parameters.collect { it.n_reads },
-            params.assembly_parameters.collect { it.min_readlen },
-            params.assembly_parameters.collect { it.min_overlap },
-            params.assembly_target_genome_size,
-            params.assembly_cor_out_coverage
+            params.canu_min_read_length,
+            params.canu_min_overlap_length,
+            params.canu_read_sampling_bias,
+            params.canu_genome_size,
+            params.canu_cor_out_coverage,
+            params.canu_stop_on_low_coverage,
+            params.canu_min_input_coverage
         ]
 
         to_assemble_targeted = mapped_to_virus_target
@@ -1018,8 +996,7 @@ workflow {
     Pinguscript.ping_start(nextflow, workflow, params)
     samples = fastq_ingress([
         "input": params.fastq,
-        "stats": true,
-        "sample_sheet": params.sample_sheet
+        "stats": true
     ])
     pipeline(samples)
     pipeline.out.results
