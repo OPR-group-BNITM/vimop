@@ -1,5 +1,6 @@
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.Files
 import java.lang.management.ManagementFactory
 import com.sun.management.OperatingSystemMXBean
@@ -38,7 +39,7 @@ class SystemRequirements {
     // }
 
     static File findExistingParentDirectory(String dir) {
-        def dirObj = new File(dir)
+        def dirObj = Paths.get(dir).toAbsolutePath().toFile()
         while (dirObj != null && !dirObj.exists()) {
             dirObj = dirObj.getParentFile()
         }
