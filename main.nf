@@ -172,8 +172,6 @@ process assemble_canu {
 }
 
 
-
-
 process prepare_blast_search {
     label "opr_general"
     cpus 1
