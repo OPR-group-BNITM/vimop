@@ -207,7 +207,7 @@ def watch_path(Path input, Map margs, ArrayList extensions) {
 
 
 process move_or_compress_fq_file {
-    label "opr_general"
+    label "general"
     cpus 1
     memory "2 GB"
     input:
@@ -232,7 +232,7 @@ process move_or_compress_fq_file {
 
 
 process fastcat {
-    label "opr_ingress"
+    label "ingress"
     cpus 3
     memory "2 GB"
     input:
@@ -534,7 +534,7 @@ def get_sample_sheet(Path sample_sheet, ArrayList required_sample_types) {
  * @return: string (optional)
  */
 process validate_sample_sheet {
-    label "opr_general"
+    label "general"
     cpus 1
     label "ingress"
     memory "2 GB"
