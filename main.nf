@@ -1028,6 +1028,7 @@ workflow {
     | output
 }
 
+
 workflow.onComplete {
     File outputFile = new File("${params.out_dir}/params.json")
     def json = new JsonBuilder(params)
@@ -1035,6 +1036,7 @@ workflow.onComplete {
     // notify that the workflow is complete
     Pinguscript.ping_complete(nextflow, workflow, params)
 }
+
 
 workflow.onError {
     Pinguscript.ping_error(nextflow, workflow, params)
