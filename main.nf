@@ -1,5 +1,5 @@
 import groovy.json.JsonBuilder
-import org.yaml.snakeyaml.Yaml
+import DatabaseInput
 
 nextflow.enable.dsl = 2
 
@@ -614,150 +614,12 @@ process output {
 }
 
 
-def exitError(message) {
-    System.err.println(message)
-    log.error(message)
-    System.exit(1)
-}
-
-
-def assertDir(dir) {
-    path = new File(dir)
-    if (!path.exists() || !path.isDirectory()) {
-        exitError( "ERROR: The directory '${path}' does not exist. Exiting.")
-    }
-}
-
-
-def assertFile(fname) {
-    path = new File(fname)
-    if (!path.exists() || !path.isFile()) {
-        exitError("ERROR: The directory '${path}' does not exist. Exiting.")
-    }
-}
-
-
-def getDir(dir, defaultDir) {
-    def outdir = dir ?: defaultDir
-    assertDir(outdir)
-    return outdir
-}
-
-
-def getFile(fname, defaultFname) {
-    def fnameOut = fname ?: defaultFname
-    assertFile(fnameOut)
-    return fnameOut
-}
-
-
-def readYamlConfig(fname) {
-    def yamlFile = new File(fname)
-    def yamlParser = new Yaml()
-    def configData = yamlParser.load(yamlFile.text)
-    return configData
-}
-
-
-def getFileFromConfig(config, path, key) {
-    if (!config.containsKey(key)) {
-        exitError("Error: Missing required key '$key' in configuration")
-    }
-    def fname = "${path}/${config[key]}"
-    assertFile(fname)
-    return fname
-}
-
-
-def getVirusFilterPaths(yamlConfig) {
-    def all = [ALL: yamlConfig.all.fasta]
-    def family_filters = yamlConfig.filters
-    def curated = yamlConfig.curated.collectEntries {
-        name, entries -> [(name): entries.fasta]
-    }
-    def merged = all + family_filters + curated
-    return merged
-}
-
-
-def checkInputDB(dbParams) {
-
-    // get the base directories
-    def baseDir = getDir(
-        dbParams.base_db,
-        dbParams.database_defaults.base
-    )
-    def virusDir = getDir(
-        dbParams.virus_db,
-        "${baseDir}/${dbParams.database_defaults.virus}"
-    )
-    def contaminantsDir = getDir(
-        dbParams.contaminants_db,
-        "${baseDir}/${dbParams.database_defaults.contaminants}"
-    )
-    def classificationDir = getDir(
-        dbParams.classification_db,
-        "${baseDir}/${dbParams.database_defaults.classification}"
-    )
-
-    // config contaminants data base
-    def contaminationConfigFileName = getFile(
-        dbParams.contaminants_db_config,
-        "${contaminantsDir}/${dbParams.database_defaults.contaminants_db_config}"
-    )
-    def contaminationConfig = readYamlConfig(contaminationConfigFileName)
-    def contaminationFilters = dbParams.contamination_filters.tokenize(",")
-    def contaminationFilterFiles = contaminationFilters.collect {
-        contaminant -> getFileFromConfig(contaminationConfig, contaminantsDir, contaminant)
-    }
-
-    // Virus configs
-    def virusConfigFileName = getFile(
-        dbParams.virus_db_config,
-        "${virusDir}/${dbParams.database_defaults.virus_db_config}"
-    )
-    def virusConfig = readYamlConfig(virusConfigFileName)
-    def filterFilenames = getVirusFilterPaths(virusConfig)
-    def virusTargets = dbParams.targets.tokenize(",")
-    def virusTargetsFiles = virusTargets.collect {
-        target -> [
-            target: target,
-            path: getFileFromConfig(filterFilenames, virusDir, target)
-        ]
-    }
-    def blastDir = "${virusDir}/${virusConfig.all.blast_db}"
-    assertDir(blastDir)
-
-    def blastPrefix = virusConfig.all.blast_prefix
-    assertFile("${blastDir}/${blastPrefix}.ndb")
-
-    // TODO: get the versions of all databases (?)
-
-    // TODO: check existance of at least one file per centrifuge library
-    classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
-
-    def databaseInfo = [
-        "virus_db": virusDir,
-        "virus_db_config": virusConfigFileName,
-        "contaminatants_db": contaminantsDir,
-        "classification_db": classificationDir,
-        "blast_db": blastDir,
-        "blast_prefix": blastPrefix,
-        "contamination_filter_names": contaminationFilters,
-        "contamination_filter_files": contaminationFilterFiles,
-        "virus_targets": virusTargetsFiles,
-        "classification_libraries": classificationLibraries
-    ]
-    return databaseInfo
-}
-
-
 // workflow module
 workflow pipeline {
     take:
         samples
     main:
-        db_config = checkInputDB(params)
+        db_config = new DatabaseInput(params)
 
         // trimming
         trimmed = samples
@@ -766,13 +628,13 @@ workflow pipeline {
 
         // metagenomic read classification with centrifuge
         classification = trimmed
-        | combine(Channel.of(db_config.classification_db))
-        | combine(Channel.from(db_config.classification_libraries))
+        | combine(Channel.of(db_config.classificationDir))
+        | combine(Channel.from(db_config.classificationLibraries))
         | classify_centrifuge
 
         // contaminant filtering
         cleaned = trimmed
-        | map{ meta, reads -> [meta, reads, db_config.contamination_filter_files, db_config.contamination_filter_names] }
+        | map{ meta, reads -> [meta, reads, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
         | filter_contaminants
 
         // get readstats
@@ -786,7 +648,7 @@ workflow pipeline {
 
         // mapping reads to given virus targets to filter them
         mapped_to_virus_target = cleaned.reads
-        | combine(Channel.from(db_config.virus_targets))
+        | combine(Channel.from(db_config.virusTargets))
         | map{ meta, reads, target -> [meta + ["mapping_target": target.target], reads, target.path] }
         | filter_virus_target
 
@@ -825,7 +687,7 @@ workflow pipeline {
         | groupTuple(by: 0)
 
         blast_hits = blast_queries
-        | map { meta, contigs -> [meta, contigs, db_config.blast_db, db_config.blast_prefix] }
+        | map { meta, contigs -> [meta, contigs, db_config.blastDir, db_config.blastPrefix] }
         | blast
         | extract_blasthits
 
@@ -846,7 +708,7 @@ workflow pipeline {
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
         | unique
-        | map { ref_id -> [ref_id, db_config.blast_db, db_config.blast_prefix]}
+        | map { ref_id -> [ref_id, db_config.blastDir, db_config.blastPrefix] }
         | get_ref_fasta
 
         // add custom reference files here
@@ -944,7 +806,7 @@ workflow pipeline {
         | join(collected_contigs_infos, by: 0)
         | join(lenquals_trim, by: 0)
         | join(lenquals_clean, by: 0)
-        | combine(Channel.of(db_config.virus_db_config))
+        | combine(Channel.of(db_config.virusConfigFileName))
         | combine(reference_info)
         | sample_report
 
