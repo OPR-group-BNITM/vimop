@@ -168,7 +168,6 @@ process assemble_canu {
     set -e
 
     if [[ \$canu_status -ne 0 ]]; then
-        echo "Canu failed, creating empty assembly..."
         touch asm.contigs.fasta
         touch asm.correctedReads.fasta
     fi
