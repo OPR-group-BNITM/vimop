@@ -198,10 +198,10 @@ process pop_bubbles {
     """
     #!/usr/bin/env python
     from Bio import SeqIO
-    with open('canu_contigs.fasta', "r") as in, open('nobubbles.fasta', "w") as out:
-        for record in SeqIO.parse(in, 'fasta'):
+    with open('nobubbles.fasta', "w") as f_out:
+        for record in SeqIO.parse('canu_contigs.fasta', 'fasta'):
             if "bubble=yes" not in record.description:
-                SeqIO.write(record, out, 'fasta')
+                SeqIO.write(record, f_out, 'fasta')
     """
 }
 

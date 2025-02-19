@@ -14,6 +14,7 @@ include {
     filter_contaminants;
     filter_virus_target;
     assemble_canu;
+    pop_bubbles;
     prepare_blast_search;
     canu_contig_info;
     blast;
