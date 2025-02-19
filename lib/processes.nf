@@ -131,7 +131,7 @@ process filter_virus_target {
 }
 
 process assemble_canu {
-    label "draft_assembly"
+    label "canu"
     cpus 16
     memory '32.GB'
     input:
