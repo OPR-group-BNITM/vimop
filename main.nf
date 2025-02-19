@@ -1,4 +1,6 @@
 import groovy.json.JsonBuilder
+import org.yaml.snakeyaml.Yaml
+
 nextflow.enable.dsl = 2
 
 include { fastq_ingress } from './lib/ingress'
@@ -99,27 +101,17 @@ process filter_virus_target {
     label "opr_target_mapping"
     cpus 4
     input:
-        tuple val(meta), path('seqs.fastq'), path(db_path)
+        tuple val(meta), path('seqs.fastq'), path(target)
     output:
         tuple val(meta), path('filtered.fastq')
     """
-    if [[ -f ${db_path}/${meta.mapping_target}.mmi ]]; then
-        fname_ref_index=${db_path}/${meta.mapping_target}.mmi
-    elif [[ -f ${db_path}/${meta.mapping_target}.fasta ]]; then
-        fname_ref_index=${db_path}/${meta.mapping_target}.fasta
-    else
-        echo "No file ${db_path}/${meta.mapping_target}.fasta or ${db_path}/${meta.mapping_target}.mmi found as reference file to map" >&2
-        exit 1
-    fi
-
     minimap2 \
         -x map-ont \
-        -a \$fname_ref_index \
+        -a ${target} \
         -t ${task.cpus} \
         seqs.fastq \
     | samtools fastq \
-        -F 4 \
-        --reference reference.fasta > filtered.fastq
+        -F 4 > filtered.fastq
     """
 }
 
@@ -648,11 +640,151 @@ process output {
 }
 
 
+def exitError(message) {
+    System.err.println(message)
+    log.error(message)
+    System.exit(1)
+}
+
+
+def assertDir(dir) {
+    path = new File(dir)
+    if (!path.exists() || !path.isDirectory()) {
+        exitError( "ERROR: The directory '${path}' does not exist. Exiting.")
+    }
+}
+
+
+def assertFile(fname) {
+    path = new File(fname)
+    if (!path.exists() || !path.isFile()) {
+        exitError("ERROR: The directory '${path}' does not exist. Exiting.")
+    }
+}
+
+
+def getDir(dir, defaultDir) {
+    def outdir = dir ?: defaultDir
+    assertDir(outdir)
+    return outdir
+}
+
+
+def getFile(fname, defaultFname) {
+    def fnameOut = fname ?: defaultFname
+    assertFile(fnameOut)
+    return fnameOut
+}
+
+
+def readYamlConfig(fname) {
+    def yamlFile = new File(fname)
+    def yamlParser = new Yaml()
+    def configData = yamlParser.load(yamlFile.text)
+    return configData
+}
+
+
+def getFileFromConfig(config, path, key) {
+    if (!config.containsKey(key)) {
+        exitError("Error: Missing required key '$key' in configuration")
+    }
+    def fname = "${path}/${config[key]}"
+    assertFile(fname)
+    return fname
+}
+
+
+def getVirusFilterPaths(yamlConfig) {
+    def all = [ALL: yamlConfig.all.fasta]
+    def family_filters = yamlConfig.filters
+    def curated = yamlConfig.curated.collectEntries {
+        name, entries -> [(name): entries.fasta]
+    }
+    def merged = all + family_filters + curated
+    return merged
+}
+
+
+def checkInputDB(dbParams) {
+
+    // get the base directories
+    def baseDir = getDir(
+        dbParams.base_db,
+        dbParams.database_defaults.base
+    )
+    def virusDir = getDir(
+        dbParams.virus_db,
+        "${baseDir}/${dbParams.database_defaults.virus}"
+    )
+    def contaminantsDir = getDir(
+        dbParams.contaminants_db,
+        "${baseDir}/${dbParams.database_defaults.contaminants}"
+    )
+    def classificationDir = getDir(
+        dbParams.classification_db,
+        "${baseDir}/${dbParams.database_defaults.classification}"
+    )
+
+    // config contaminants data base
+    def contaminationConfigFileName = getFile(
+        dbParams.contaminants_db_config,
+        "${contaminantsDir}/${dbParams.database_defaults.contaminants_db_config}"
+    )
+    def contaminationConfig = readYamlConfig(contaminationConfigFileName)
+    def contaminationFilters = dbParams.contamination_filters.tokenize(",")
+    def contaminationFilterFiles = contaminationFilters.collect {
+        contaminant -> getFileFromConfig(contaminationConfig, contaminantsDir, contaminant)
+    }
+
+    // Virus configs
+    def virusConfigFileName = getFile(
+        dbParams.virus_db_config,
+        "${virusDir}/${dbParams.database_defaults.virus_db_config}"
+    )
+    def virusConfig = readYamlConfig(virusConfigFileName)
+    def filterFilenames = getVirusFilterPaths(virusConfig)
+    def virusTargets = dbParams.targets.tokenize(",")
+    def virusTargetsFiles = virusTargets.collect {
+        target -> [
+            target: target,
+            path: getFileFromConfig(filterFilenames, virusDir, target)
+        ]
+    }
+    def blastDir = "${virusDir}/${virusConfig.all.blast_db}"
+    assertDir(blastDir)
+
+    def blastPrefix = virusConfig.all.blast_prefix
+    assertFile("${blastDir}/${blastPrefix}.ndb")
+
+    // TODO: get the versions of all databases (?)
+
+    // TODO: check existance of at least one file per centrifuge library
+    classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
+
+    def databaseInfo = [
+        "virus_db": virusDir,
+        "virus_db_config": virusConfigFileName,
+        "contaminatants_db": contaminantsDir,
+        "classification_db": classificationDir,
+        "blast_db": blastDir,
+        "blast_prefix": blastPrefix,
+        "contamination_filter_names": contaminationFilters,
+        "contamination_filter_files": contaminationFilterFiles,
+        "virus_targets": virusTargetsFiles,
+        "classification_libraries": classificationLibraries
+    ]
+    return databaseInfo
+}
+
+
 // workflow module
 workflow pipeline {
     take:
         samples
     main:
+        db_config = checkInputDB(params)
+
         // trimming
         trimmed = samples
         | map{ meta, reads, stats -> [meta, reads] }
@@ -660,14 +792,13 @@ workflow pipeline {
 
         // metagenomic read classification with centrifuge
         classification = trimmed
-        | combine(Channel.of(params.classification_db))
-        | combine(Channel.from(params.centrifuge_classification_libraries))
+        | combine(Channel.of(db_config.classification_db))
+        | combine(Channel.from(db_config.classification_libraries))
         | classify_centrifuge
 
         // contaminant filtering
-        db_files = params.contamination_filters.collect{ filter -> params.contamination_databases[filter] }
         cleaned = trimmed
-        | map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
+        | map{ meta, reads -> [meta, reads, db_config.contamination_filter_files, db_config.contamination_filter_names] }
         | filter_contaminants
 
         // get readstats
@@ -681,8 +812,8 @@ workflow pipeline {
 
         // mapping reads to given virus targets to filter them
         mapped_to_virus_target = cleaned.reads
-        | combine(Channel.from(params.targets))
-        | map{ meta, reads, target -> [meta + ["mapping_target": target], reads, params.virus_db] }
+        | combine(Channel.from(db_config.virus_targets))
+        | map{ meta, reads, target -> [meta + ["mapping_target": target.target], reads, target.path] }
         | filter_virus_target
 
         // assembly to get queries to find references
@@ -718,7 +849,7 @@ workflow pipeline {
         | groupTuple(by: 0)
 
         blast_hits = blast_queries
-        | map { meta, contigs -> [meta, contigs, params.blast_db, params.all_target] }
+        | map { meta, contigs -> [meta, contigs, db_config.blast_db, db_config.blast_prefix] }
         | blast
         | extract_blasthits
 
@@ -739,7 +870,7 @@ workflow pipeline {
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
         | unique
-        | map { ref_id -> [ref_id, params.blast_db, params.all_target]}
+        | map { ref_id -> [ref_id, db_config.blast_db, db_config.blast_prefix]}
         | get_ref_fasta
 
         // add custom reference files here
@@ -837,7 +968,7 @@ workflow pipeline {
         | join(collected_contigs_infos, by: 0)
         | join(lenquals_trim, by: 0)
         | join(lenquals_clean, by: 0)
-        | combine(Channel.of(params.virus_db_config))
+        | combine(Channel.of(db_config.virus_db_config))
         | combine(reference_info)
         | sample_report
 
@@ -853,7 +984,7 @@ workflow pipeline {
         ch_to_publish = Channel.empty()
         | mix(
             // centrifuge classification
-            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },  // TODO: all necessary as output?
+            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
@@ -873,7 +1004,7 @@ workflow pipeline {
             sample_results.contig_stats | map { alias, contig_stats -> [contig_stats, "$alias/tables", "contigs.tsv"] },
             sample_results.consensus_stats | map { alias, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"] },
             // advanced output
-            cleaned.reads | filter { params.advanced_output.cleaned_reads } | map { meta, reads -> [reads, "$meta.alias/clean", null] }
+            cleaned.reads | filter { params.output_cleaned_reads } | map { meta, reads -> [reads, "$meta.alias/clean", null] }
         )
 
     emit:
