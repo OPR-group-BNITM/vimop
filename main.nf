@@ -1,5 +1,6 @@
 import groovy.json.JsonBuilder
 import DatabaseInput
+import SystemRequirements
 
 nextflow.enable.dsl = 2
 
@@ -94,8 +95,8 @@ workflow pipeline {
         | assemble_canu
 
         // database search for references using blast
-        blast_queries = assemblies
-        | map { meta, contigs, stats -> [meta, contigs] }
+        blast_queries = assemblies.contigs
+        | pop_bubbles
         | prepare_blast_search
 
         collected_contigs_infos = blast_queries
@@ -207,8 +208,8 @@ workflow pipeline {
         // Create the report
         assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
 
-        collected_assembly_stats = assemblies
-        | map {meta, contigs, stats -> [meta.alias, stats]}
+        collected_assembly_stats = assemblies.stats
+        | map {meta, stats -> [meta.alias, stats]}
         | groupTuple(by: 0)
 
         collected_blast_hits = blast_hits
@@ -244,7 +245,7 @@ workflow pipeline {
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
             // contigs
-            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
+            assemblies.contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
             // consensus
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
@@ -271,6 +272,17 @@ workflow pipeline {
 WorkflowMain.initialise(workflow, params, log)
 workflow {
     Pinguscript.ping_start(nextflow, workflow, params)
+
+    def workDir = session.workDir.toString()
+    new SystemRequirements(true).checkSystemRequirements(
+        params.min_disk_space_work_gb,
+        params.min_disk_space_out_gb,
+        params.min_ram_gb,
+        params.min_cpus,
+        params.out_dir,
+        workDir
+    )
+
     samples = fastq_ingress([
         "input": params.fastq,
         "stats": true

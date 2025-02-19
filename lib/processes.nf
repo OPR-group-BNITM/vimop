@@ -145,7 +145,8 @@ process assemble_canu {
             val(stop_on_low_coverage),
             val(min_input_coverage)
     output:
-        tuple val(meta), path("asm.contigs.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
+        tuple val(meta), path("asm.contigs.fasta"), emit: contigs
+        tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """        
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
     echo -n "all_${meta.mapping_target}\t" >> stats.tsv
@@ -183,6 +184,24 @@ process assemble_canu {
     seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
 
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
+    """
+}
+
+
+process pop_bubbles {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path('canu_contigs.fasta')
+    output:
+        tuple val(meta), path('nobubbles.fasta')
+    """
+    #!/usr/bin/env python
+    from Bio import SeqIO
+    with open('canu_contigs.fasta', "r") as in, open('nobubbles.fasta', "w") as out:
+        for record in SeqIO.parse(in, 'fasta'):
+            if "bubble=yes" not in record.description:
+                SeqIO.write(record, out, 'fasta')
     """
 }
 
