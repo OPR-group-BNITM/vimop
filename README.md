@@ -2,6 +2,10 @@
 
 Analysis pipeline for virus metagenomics using the sispa-protocol.
 
+## Requirements
+
+TODO
+
 ## Installation
 
 Todo
@@ -9,6 +13,10 @@ Todo
 ## Run nanoflow 
 
 Todo
+
+## Options
+
+TODO
 
 ## TODO
 
@@ -23,3 +31,4 @@ Todo
 
 - assembly
   - exclude bubbles
+  - input coverage parameter that determines the number of reads sampled
