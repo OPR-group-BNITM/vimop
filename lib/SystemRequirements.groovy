@@ -21,22 +21,14 @@ class SystemRequirements {
     }
 
     static void exitError(String message) {
-        System.err.println(
+        def fullMessage = (
             "${message}\n"
-            "The minimum system requirements are an approximation and may not always fit.\n"
-            "You can change them in the configs."
+            + "The minimum system requirements are an approximation and may not always fit.\n"
+            + "You can change them in the configs."
         )
+        System.err.println(fullMessage)
         System.exit(1)
     }
-
-    // TODO: do this instead?
-    // static void exitError(String message) {
-    //     throw new RuntimeException(
-    //         "${message}\n"
-    //         "The minimum system requirements are an approximation and may not always fit.\n"
-    //         "You can change them in the configs."
-    //     )
-    // }
 
     static File findExistingParentDirectory(String dir) {
         def dirObj = Paths.get(dir).toAbsolutePath().toFile()

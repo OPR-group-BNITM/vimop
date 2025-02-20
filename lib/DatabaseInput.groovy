@@ -15,21 +15,20 @@ class DatabaseInput {
     List<String> classificationLibraries
 
     static void exitError(String message) {
-        System.err.println(message)
-        System.exit(1)
+        throw new RuntimeException(message)
     }
 
     static void assertDir(String dir) {
         def path = new File(dir)
         if (!path.exists() || !path.isDirectory()) {
-            exitError("ERROR: The directory '${path}' does not exist. Exiting.")
+            exitError("The directory '${path}' does not exist. Exiting.")
         }
     }
 
     static void assertFile(String fname) {
         def path = new File(fname)
         if (!path.exists() || !path.isFile()) {
-            exitError("ERROR: The file '${path}' does not exist. Exiting.")
+            exitError("The file '${path}' does not exist. Exiting.")
         }
     }
 
@@ -54,7 +53,7 @@ class DatabaseInput {
 
     static String getFileFromConfig(Map config, String path, String key) {
         if (!config.containsKey(key)) {
-            exitError("Error: Missing required key '$key' in configuration")
+            exitError("Missing required key '$key' in configuration")
         }
         def fname = "${path}/${config[key]}"
         assertFile(fname)

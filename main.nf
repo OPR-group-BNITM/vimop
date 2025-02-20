@@ -271,18 +271,19 @@ workflow pipeline {
 
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
+
+// check the system requirements before starting the workflow
+new SystemRequirements(true).checkSystemRequirements(
+    params.min_disk_space_work_gb,
+    params.min_disk_space_out_gb,
+    params.min_ram_gb,
+    params.min_cpus,
+    params.out_dir,
+    session.workDir.toString()
+)
+
 workflow {
     Pinguscript.ping_start(nextflow, workflow, params)
-
-    def workDir = session.workDir.toString()
-    new SystemRequirements(true).checkSystemRequirements(
-        params.min_disk_space_work_gb,
-        params.min_disk_space_out_gb,
-        params.min_ram_gb,
-        params.min_cpus,
-        params.out_dir,
-        workDir
-    )
 
     samples = fastq_ingress([
         "input": params.fastq,
