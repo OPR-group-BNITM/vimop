@@ -10,6 +10,36 @@ from ezcharts.layout.snippets.table import DataTable
 from ezcharts.layout.snippets import Tabs, Grid
 from ezcharts.components.ezchart import EZChart
 
+# ezcharts wrappers
+from ezcharts.layout.util import cls, css
+from ezcharts.layout.snippets.tabs import ITabsClasses, ITabsStyles
+
+
+class NoMarginTabsClasses(ITabsClasses):
+    """Override tab classes to remove margins."""
+    tab_buttons_list: str = cls("nav", "nav-tabs")  # Removed "mb-2"
+    tab_contents_container: str = cls("tab-content", "p-0")  # Set padding to 0
+
+
+class NoMarginTabsStyles(ITabsStyles):
+    """Override tab styles to remove margins."""
+    tab_button: str = css(
+        "margin-bottom: 0",  # Remove negative margin
+        "font-weight: 600",
+        "cursor: pointer",
+        "border-color: transparent"
+    )
+    tab_button_active: str = css(
+        "border-bottom: 2px solid #0079a4",
+        "color: #0079a4!important"
+    )
+
+
+class NoMarginTabs(Tabs):
+    """Custom Tabs class without extra margins."""
+    def __init__(self) -> None:
+        super().__init__(styles=NoMarginTabsStyles(), classes=NoMarginTabsClasses())
+
 
 def argparser():
     parser = wf_parser("report_sample")
@@ -91,7 +121,7 @@ def html_report(
 ):
     report = labs.BasicReport(report_title="Virus metagenommics sequencing")
     with report.add_section("Read Statistics", "Read Statistics"):
-        tabs_readstats = Tabs()
+        tabs_readstats = NoMarginTabs()
         with tabs_readstats.add_tab("Table"):
             DataTable.from_pandas(
                 df_clean_read_stats[['Stage', 'Reads', 'Mean length']].round({'Mean length': 0}).astype({'Mean length': int}),
@@ -129,7 +159,7 @@ def html_report(
 
     section_name = 'Consensus'
     with report.add_section(section_name, section_name):
-        tabs_consensus = Tabs()
+        tabs_consensus = NoMarginTabs()
         for organism_label, mapstats in mapstats_curated.groupby("Organism Label"):
             with tabs_consensus.add_tab(organism_label):
                 cols_overview = [
@@ -178,7 +208,7 @@ def html_report(
                     [mapstats_segments, missing_segments_rows],
                     ignore_index=True
                 )
-                tabs = Tabs()
+                tabs = NoMarginTabs()
                 with tabs.add_tab("Overview"):
                     DataTable.from_pandas(mapstats_segments[cols_overview], use_index=False, export=True)
                     p(
@@ -197,7 +227,7 @@ def html_report(
                     )
         with tabs_consensus.add_tab("Non-Curated"):
             df_mapstats = df_mapping_stats[df_mapping_stats['Curated'] == False]
-            tabs = Tabs()
+            tabs = NoMarginTabs()
             with tabs.add_tab("Overview"):
                 cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
                 DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
