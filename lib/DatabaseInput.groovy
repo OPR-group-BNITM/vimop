@@ -60,13 +60,35 @@ class DatabaseInput {
         return fname
     }
 
-    static Map getVirusFilterPaths(Map yamlConfig) {
-        def all = [ALL: yamlConfig.all.fasta]
-        def family_filters = yamlConfig.filters
-        def curated = yamlConfig.curated.collectEntries { name, entries ->
-            [(name): entries.fasta]
+    static void checkUniqueKeys(List<Map<String, Object>> maps) {
+        def seenKeys = new HashSet<String>()
+        maps.each { map ->
+            map.each { key, value ->
+                def normalizedKey = key.toLowerCase()
+                if (seenKeys.contains(normalizedKey)) {
+                    exitError("Duplicate key detected: $key")
+                }
+                seenKeys.add(normalizedKey)
+            }
         }
-        return all + family_filters + curated
+    }
+
+    static Map upperCaseMap(List<Map<String, Object>> maps) {
+        checkUniqueKeys(maps)
+        def merged = maps.inject([:]) { mergedSoFar, map -> mergedSoFar + map }
+        def mapWithUpperCaseKeys = merged.collectEntries {
+            name, fasta -> [(name.toUpperCase()): fasta]
+        }
+        return mapWithUpperCaseKeys
+    }
+
+    static Map getVirusFilterPaths(Map yamlConfig) {
+        def all = ["ALL": yamlConfig.all.fasta]
+        def family_filters = yamlConfig.filters
+        def curated = yamlConfig.curated.collectEntries {
+            name, entries -> [(name): entries.fasta]
+        }
+        return upperCaseMap([all, family_filters, curated])
     }
 
     DatabaseInput(Map dbParams) {
@@ -90,10 +112,10 @@ class DatabaseInput {
             dbParams.contaminants_db_config,
             "${this.contaminantsDir}/${dbParams.database_defaults.contaminants_db_config}"
         )
-        def contaminationConfig = readYamlConfig(contaminationConfigFileName)
+        def contaminationConfig = upperCaseMap([readYamlConfig(contaminationConfigFileName)])
         this.contaminationFilters = dbParams.contamination_filters.tokenize(",")
         this.contaminationFilterFiles = this.contaminationFilters.collect {
-            contaminant -> getFileFromConfig(contaminationConfig, this.contaminantsDir, contaminant)
+            contaminant -> getFileFromConfig(contaminationConfig, this.contaminantsDir, contaminant.toUpperCase())
         }
 
         // virus
@@ -105,7 +127,10 @@ class DatabaseInput {
         def filterFilenames = getVirusFilterPaths(virusConfig)
         def virusTargetNames = dbParams.targets.tokenize(",")
         this.virusTargets = virusTargetNames.collect {
-            target -> [target: target, path: getFileFromConfig(filterFilenames, virusDir, target)]
+            target -> [
+                target: target,
+                path: getFileFromConfig(filterFilenames, virusDir, target.toUpperCase())
+            ]
         }
 
         // blast
@@ -117,5 +142,7 @@ class DatabaseInput {
 
         // classification
         this.classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
+
+        // TODO: check for each classification library, that at least one file exists
     }
 }
