@@ -1,18 +1,34 @@
 from .util import get_named_logger, wf_parser  # noqa: ABS101
 import pandas as pd
 import yaml
+from typing import List, Type
 
 from bokeh.models import Title
-from dominate.tags import h5, p, span, table, tbody, td, th, thead, tr
+from dominate.tags import (
+    h1, h5, p, div, span, table, tbody,
+    td, th, thead, tr, section, html_tag
+)
 import ezcharts as ezc
 from ezcharts.components.reports import labs
-from ezcharts.layout.snippets.table import DataTable
 from ezcharts.layout.snippets import Tabs, Grid
+from ezcharts.layout.snippets.table import DataTable
+from ezcharts.layout.snippets.section import Section
 from ezcharts.components.ezchart import EZChart
 
-# ezcharts wrappers
+# for Tabs without margins
 from ezcharts.layout.util import cls, css
 from ezcharts.layout.snippets.tabs import ITabsClasses, ITabsStyles
+
+# report
+from ezcharts.components.theme import (
+    EPI2MELabsLogo, LAB_body_resources, LAB_head_resources
+)
+from ezcharts.layout.snippets.banner import (
+    IBannerStyles, IBannerClasses, IBadgeStyles, IBadgeClasses, Badge
+)
+from ezcharts.components.reports import Report
+from ezcharts.layout.resource import Resource
+from ezcharts.layout.base import Snippet
 
 
 class NoMarginTabsClasses(ITabsClasses):
@@ -39,6 +55,83 @@ class NoMarginTabs(Tabs):
     """Custom Tabs class without extra margins."""
     def __init__(self) -> None:
         super().__init__(styles=NoMarginTabsStyles(), classes=NoMarginTabsClasses())
+
+
+class OprBanner(Snippet):
+    """A styled div tag containing a heading and badges."""
+
+    TAG = 'div'
+
+    def __init__(self, report_title: str) -> None:
+        """Create styled banner."""
+        styles: IBannerStyles = IBannerStyles()
+        classes: IBannerClasses = IBannerClasses()
+        super().__init__(
+            styles=styles,
+            classes=classes,
+            className=classes.container,
+            style=styles.container
+        )
+        with self:
+            with div(className=self.classes.inner, style=self.styles.inner):
+                h1(report_title)
+                # p(
+                #     f"Results generated through the {workflow_name} nextflow "
+                #     "workflow provided by Oxford Nanopore Technologies.",
+                #     className="py-2 fs-5"
+                # )
+                self.badges = div(className="d-flex flex-wrap")
+
+    def add_badge(
+        self,
+        title: str,
+        bg_class=None,
+        styles: IBadgeStyles = IBadgeStyles(),
+        classes: IBadgeClasses = IBadgeClasses(),
+    ) -> None:
+        """Add a badge to the banner."""
+        with self.badges:
+            Badge(title, styles=styles, classes=classes, bg_class=bg_class)
+
+
+class OprReport(Report):
+    """A basic OPR-themed report."""
+
+    def __init__(
+        self,
+        report_title,
+        logo: Type[html_tag] = EPI2MELabsLogo,
+        head_resources: List[Resource] = LAB_head_resources,
+        body_resources: List[Resource] = LAB_body_resources
+    ) -> None:
+        """Create tag."""
+        super().__init__(
+            report_title=report_title,
+            head_resources=head_resources,
+            body_resources=body_resources
+        )
+        with self.header:
+            self.nav = labs.LabsNavigation(logo=logo, groups=['main', 'meta'])
+            self.intro_content = section(id="intro-content", role="region")
+            with self.intro_content:
+                self.banner = OprBanner(report_title)
+                self.banner.add_badge("Research use only")
+
+        with self.main:
+            self.intro_content = section(id="intro-content", role="region")
+            self.main_content = section(id="main-content", role="region")
+
+    def add_section(
+        self,
+        title: str,
+        link: str,
+        overflow: bool = False
+    ) -> Section:
+        """Add a section to the main_content region."""
+        href = self.get_uid('Section')
+        self.nav.add_link('main', link, f'#{href}')
+        with self.main_content:
+            return Section(href, title, overflow=overflow)
 
 
 def argparser():
@@ -119,7 +212,9 @@ def html_report(
         virus_db_config,
         fname_out 
 ):
-    report = labs.BasicReport(report_title="Virus metagenommics sequencing")
+    report = OprReport(
+        report_title="Virus metagenomics sequencing"
+    )
     with report.add_section("Read Statistics", "Read Statistics"):
         tabs_readstats = NoMarginTabs()
         with tabs_readstats.add_tab("Table"):
