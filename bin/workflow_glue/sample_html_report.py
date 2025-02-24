@@ -6,29 +6,28 @@ from typing import List, Type
 from bokeh.models import Title
 from dominate.tags import (
     h1, h5, p, div, span, table, tbody,
-    td, th, thead, tr, section, html_tag
+    td, th, thead, tr, section, html_tag,
+    a, button
 )
 import ezcharts as ezc
-from ezcharts.components.reports import labs
+
 from ezcharts.layout.snippets import Tabs, Grid
 from ezcharts.layout.snippets.table import DataTable
 from ezcharts.layout.snippets.section import Section
-from ezcharts.components.ezchart import EZChart
-
-# for Tabs without margins
-from ezcharts.layout.util import cls, css
 from ezcharts.layout.snippets.tabs import ITabsClasses, ITabsStyles
-
-# report
-from ezcharts.components.theme import (
-    EPI2MELabsLogo, LAB_body_resources, LAB_head_resources
-)
 from ezcharts.layout.snippets.banner import (
     IBannerStyles, IBannerClasses, IBadgeStyles, IBadgeClasses, Badge
 )
-from ezcharts.components.reports import Report
+
 from ezcharts.layout.resource import Resource
 from ezcharts.layout.base import Snippet
+from ezcharts.layout.util import cls, css
+
+from ezcharts.components.reports import Report, labs
+from ezcharts.components.ezchart import EZChart
+from ezcharts.components.theme import (
+    EPI2MELabsLogo, LAB_body_resources, LAB_head_resources
+)
 
 
 class NoMarginTabsClasses(ITabsClasses):
@@ -75,11 +74,6 @@ class OprBanner(Snippet):
         with self:
             with div(className=self.classes.inner, style=self.styles.inner):
                 h1(report_title)
-                # p(
-                #     f"Results generated through the {workflow_name} nextflow "
-                #     "workflow provided by Oxford Nanopore Technologies.",
-                #     className="py-2 fs-5"
-                # )
                 self.badges = div(className="d-flex flex-wrap")
 
     def add_badge(
@@ -92,6 +86,71 @@ class OprBanner(Snippet):
         """Add a badge to the banner."""
         with self.badges:
             Badge(title, styles=styles, classes=classes, bg_class=bg_class)
+
+
+
+class OprNavigation(Snippet):
+    """A styled nav component for use in a Report."""
+
+    TAG = 'nav'
+
+    def __init__(
+        self,
+        logo: Type[html_tag],
+        groups: List[str],
+        header_height: int = 75,
+        classes: labs.ILabsNavigationClasses = labs.ILabsNavigationClasses()
+    ) -> None:
+        """Create tag."""
+        spacer = div(
+            className=classes.spacer,
+            style=f"margin-top: {header_height}px;"
+        )
+        super().__init__(
+            styles=None,
+            classes=classes,
+            style=f"min-height: {header_height}px;",
+            className=classes.container
+        )
+        spacer.add(self)
+        with self:
+            with div(className=self.classes.inner):
+                with a(href="https://www.bnitm.de/en/research/research-groups/pathogen/virology-department/lab-group-duraffour-pahlmann/",
+                       className=self.classes.logo):
+                    logo()
+                button(
+                    "Jump to section... ",
+                    cls=self.classes.dropdown_btn,
+                    type="button",
+                    id="dropdownMenuButton",
+                    data_bs_toggle="dropdown",
+                    aria_haspopup="true",
+                    aria_expanded="false"
+                )
+                ngroups = len(groups)
+                with div(className=self.classes.dropdown_menu):
+                    for count, group in enumerate(groups):
+                        setattr(
+                            self, group,
+                            div(className='', __pretty=False)
+                        )
+                        if count != ngroups - 1:
+                            div(cls="dropdown-divider")
+
+    def add_link(
+        self,
+        group: str,
+        link_title: str,
+        link_href: str
+    ) -> None:
+        """Add a header nav link to the header links list."""
+        group_list = getattr(self, group)
+        with group_list:
+            a(
+                link_title,
+                href=link_href,
+                className=self.classes.dropdown_item_link
+            )
 
 
 class OprReport(Report):
@@ -111,7 +170,7 @@ class OprReport(Report):
             body_resources=body_resources
         )
         with self.header:
-            self.nav = labs.LabsNavigation(logo=logo, groups=['main', 'meta'])
+            self.nav = OprNavigation(logo=logo, groups=['main', 'meta'])
             self.intro_content = section(id="intro-content", role="region")
             with self.intro_content:
                 self.banner = OprBanner(report_title)
