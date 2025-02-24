@@ -22,8 +22,6 @@ TODO
 
 - write this README :)
 - test if classification file exists?
-- gzip files when writing to results (e.g. cleaned fastq)
-  - also in between to keep work small?
 
 - assembly
   - input coverage parameter that determines the number of reads sampled
