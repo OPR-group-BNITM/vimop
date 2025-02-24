@@ -1,13 +1,14 @@
 from .util import get_named_logger, wf_parser  # noqa: ABS101
 import pandas as pd
 import yaml
+import os
+
 from typing import List, Type
 
 from bokeh.models import Title
 from dominate.tags import (
-    h1, h5, p, div, span, table, tbody,
-    td, th, thead, tr, section, html_tag,
-    a, button
+    h1, p, div, section, html_tag,
+    a, button, img
 )
 import ezcharts as ezc
 
@@ -19,15 +20,12 @@ from ezcharts.layout.snippets.banner import (
     IBannerStyles, IBannerClasses, IBadgeStyles, IBadgeClasses, Badge
 )
 
-from ezcharts.layout.resource import Resource
 from ezcharts.layout.base import Snippet
 from ezcharts.layout.util import cls, css
 
 from ezcharts.components.reports import Report, labs
 from ezcharts.components.ezchart import EZChart
-from ezcharts.components.theme import (
-    EPI2MELabsLogo, LAB_body_resources, LAB_head_resources
-)
+from ezcharts.components.theme import LAB_body_resources, LAB_head_resources
 
 
 class NoMarginTabsClasses(ITabsClasses):
@@ -87,6 +85,22 @@ class OprBanner(Snippet):
         with self.badges:
             Badge(title, styles=styles, classes=classes, bg_class=bg_class)
 
+
+class OprLogo(div):
+    """OPR logo element."""
+    def __init__(self) -> None:
+        """Create a div containing an image logo."""
+        fname_logo = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'OPR_logo_v01-light.cropped.png'
+        )
+
+        super().__init__(
+            #img(src=fname_logo, style="width: 80px; height: 75px;", alt="OPR Logo"),
+            img(src=fname_logo, style="height: 75px;", alt="OPR Logo"),
+            tagname='div',
+            className="d-flex"
+        )
 
 
 class OprNavigation(Snippet):
@@ -156,24 +170,18 @@ class OprNavigation(Snippet):
 class OprReport(Report):
     """A basic OPR-themed report."""
 
-    def __init__(
-        self,
-        report_title,
-        logo: Type[html_tag] = EPI2MELabsLogo,
-        head_resources: List[Resource] = LAB_head_resources,
-        body_resources: List[Resource] = LAB_body_resources
-    ) -> None:
+    def __init__(self, title):
         """Create tag."""
         super().__init__(
-            report_title=report_title,
-            head_resources=head_resources,
-            body_resources=body_resources
+            report_title=title,
+            head_resources=LAB_head_resources,
+            body_resources=LAB_body_resources
         )
         with self.header:
-            self.nav = OprNavigation(logo=logo, groups=['main', 'meta'])
+            self.nav = OprNavigation(logo=OprLogo, groups=['main', 'meta'])
             self.intro_content = section(id="intro-content", role="region")
             with self.intro_content:
-                self.banner = OprBanner(report_title)
+                self.banner = OprBanner(title)
                 self.banner.add_badge("Research use only")
 
         with self.main:
@@ -195,6 +203,11 @@ class OprReport(Report):
 
 def argparser():
     parser = wf_parser("report_sample")
+    parser.add_argument(
+        '--samplename',
+        help='The name of your sample.',
+        required=True,
+    )
     parser.add_argument(
         '--virus-db-config',
         help='Config file of the virus data base (yaml).',
@@ -263,6 +276,7 @@ def histogram_plot(data, title, xaxis_label):
 
 
 def html_report(
+        samplename,
         df_mapping_stats,
         df_clean_read_stats,
         df_contig_stats,
@@ -272,7 +286,7 @@ def html_report(
         fname_out 
 ):
     report = OprReport(
-        report_title="Virus metagenomics sequencing"
+        title=f"Virus metagenomics sequencing report ({samplename})"
     )
     with report.add_section("Read Statistics", "Read Statistics"):
         tabs_readstats = NoMarginTabs()
@@ -454,6 +468,7 @@ def main(args):
     lenqual_clean = read_tsv(args.cleaned_read_distribution)
 
     html_report(
+        args.samplename,
         consensus_stats,
         clean_read_stats,
         contigs_stats,
