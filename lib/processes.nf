@@ -475,7 +475,7 @@ process simple_consensus {
         seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
     fi
 
-    consensus_correction ref.fasta consensus.fasta sorted.bam \
+    correct_samtools_consensus.py ref.fasta consensus.fasta sorted.bam \
     --call-fract $min_share \
     --min-depth $min_depth \
     --output consensus.${meta.consensus_target}.fasta
