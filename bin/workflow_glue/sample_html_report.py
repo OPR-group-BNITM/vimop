@@ -17,7 +17,7 @@ from ezcharts.layout.snippets.table import DataTable
 from ezcharts.layout.snippets.section import Section
 from ezcharts.layout.snippets.tabs import ITabsClasses, ITabsStyles
 from ezcharts.layout.snippets.banner import (
-    IBannerStyles, IBannerClasses, IBadgeStyles, IBadgeClasses, Badge
+    IBannerStyles, IBannerClasses
 )
 
 from ezcharts.layout.base import Snippet
@@ -26,6 +26,10 @@ from ezcharts.layout.util import cls, css
 from ezcharts.components.reports import Report, labs
 from ezcharts.components.ezchart import EZChart
 from ezcharts.components.theme import LAB_body_resources, LAB_head_resources
+
+
+BACKGROUND_COLOR = '#1d1d1d'
+PLOT_COLOR = None
 
 
 class NoMarginTabsClasses(ITabsClasses):
@@ -59,10 +63,19 @@ class OprBanner(Snippet):
 
     TAG = 'div'
 
-    def __init__(self, report_title: str) -> None:
+    def __init__(self, report_title: str, pipeline_version: str) -> None:
         """Create styled banner."""
+
+        # TODO: replace the banner styles and classes?
         styles: IBannerStyles = IBannerStyles()
         classes: IBannerClasses = IBannerClasses()
+        # Override the default background color
+        styles.container = css(
+            f"background-color: {BACKGROUND_COLOR} !important;",
+            "padding: 15px;",
+            "border-radius: 5px;"
+        )
+
         super().__init__(
             styles=styles,
             classes=classes,
@@ -72,18 +85,8 @@ class OprBanner(Snippet):
         with self:
             with div(className=self.classes.inner, style=self.styles.inner):
                 h1(report_title)
-                self.badges = div(className="d-flex flex-wrap")
-
-    def add_badge(
-        self,
-        title: str,
-        bg_class=None,
-        styles: IBadgeStyles = IBadgeStyles(),
-        classes: IBadgeClasses = IBadgeClasses(),
-    ) -> None:
-        """Add a badge to the banner."""
-        with self.badges:
-            Badge(title, styles=styles, classes=classes, bg_class=bg_class)
+                p(f'Pipeline version {pipeline_version}')
+                p('Research use only')
 
 
 class OprLogo(div):
@@ -96,7 +99,6 @@ class OprLogo(div):
         )
 
         super().__init__(
-            #img(src=fname_logo, style="width: 80px; height: 75px;", alt="OPR Logo"),
             img(src=fname_logo, style="height: 75px;", alt="OPR Logo"),
             tagname='div',
             className="d-flex"
@@ -123,13 +125,13 @@ class OprNavigation(Snippet):
         super().__init__(
             styles=None,
             classes=classes,
-            style=f"min-height: {header_height}px;",
+            style=f"min-height: {header_height}px; background-color: {BACKGROUND_COLOR} !important;",
             className=classes.container
         )
         spacer.add(self)
         with self:
             with div(className=self.classes.inner):
-                with a(href="https://www.bnitm.de/en/research/research-groups/pathogen/virology-department/lab-group-duraffour-pahlmann/",
+                with a(href="https://github.com/OPR-group-BNITM",
                        className=self.classes.logo):
                     logo()
                 button(
@@ -170,7 +172,7 @@ class OprNavigation(Snippet):
 class OprReport(Report):
     """A basic OPR-themed report."""
 
-    def __init__(self, title):
+    def __init__(self, title, pipeline_version):
         """Create tag."""
         super().__init__(
             report_title=title,
@@ -178,14 +180,17 @@ class OprReport(Report):
             body_resources=LAB_body_resources
         )
         with self.header:
+            self.header.attributes["style"] = f"background-color: {BACKGROUND_COLOR} !important;"
             self.nav = OprNavigation(logo=OprLogo, groups=['main', 'meta'])
-            self.intro_content = section(id="intro-content", role="region")
+            self.intro_content = section(
+                id="intro-content",
+                role="region",
+                style=f"background-color: {BACKGROUND_COLOR}  !important;"
+            )
             with self.intro_content:
-                self.banner = OprBanner(title)
-                self.banner.add_badge("Research use only")
+                self.banner = OprBanner(title, pipeline_version)
 
         with self.main:
-            self.intro_content = section(id="intro-content", role="region")
             self.main_content = section(id="main-content", role="region")
 
     def add_section(
@@ -203,6 +208,11 @@ class OprReport(Report):
 
 def argparser():
     parser = wf_parser("report_sample")
+    parser.add_argument(
+        '--pipeline-version',
+        help='The version of this pipeline.',
+        required=True,
+    )
     parser.add_argument(
         '--samplename',
         help='The name of your sample.',
@@ -259,7 +269,7 @@ def histogram_plot(data, title, xaxis_label):
         data=data,
         binwidth=bin_width,
         binrange=(min_val, max_val),
-        color=None
+        color=PLOT_COLOR
     )
     subtitle = f"Mean: {mean:.1f}. Median: {median:.1f}"
 
@@ -276,6 +286,7 @@ def histogram_plot(data, title, xaxis_label):
 
 
 def html_report(
+        pipeline_version,
         samplename,
         df_mapping_stats,
         df_clean_read_stats,
@@ -286,7 +297,8 @@ def html_report(
         fname_out 
 ):
     report = OprReport(
-        title=f"Virus metagenomics sequencing report ({samplename})"
+        title=f"Virus metagenomics sequencing report ({samplename})",
+        pipeline_version=pipeline_version
     )
     with report.add_section("Read Statistics", "Read Statistics"):
         tabs_readstats = NoMarginTabs()
@@ -425,6 +437,38 @@ def html_report(
                     Coverage is reported in percent.
                     """
                 )
+        with tabs_consensus.add_tab("All"):
+            df_mapstats = df_mapping_stats
+            tabs = NoMarginTabs()
+            with tabs.add_tab("Overview"):
+                cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
+                DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
+                p(
+                    """
+                    Targets used for consensus building.
+                    Coverage is reported in percent.
+                    """
+                )
+            with tabs.add_tab("Details"):
+                cols = [
+                    'Reference',
+                    'Family',
+                    'Organism',
+                    'Length',
+                    'Coverage',
+                    'Positions called',
+                    'Ambiguous positions',
+                    'Mapped reads',
+                    'Average read coverage'
+                ]
+                round = {'Average read coverage': 1}
+                DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
+                p(
+                    """
+                    Targets used for consensus building.
+                    Coverage is reported in percent.
+                    """
+                )
 
     section_name = "Contigs"
     with report.add_section(section_name, section_name):
@@ -468,6 +512,7 @@ def main(args):
     lenqual_clean = read_tsv(args.cleaned_read_distribution)
 
     html_report(
+        args.pipeline_version,
         args.samplename,
         consensus_stats,
         clean_read_stats,
