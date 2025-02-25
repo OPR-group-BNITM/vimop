@@ -17,11 +17,3 @@ Todo
 ## Options
 
 TODO
-
-## TODO
-
-- write this README :)
-- test if classification file exists?
-
-- assembly
-  - input coverage parameter that determines the number of reads sampled
