@@ -599,6 +599,8 @@ process sample_report {
         --out stats_consensus.tsv
 
     workflow-glue sample_html_report \
+        --pipeline-version ${workflow.manifest.version} \
+        --samplename ${samplename} \
         --virus-db-config virus_db_config.yaml \
         --reads-stats stats_reads.tsv \
         --contigs-stats stats_contigs.tsv \
