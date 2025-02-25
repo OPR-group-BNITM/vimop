@@ -79,7 +79,7 @@ workflow pipeline {
             params.canu_genome_size,
             params.canu_cor_out_coverage,
             params.canu_stop_on_low_coverage,
-            params.canu_min_input_coverage
+            params.canu_min_input_coverage,
             params.canu_max_input_coverage
         ]
 

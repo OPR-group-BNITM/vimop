@@ -143,7 +143,7 @@ process assemble_canu {
             val(genome_size),
             val(cor_out_coverage),
             val(stop_on_low_coverage),
-            val(min_input_coverage)
+            val(min_input_coverage),
             val(max_input_coverage)
     output:
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
