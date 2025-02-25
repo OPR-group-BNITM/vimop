@@ -144,6 +144,7 @@ process assemble_canu {
             val(cor_out_coverage),
             val(stop_on_low_coverage),
             val(min_input_coverage)
+            val(max_input_coverage)
     output:
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
