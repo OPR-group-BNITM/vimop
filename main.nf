@@ -9,6 +9,8 @@ include { fastq_ingress } from './lib/ingress'
 include {
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
+    empty_tsv;
+    empty_fasta;
     trim;
     classify_centrifuge;
     filter_contaminants;
@@ -33,7 +35,6 @@ include {
 } from './lib/processes'
 
 
-// workflow module
 workflow pipeline {
     take:
         samples
@@ -188,21 +189,28 @@ workflow pipeline {
             | medaka_consensus
         }
 
-        reference_info = extended_ref_seqs
-        | map {refid, refseq -> refseq}
+        reference_info = empty_fasta
+        | mix(extended_ref_seqs | map {refid, refseq -> refseq})
         | collect
         | collect_reference_info
 
-        // TODO: create & export vcf files?
-
         // compute the stats for the reads mapped to the different targets and build a big table.
-        collected_mapping_stats = mapped_to_ref
+        mapping_stats = mapped_to_ref
         | map {meta, ref, bam, bai -> [meta.alias, meta.consensus_target, meta, ref, bam, bai]}
         | join(consensi | map {meta, cons -> [meta.alias, meta.consensus_target, cons]}, by: [0, 1])
         | join(coverage | map {meta, cov -> [meta.alias, meta.consensus_target, cov]}, by: [0, 1])
         | map {samplename, target_name, meta, ref, bam, bai, cons, cov -> [meta, ref, bam, bai, cons, cov]}
         | compute_mapping_stats
         | map {meta, stats -> [meta.alias, stats]}
+
+        // mix in empty files for cases, where no target was detected 
+        // in order to still create a report
+        samplenames = samples
+        | map{ meta, reads, stats -> meta.alias }
+
+        collected_mapping_stats = samplenames
+        | empty_tsv
+        | mix(mapping_stats)
         | groupTuple(by: 0)
         | concat_mapping_stats
 

@@ -10,6 +10,7 @@ from dominate.tags import (
     h1, p, div, section, html_tag,
     a, button, img
 )
+
 import ezcharts as ezc
 
 from ezcharts.layout.snippets import Tabs, Grid
@@ -314,23 +315,31 @@ def html_report(
                 """
             )
         with tabs_readstats.add_tab("Distributions trimmed"):
-            with Grid(columns=2):
-                EZChart(histogram_plot(df_lenqual_trim['Length'], 'Length', 'Base pairs'))
-                EZChart(histogram_plot(df_lenqual_trim['Quality'], 'Quality', 'Avgerage quality score per read'))
-            p(
-                """
-                The distributions of the reads after trimming. They still contain host reads.
-                """
-            )
+            try:
+                with Grid(columns=2):
+                    EZChart(histogram_plot(df_lenqual_trim['Length'], 'Length', 'Base pairs'))
+                    EZChart(histogram_plot(df_lenqual_trim['Quality'], 'Quality', 'Avgerage quality score per read'))
+                p(
+                    """
+                    The distributions of the reads after trimming. They still contain host reads.
+                    """
+                )
+            except ValueError:
+                nseqs = len(df_lenqual_trim['Length'])
+                p(f'Failed to create histograms for {nseqs} sequences')
         with tabs_readstats.add_tab("Distributions cleaned"):
-            with Grid(columns=2):
-                EZChart(histogram_plot(df_lenqual_clean['Length'], 'Length', 'Base pairs'))
-                EZChart(histogram_plot(df_lenqual_clean['Quality'], 'Quality', 'Avgerage quality score per read'))
-            p(
-                """
-                The distributions of the reads after cleaning. Host reads and technical contaminants are removed.
-                """
-            )
+            try:
+                with Grid(columns=2):
+                    EZChart(histogram_plot(df_lenqual_clean['Length'], 'Length', 'Base pairs'))
+                    EZChart(histogram_plot(df_lenqual_clean['Quality'], 'Quality', 'Avgerage quality score per read'))
+                p(
+                    """
+                    The distributions of the reads after cleaning. Host reads and technical contaminants are removed.
+                    """
+                )
+            except ValueError:
+                nseqs = len(df_lenqual_clean['Length'])
+                p(f'Failed to create histograms for {nseqs} sequences')
     mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {
         label: feats['segments'] 
@@ -472,7 +481,6 @@ def html_report(
 
     section_name = "Contigs"
     with report.add_section(section_name, section_name):
-        # TODO: add tabs for overview and table?
         cols = [
             'Filter',
             'Contig',
