@@ -151,8 +151,13 @@ process assemble_canu {
     """        
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
     echo -n "all_${meta.mapping_target}\t" >> stats.tsv
-    seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    
+    if [ -s seqs.fastq ]
+    then
+        seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    else
+        echo "0\t0\t0\t0.0\t0" >> stats.tsv
+    fi
+
     outdir=.
 
     set +e
@@ -182,7 +187,12 @@ process assemble_canu {
     fi
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
-    seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    if [ -s asm.correctedReads.fasta ]
+    then
+        seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    else
+        echo "0\t0\t0\t0.0\t0" >> stats.tsv
+    fi
 
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
     """
@@ -396,7 +406,7 @@ process map_to_ref {
 
 process calc_coverage {
     label "general"
-    cpus 8
+    cpus 1
     input:
         tuple val(meta), path("sorted.bam"), path("sorted.bam.bai")
     output:
@@ -476,7 +486,7 @@ process simple_consensus {
         seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
     fi
 
-    consensus_correction ref.fasta consensus.fasta sorted.bam \
+    correct_samtools_consensus.py ref.fasta consensus.fasta sorted.bam \
     --call-fract $min_share \
     --min-depth $min_depth \
     --output consensus.${meta.consensus_target}.fasta
@@ -508,6 +518,19 @@ process compute_mapping_stats {
 }
 
 
+process empty_tsv {
+    label "general"
+    cpus 1
+    input:
+        val(samplename)
+    output:
+        tuple val(samplename), path('empty.tsv')
+    """
+    touch empty.tsv
+    """
+}
+
+
 process concat_mapping_stats {
     label "general"
     cpus 1
@@ -518,6 +541,17 @@ process concat_mapping_stats {
     """
     echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tConsensusLength\tAverageCoverage" > all_stats.tsv
     cat collected_stats_*.tsv >> all_stats.tsv
+    """
+}
+
+
+process empty_fasta {
+    label "general"
+    cpus 1
+    output:
+        path('empty.fasta')
+    """
+    touch empty.fasta
     """
 }
 
@@ -538,6 +572,8 @@ process collect_reference_info {
     for fname in glob.glob("ref_*.fasta"):
         with open(fname) as f:
             header = f.readline().lstrip('>').strip()
+            if not header:
+                continue
             try:
                 id, rest = map(str.strip, header.split('|', 1))
                 descr, fam, org, orient, seg = map(str.strip, rest.rsplit('|', 4))
@@ -558,7 +594,16 @@ process collect_reference_info {
                     'Orientation': empty,
                     'Segment': empty,
                 })
-    pd.DataFrame(data).to_csv('reference_info.tsv', sep='\t')
+    cols = [
+        'Reference',
+        'Description',
+        'Family',
+        'Organism',
+        'Orientation',
+        'Segment',
+    ]
+    df = pd.DataFrame(data, columns=cols)
+    df.to_csv('reference_info.tsv', sep='\t')
     """
 }
 
