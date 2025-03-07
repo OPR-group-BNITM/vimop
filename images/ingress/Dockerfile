@@ -14,6 +14,3 @@ RUN conda env create -f env.yaml
 SHELL ["/bin/bash", "-c"]
 RUN echo "source activate env" > ~/.bashrc
 ENV PATH /opt/conda/envs/env/bin:$PATH
-
-# Set the default command to run when the container starts
-CMD ["samtools", "--version"]

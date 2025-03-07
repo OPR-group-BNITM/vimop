@@ -1,6 +1,0 @@
-[submodule "bin/maptools"]
-	path = bin/maptools
-	url = git@github.com:OPR-group-BNITM/maptools.git
-[submodule "images/report/ezcharts_opr"]
-	path = images/report/ezcharts_opr
-	url = git@github.com:OPR-group-BNITM/ezcharts_opr.git

@@ -319,19 +319,20 @@ class NfcoreTemplate {
         return "${colors.dim}--------------------------------------------------------------------------------${colors.reset}"
     }
 
-    // epi2me-labs logo
     public static String logo(workflow, monochrome_logs) {
         Map colors = NfcoreTemplate.logColours(monochrome_logs)
         String workflow_name = workflow.manifest.name.split("/")[1]
         String workflow_version = version(workflow)
         String.format(
             """
-            ${colors.igreen}||||||||||   ${colors.reset}${colors.dim}_____ ____ ___ ____  __  __ _____      _       _
-            ${colors.igreen}||||||||||  ${colors.reset}${colors.dim}| ____|  _ \\_ _|___ \\|  \\/  | ____|    | | __ _| |__  ___
-            ${colors.yellow}|||||       ${colors.reset}${colors.dim}|  _| | |_) | |  __) | |\\/| |  _| _____| |/ _` | '_ \\/ __|
-            ${colors.yellow}|||||       ${colors.reset}${colors.dim}| |___|  __/| | / __/| |  | | |__|_____| | (_| | |_) \\__ \\
-            ${colors.iblue}||||||||||  ${colors.reset}${colors.dim}|_____|_|  |___|_____|_|  |_|_____|    |_|\\__,_|_.__/|___/
-            ${colors.iblue}||||||||||  ${colors.reset}${colors.bold}${workflow_name} ${workflow_version}${colors.reset}
+             _______  __    _  ___   _______  __   __         _______  _______  ______   
+            |  _    ||  |  | ||   | |       ||  |_|  |       |       ||       ||    _ |  
+            | |_|   ||   |_| ||   | |_     _||       | ____  |   _   ||    _  ||   | ||  
+            |       ||       ||   |   |   |  |       ||____| |  | |  ||   |_| ||   |_||_ 
+            |  _   | |  _    ||   |   |   |  |       |       |  |_|  ||    ___||    __  |
+            | |_|   || | |   ||   |   |   |  | ||_|| |       |       ||   |    |   |  | |
+            |_______||_|  |__||___|   |___|  |_|   |_|       |_______||___|    |___|  |_|
+            ${colors.reset}${colors.bold}${workflow_name} ${workflow_version}${colors.reset}
             ${NfcoreTemplate.dashedLine(monochrome_logs)}
             """.stripIndent()
         )
