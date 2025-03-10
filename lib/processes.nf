@@ -38,7 +38,7 @@ process trim {
 process classify_centrifuge {
     label "centrifuge"
     cpus 1
-    memory '10G'
+    memory '10 GB'
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
@@ -68,7 +68,7 @@ process classify_centrifuge {
 process filter_contaminants {
     label "general"
     cpus 4
-    memory '20G'
+    memory '20 GB'
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
     output:
@@ -114,7 +114,7 @@ process filter_contaminants {
 process filter_virus_target {
     label "general"
     cpus 4
-    memory '10G'
+    memory '10 GB'
     input:
         tuple val(meta), path('seqs.fastq'), path(target)
     output:
@@ -133,7 +133,7 @@ process filter_virus_target {
 process assemble_canu {
     label "canu"
     cpus 16
-    memory '32.GB'
+    memory '32 GB'
     input:
         tuple val(meta),
             path("seqs.fastq"),
@@ -386,7 +386,7 @@ process get_ref_fasta {
 process map_to_ref {
     label "general"
     cpus 8
-    memory '10G'
+    memory '10 GB'
     input:
         tuple val(meta), path("trimmed.fastq"), path("ref.fasta")
     output:
@@ -420,7 +420,7 @@ process calc_coverage {
 process medaka_consensus {
     label "medaka"
     cpus 2
-    memory '30G'
+    memory '30 GB'
     input:
         tuple val(meta),
             path("ref.fasta"),
