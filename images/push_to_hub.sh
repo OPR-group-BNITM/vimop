@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 images=(canu centrifuge general ingress medaka report)
+docker_user=oprgroup
 
 for img in "${images[@]}";
 do
     echo $img
-    docker build --no-cache -t oprgroup/${img}:0.0.1 $img/
+    docker push ${docker_user}/${img}:0.0.1
     echo ""
 done
