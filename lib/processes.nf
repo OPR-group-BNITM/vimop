@@ -133,7 +133,7 @@ process filter_virus_target {
 process assemble_canu {
     label "canu"
     cpus 16
-    memory '32 GB'
+    memory '24 GB'
     input:
         tuple val(meta),
             path("seqs.fastq"),
