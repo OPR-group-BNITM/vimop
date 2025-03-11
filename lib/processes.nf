@@ -420,7 +420,7 @@ process calc_coverage {
 process medaka_consensus {
     label "medaka"
     cpus 2
-    memory '30 GB'
+    memory '24 GB'
     input:
         tuple val(meta),
             path("ref.fasta"),
