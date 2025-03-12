@@ -46,16 +46,16 @@ workflow pipeline {
         | map{ meta, reads, stats -> [meta, reads] }
         | trim
 
-        // metagenomic read classification with centrifuge
-        classification = trimmed
-        | combine(Channel.of(db_config.classificationDir))
-        | combine(Channel.from(db_config.classificationLibraries))
-        | classify_centrifuge
-
         // contaminant filtering
         cleaned = trimmed
         | map{ meta, reads -> [meta, reads, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
         | filter_contaminants
+
+        // metagenomic read classification with centrifuge
+        classification = cleaned
+        | combine(Channel.of(db_config.classificationDir))
+        | combine(Channel.from(db_config.classificationLibraries))
+        | classify_centrifuge
 
         // get readstats
         lenquals_trim = trimmed

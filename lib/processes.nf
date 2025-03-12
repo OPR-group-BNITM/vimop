@@ -37,8 +37,8 @@ process trim {
 
 process classify_centrifuge {
     label "centrifuge"
-    cpus 1
-    memory '10 GB'
+    cpus 12
+    memory '28 GB'
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
@@ -49,6 +49,7 @@ process classify_centrifuge {
             path("classification_${target_db}.html")
     """
     centrifuge \
+        -p ${task.cpus} \
         --mm \
         -x ${db_path}/${target_db} \
         -U seqs.fastq \
@@ -174,6 +175,7 @@ process assemble_canu {
         readSamplingBias=$read_sampling_bias \
         stopOnLowCoverage=$stop_on_low_coverage \
         minInputCoverage=$min_input_coverage \
+        maxInputCoverage=$max_input_coverage \
         maxThreads=${task.cpus} \
         maxMemory=${task.memory.toGiga()}g
 
