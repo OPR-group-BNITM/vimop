@@ -52,7 +52,7 @@ workflow pipeline {
         | filter_contaminants
 
         // metagenomic read classification with centrifuge
-        classification = cleaned
+        classification = cleaned.reads
         | combine(Channel.of(db_config.classificationDir))
         | combine(Channel.from(db_config.classificationLibraries))
         | classify_centrifuge
