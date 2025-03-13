@@ -220,7 +220,9 @@ process assemble_canu {
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
 
-    if [[ $(gzip -l asm.correctedReads.fasta.gz | awk 'NR==2 {print \$2}') -ne 0 ]]; then
+    first_line_count=\$(gunzip -c asm.correctedReads.fasta.gz | head -n 1 | wc | awk '{print \$1}')
+
+    if [[ \$first_line_count -ne 0 ]]
     then
         seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
     else
