@@ -210,15 +210,19 @@ process assemble_canu {
 
     set -e
 
-    if [[ \$canu_status -ne 0 ]]; then
-        touch asm.contigs.fasta
+    touch asm.contigs.fasta
+
+    if [[ ! -f asm.correctedReads.fasta.gz ]]
+    then
         touch asm.correctedReads.fasta
+        gzip asm.correctedReads.fasta
     fi
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
-    if [ -s asm.correctedReads.fasta ]
+
+    if [[ $(gzip -l asm.correctedReads.fasta.gz | awk 'NR==2 {print \$2}') -ne 0 ]]; then
     then
-        seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+        seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
     else
         echo "0\t0\t0\t0.0\t0" >> stats.tsv
     fi
