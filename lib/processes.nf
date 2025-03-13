@@ -48,20 +48,47 @@ process classify_centrifuge {
             path("classification_kraken_${target_db}.tsv"),
             path("classification_${target_db}.html")
     """
-    centrifuge \
-        -p ${task.cpus} \
-        --mm \
-        -x ${db_path}/${target_db} \
-        -U seqs.fastq \
-        --report-file classification_report_${target_db}.tsv \
-        -S classification_${target_db}.tsv
-    centrifuge-kreport \
-        -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
-    ktImportTaxonomy \
-        -tax ${db_path}/taxonomy \
-        -m 3 -t 5 \
-        classification_kraken_${target_db}.tsv \
-        -o classification_${target_db}.html
+
+    if [ -s seqs.fastq ]
+    then
+        centrifuge \
+            -p ${task.cpus} \
+            --mm \
+            -x ${db_path}/${target_db} \
+            -U seqs.fastq \
+            --report-file classification_report_${target_db}.tsv \
+            -S classification_${target_db}.tsv
+        centrifuge-kreport \
+            -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
+        ktImportTaxonomy \
+            -tax ${db_path}/taxonomy \
+            -m 3 -t 5 \
+            classification_kraken_${target_db}.tsv \
+            -o classification_${target_db}.html
+    else
+        # write a report even if no sequences were available
+        touch classification_${target_db}.tsv
+        touch classification_report_${target_db}.tsv
+        touch classification_kraken_${target_db}.tsv
+
+        # Create an informative HTML file telling the user that no sequences were found
+        cat <<EOF > classification_${target_db}.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>No Sequences Found</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: red; }
+    </style>
+</head>
+<body>
+    <h1>No sequences were found</h1>
+    <p>For this barcode no sequences could be classified by centrifuge.</p>
+</body>
+</html>
+EOF
+    fi
     """
 }
 
