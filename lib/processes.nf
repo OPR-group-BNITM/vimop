@@ -94,7 +94,7 @@ EOF
 
 process filter_contaminants {
     label "general"
-    cpus 4
+    cpus 8
     memory '20 GB'
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
@@ -167,8 +167,10 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
+    source /opt/conda/etc/profile.d/conda.sh
+    export PATH="/opt/conda/bin:$PATH"
     conda deactivate
-    
+
     outdir=.
 
     set +e
@@ -246,17 +248,18 @@ process assemble_canu {
         fi
 
         if [[ -s renamed.fasta ]]
+        then
             cd-hit-est \\
                 -c ${params.nocontigs_cdhit_thresh} \\
                 -T ${task.cpus} \\
                 -M ${task.memory.toMega()} \\
-                -i renamed.fasta
+                -i renamed.fasta \\
                 -o clustered.fasta
 
             seqkit head -n ${params.nocontings_nreads} clustered.fasta > reads_out.fasta
         
             # replace the empty contigs-file with the longest reads
-            mv read_out.fasta asm.contigs.fasta
+            mv reads_out.fasta asm.contigs.fasta
         fi
     fi
 
