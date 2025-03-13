@@ -242,11 +242,6 @@ process assemble_canu {
             | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
 
             read_type=raw
-
-            // seqkit replace \\
-            //     -p '(.+)' \\
-            //     -r 'raw_read_\$1 type=raw_read filter=${meta.mapping_target} reads=1 len=1' \\
-            //     longest_reads.fasta -o renamed.fasta
         fi
 
         if [[ -s longest_reads.fasta ]]
