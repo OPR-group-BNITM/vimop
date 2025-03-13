@@ -72,24 +72,12 @@ workflow pipeline {
         | map{ meta, reads, target -> [meta + ["mapping_target": target.target], reads, target.path] }
         | filter_virus_target
 
-        // assembly to get queries to find references
-        def assembly_params = [
-            params.canu_min_read_length,
-            params.canu_min_overlap_length,
-            params.canu_read_sampling_bias,
-            params.canu_genome_size,
-            params.canu_cor_out_coverage,
-            params.canu_stop_on_low_coverage,
-            params.canu_min_input_coverage,
-            params.canu_max_input_coverage
-        ]
-
         to_assemble_targeted = mapped_to_virus_target
-        | map { meta, reads -> [meta, reads] + assembly_params }
+        | map { meta, reads -> [meta, reads, params.nocontigs_enable_read_usage] }
 
         if (params.assemble_notarget) {
             to_assemble_notarget = cleaned.reads
-            | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+            | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads, false] }
         } else {
             to_assemble_notarget = Channel.empty()
         }

@@ -1,10 +1,13 @@
-# Use an official Ubuntu as a base image
-FROM ubuntu:20.04
+# Use Miniconda as the base image
+FROM continuumio/miniconda3
 
 # Set environment variables to avoid prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Set the working directory
+WORKDIR /app
+
+# Install system dependencies
 RUN apt-get update && \
     apt-get install -y \
     build-essential \
@@ -13,7 +16,7 @@ RUN apt-get update && \
     zlib1g-dev \
     libcurl4-openssl-dev \
     libssl-dev \
-    openjdk-8-jdk \
+    default-jdk \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,3 +32,14 @@ RUN wget https://github.com/marbl/canu/releases/download/v$CANU_VERSION/canu-$CA
 
 # Add Canu to PATH
 ENV PATH="/usr/local/canu/bin:$PATH"
+
+# Copy the Conda environment YAML file into the container
+COPY env.yaml .
+
+# Create the Conda environment
+RUN conda env create -f env.yaml
+
+# Set the active Conda environment
+SHELL ["/bin/bash", "-c"]
+RUN echo "source activate env" > ~/.bashrc
+ENV PATH /opt/conda/envs/env/bin:$PATH

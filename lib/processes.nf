@@ -162,29 +162,13 @@ process assemble_canu {
     cpus 16
     memory '24 GB'
     input:
-        tuple val(meta),
-            path("seqs.fastq"),
-            val(min_read_length),
-            val(min_overlap_length),
-            val(read_sampling_bias),
-            val(genome_size),
-            val(cor_out_coverage),
-            val(stop_on_low_coverage),
-            val(min_input_coverage),
-            val(max_input_coverage)
+        tuple val(meta), path("seqs.fastq"), val(get_reads_if_no_contigs)
     output:
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
-    """        
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
-    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
-    if [ -s seqs.fastq ]
-    then
-        seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    else
-        echo "0\t0\t0\t0.0\t0" >> stats.tsv
-    fi
-
+    """
+    conda deactivate
+    
     outdir=.
 
     set +e
@@ -194,18 +178,29 @@ process assemble_canu {
         -fast \
         -p asm \
         -d \$outdir \
-        genomeSize=$genome_size \
-        minReadLength=$min_read_length  \
-        minOverlapLength=$min_overlap_length \
-        corOutCoverage=$cor_out_coverage \
-        readSamplingBias=$read_sampling_bias \
-        stopOnLowCoverage=$stop_on_low_coverage \
-        minInputCoverage=$min_input_coverage \
-        maxInputCoverage=$max_input_coverage \
+        genomeSize=${params.canu_genome_size} \
+        minReadLength=${params.canu_min_read_length} \
+        minOverlapLength=${params.canu_min_overlap_length} \
+        corOutCoverage=${params.canu_cor_out_coverage} \
+        readSamplingBias=${params.canu_read_sampling_bias} \
+        stopOnLowCoverage=${params.canu_stop_on_low_coverage} \
+        minInputCoverage=${params.canu_min_input_coverage} \
+        maxInputCoverage=${params.canu_max_input_coverage} \
         maxThreads=${task.cpus} \
         maxMemory=${task.memory.toGiga()}g
 
     canu_status=\$?  # Capture Canu's exit code
+
+    conda activate env
+
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
+    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
+    if [ -s seqs.fastq ]
+    then
+        seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+    else
+        echo "0\t0\t0\t0.0\t0" >> stats.tsv
+    fi
 
     set -e
 
@@ -219,13 +214,50 @@ process assemble_canu {
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
 
-    first_line_count=\$(gunzip -c asm.correctedReads.fasta.gz | head -n 1 | wc | awk '{print \$1}')
+    n_lines_corrected=\$(zcat asm.correctedReads.fasta.gz | wc -l)
 
-    if [[ \$first_line_count -ne 0 ]]
+    if [[ \$n_lines_corrected -ne 0 ]]
     then
         seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
     else
         echo "0\t0\t0\t0.0\t0" >> stats.tsv
+    fi
+
+    if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
+    then
+        # no contigs, get some reads, prefer corrected reads if they are available
+        if [[ n_lines_corrected -gt 0 ]]
+        then
+            seqkit sort -l -r asm.correctedReads.fasta.gz \\
+            | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
+
+            seqkit replace \\
+                -p '(.+)' \\
+                -r 'corrected_read_\$1 type=corrected_read filter=${meta.mapping_target} reads=1 len=1' \\
+                longest_reads.fasta -o renamed.fasta
+        else
+            seqkit fq2fa seqs.fastq | seqkit sort -l -r \\
+            | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
+
+            seqkit replace \\
+                -p '(.+)' \\
+                -r 'raw_read_\$1 type=raw_read filter=${meta.mapping_target} reads=1 len=1' \\
+                longest_reads.fasta -o renamed.fasta
+        fi
+
+        if [[ -s renamed.fasta ]]
+            cd-hit-est \\
+                -c ${params.nocontigs_cdhit_thresh} \\
+                -T ${task.cpus} \\
+                -M ${task.memory.toMega()} \\
+                -i renamed.fasta
+                -o clustered.fasta
+
+            seqkit head -n ${params.nocontings_nreads} clustered.fasta > reads_out.fasta
+        
+            # replace the empty contigs-file with the longest reads
+            mv read_out.fasta asm.contigs.fasta
+        fi
     fi
 
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
