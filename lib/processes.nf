@@ -167,6 +167,9 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
+    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
+    wfglue=\$(which workflow-glue)
+
     source /opt/conda/etc/profile.d/conda.sh
     export PATH="/opt/conda/bin:$PATH"
     conda deactivate
@@ -233,33 +236,38 @@ process assemble_canu {
             seqkit sort -l -r asm.correctedReads.fasta.gz \\
             | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
 
-            seqkit replace \\
-                -p '(.+)' \\
-                -r 'corrected_read_\$1 type=corrected_read filter=${meta.mapping_target} reads=1 len=1' \\
-                longest_reads.fasta -o renamed.fasta
+            read_type=corrected
         else
             seqkit fq2fa seqs.fastq | seqkit sort -l -r \\
             | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
 
-            seqkit replace \\
-                -p '(.+)' \\
-                -r 'raw_read_\$1 type=raw_read filter=${meta.mapping_target} reads=1 len=1' \\
-                longest_reads.fasta -o renamed.fasta
+            read_type=raw
+
+            // seqkit replace \\
+            //     -p '(.+)' \\
+            //     -r 'raw_read_\$1 type=raw_read filter=${meta.mapping_target} reads=1 len=1' \\
+            //     longest_reads.fasta -o renamed.fasta
         fi
 
-        if [[ -s renamed.fasta ]]
+        if [[ -s longest_reads.fasta ]]
         then
             cd-hit-est \\
                 -c ${params.nocontigs_cdhit_thresh} \\
                 -T ${task.cpus} \\
                 -M ${task.memory.toMega()} \\
-                -i renamed.fasta \\
+                -i longest_reads.fasta \\
                 -o clustered.fasta
 
-            seqkit head -n ${params.nocontings_nreads} clustered.fasta > reads_out.fasta
-        
+            seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
+
+            # rename the reads and add header infos
+            \$wfglue rename_seqs \\
+                --prefix \${read_type}_read_ \\
+                --input selected.fasta \\
+                --output renamed.fasta
+
             # replace the empty contigs-file with the longest reads
-            mv reads_out.fasta asm.contigs.fasta
+            mv renamed.fasta asm.contigs.fasta
         fi
     fi
 
