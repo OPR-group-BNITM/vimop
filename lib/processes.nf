@@ -48,8 +48,7 @@ process classify_centrifuge {
             path("classification_kraken_${target_db}.tsv"),
             path("classification_${target_db}.html")
     """
-
-    if [ -s seqs.fastq ]
+    if [[ -s seqs.fastq ]]
     then
         centrifuge \
             -p ${task.cpus} \
