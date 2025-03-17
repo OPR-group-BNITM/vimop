@@ -114,220 +114,6 @@ def fastq_ingress(Map arguments)
 
 
 /**
- * Take a map of input arguments, find valid (u)BAM inputs, and return a channel
- * with elements of `[metamap, reads.bam | null, path-to-bamstats-results | null]`.
- * The second item is `null` for sample sheet entries without a matching barcode
- * directory or samples containing only uBAM files when `keep_unaligned` is `false`.
- * The last item is `null` if `bamstats` was not run (it is only run when `stats: true`).
- *
- * @param arguments: map with arguments containing
- *  - "input": path to either: (i) input (u)BAM file, (ii) top-level directory
- *    containing (u)BAM files, (iii) directory containing sub-directories which contain
- *    (u)BAM files
- *  - "sample": string to name single sample
- *  - "sample_sheet": path to CSV sample sheet
- *  - "analyse_unclassified": boolean whether to keep unclassified reads
- *  - "stats": boolean whether to run `bamstats`
- *  - "keep_unaligned": boolean whether to include uBAM files
- *  - "required_sample_types": list of required sample types in the sample sheet
- *  - "watch_path": boolean whether to use `watchPath` and run in streaming mode
- * @return: channel of `[Map(alias, barcode, type, ...), Path|null, Path|null]`.
- *  The first element is a map with metadata, the second is the path to the
- *  `.bam` file with the (potentially merged) sequences and the third is
- *  the path to the directory with the `bamstats` statistics. The second element is
- *  `null` for sample sheet entries for which no corresponding barcode directory was
- *  found and for samples with only uBAM files when `keep_unaligned: false`. The third
- *  element is `null` if `bamstats` was not run.
- */
-def xam_ingress(Map arguments)
-{
-    // check arguments
-    Map margs = parse_arguments(arguments, ["keep_unaligned": false])
-
-    // we only accept BAM or uBAM for now (i.e. no SAM or CRAM)
-    ArrayList xam_extensions = [".bam", ".ubam"]
-
-    def input = get_valid_inputs(margs, xam_extensions)
-
-    // check BAM headers to see if any samples are uBAM
-    ch_result = input.dirs
-    | map { meta, path -> [meta, get_target_files_in_dir(path, xam_extensions)] }
-    | mix(input.files)
-    | checkBamHeaders
-    | map { meta, paths, is_unaligned_env, mixed_headers_env ->
-        // convert the env. variables from strings ('0' or '1') into bools
-        boolean is_unaligned = is_unaligned_env as int as boolean
-        boolean mixed_headers = mixed_headers_env as int as boolean
-        // throw an error if there was a sample with mixed headers
-        if (mixed_headers) {
-            error "Found mixed headers in (u)BAM files of sample '${meta.alias}'."
-        }
-        // add `is_unaligned` to the metamap (note the use of `+` to create a copy of
-        // `meta` to avoid modifying every item in the channel;
-        // https://github.com/nextflow-io/nextflow/issues/2660)
-        [meta + [is_unaligned: is_unaligned], paths]
-    }
-    | branch { meta, paths ->
-        // set `paths` to `null` for uBAM samples if unallowed (they will be added to
-        // the results channel in shape of `[meta, null]` at the end of the function
-        // (alongside the sample sheet entries without matching barcode dirs)
-        if (!margs["keep_unaligned"] && meta["is_unaligned"]){
-            paths = null
-        }
-        // get the number of files (`paths` can be a list, a single path, or `null`)
-        int n_files = paths instanceof List ? paths.size() : (paths ? 1 : 0)
-        // Preparations finished; we can do the branching now. There will be 3 branches
-        // depending on the number of files per sample and whether the reads are already
-        // aligned:
-        // * no_op_needed: no need to do anything; just add to the final results channel
-        //   downstream
-        //   - no files
-        //   - a single unaligned file
-        // * to_catsort: `samtools cat` into `samtools sort`
-        //  - a single aligned file
-        //  - more than one unaligned file
-        //  - too many aligned files to safely and quickly merge (`samtools merge` opens
-        //    all files at the same time and some machines might have low limits for
-        //    open file descriptors)
-        // * to_merge: flatMap > sort > group > merge
-        //  - between 1 and `N_OPEN_FILES_LIMIT` aligned files
-        no_op_needed: (n_files == 0) || (n_files == 1 && meta["is_unaligned"])
-        to_catsort: \
-            (n_files == 1) || (n_files > N_OPEN_FILES_LIMIT) || meta["is_unaligned"]
-        to_merge: true
-    }
-
-    // deal with samples with few-enough files for `samtools merge` first
-    ch_merged = ch_result.to_merge
-    | flatMap { meta, paths -> paths.collect { [meta, it] } }
-    | sortBam
-    | groupTuple
-    | mergeBams
-
-    // now handle samples with too many files for `samtools merge`
-    ch_catsorted = ch_result.to_catsort
-    | catSortBams
-
-    ch_result = input.missing
-    | mix(
-        ch_result.no_op_needed,
-        ch_merged,
-        ch_catsorted,
-    )
-
-    // run `bamstats` if requested
-    if (margs["stats"]) {
-        // branch and run `bamstats` only on the non-`null` paths
-        ch_result = ch_result.branch { meta, path ->
-            has_reads: path
-            is_null: true
-        }
-        ch_bamstats = bamstats(ch_result.has_reads)
-        ch_result = add_run_IDs_to_meta(ch_bamstats) | mix(ch_result.is_null)
-    } else {
-        // add `null` instead of path to `bamstats` results dir
-        ch_result = ch_result | map { meta, bam -> [meta, bam, null] }
-    }
-    return ch_result
-}
-
-
-process checkBamHeaders {
-    label "ingress"
-    label "wf_common"
-    cpus 1
-    memory "2 GB"
-    input: tuple val(meta), path("input_dir/reads*.bam")
-    output:
-        // set the two env variables by `eval`-ing the output of the python script
-        // checking the XAM headers
-        tuple(
-            val(meta),
-            path("input_dir/reads*.bam", includeInputs: true),
-            env(IS_UNALIGNED),
-            env(MIXED_HEADERS),
-        )
-    script:
-    """
-    workflow-glue check_bam_headers_in_dir input_dir > env.vars
-    source env.vars
-    """
-}
-
-
-process mergeBams {
-    label "ingress"
-    label "wf_common"
-    cpus 3
-    memory "4 GB"
-    input: tuple val(meta), path("input_bams/reads*.bam")
-    output: tuple val(meta), path("reads.bam")
-    shell:
-    """
-    samtools merge -@ ${task.cpus - 1} \
-        -b <(find input_bams -name 'reads*.bam') -o reads.bam
-    """
-}
-
-
-process catSortBams {
-    label "ingress"
-    label "wf_common"
-    cpus 4
-    memory "4 GB"
-    input: tuple val(meta), path("input_bams/reads*.bam")
-    output: tuple val(meta), path("reads.bam")
-    script:
-    """
-    samtools cat -b <(find input_bams -name 'reads*.bam') \
-    | samtools sort - -@ ${task.cpus - 2} -o reads.bam
-    """
-}
-
-
-process sortBam {
-    label "ingress"
-    label "wf_common"
-    cpus 3
-    memory "4 GB"
-    input: tuple val(meta), path("reads.bam")
-    output: tuple val(meta), path("reads.sorted.bam")
-    script:
-    """
-    samtools sort -@ ${task.cpus - 1} reads.bam -o reads.sorted.bam
-    """
-}
-
-
-process bamstats {
-    label "ingress"
-    label "wf_common"
-    cpus 3
-    memory "4 GB"
-    input:
-        tuple val(meta), path("reads.bam")
-    output:
-        tuple val(meta),
-              path("reads.bam"),
-              path("bamstats_results")
-    script:
-        def bamstats_threads = Math.max(1, task.cpus - 1)
-    """
-    mkdir bamstats_results
-    bamstats reads.bam -s $meta.alias -u \
-        -f bamstats_results/bamstats.flagstat.tsv -t $bamstats_threads \
-        --histograms histograms \
-    | bgzip > bamstats_results/bamstats.readstats.tsv.gz
-    mv histograms/* bamstats_results/
-
-    # extract the run IDs from the per-read stats
-    csvtk cut -tf runid bamstats_results/bamstats.readstats.tsv.gz \
-    | csvtk del-header | sort | uniq > bamstats_results/run_ids
-    """
-}
-
-
-/**
  * Run `watchPath` on the input directory and return a channel of shape [metamap,
  * path-to-target-file]. The meta data is taken from the sample sheet in case one was
  * provided. Otherwise it only contains the `alias` (either `margs["sample"]` or the
@@ -421,8 +207,7 @@ def watch_path(Path input, Map margs, ArrayList extensions) {
 
 
 process move_or_compress_fq_file {
-    label "ingress"
-    label "wf_common"
+    label "general"
     cpus 1
     memory "2 GB"
     input:
@@ -448,7 +233,6 @@ process move_or_compress_fq_file {
 
 process fastcat {
     label "ingress"
-    label "wf_common"
     cpus 3
     memory "2 GB"
     input:
@@ -750,9 +534,9 @@ def get_sample_sheet(Path sample_sheet, ArrayList required_sample_types) {
  * @return: string (optional)
  */
 process validate_sample_sheet {
+    label "general"
     cpus 1
     label "ingress"
-    label "wf_common"
     memory "2 GB"
     input:
         path "sample_sheet.csv"

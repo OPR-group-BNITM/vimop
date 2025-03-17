@@ -1,566 +1,123 @@
 import groovy.json.JsonBuilder
+import DatabaseInput
+import SystemRequirements
+
 nextflow.enable.dsl = 2
 
+
 include { fastq_ingress } from './lib/ingress'
+include {
+    lengths_and_qualities as lengths_and_qualities_trimmed;
+    lengths_and_qualities as lengths_and_qualities_cleaned;
+    empty_tsv;
+    empty_fasta;
+    trim;
+    classify_centrifuge;
+    filter_contaminants;
+    filter_virus_target;
+    assemble_canu;
+    pop_bubbles;
+    prepare_blast_search;
+    canu_contig_info;
+    blast;
+    extract_blasthits;
+    get_ref_fasta;
+    map_to_ref;
+    calc_coverage;
+    medaka_variant_consensus;
+    medaka_consensus;
+    simple_consensus;
+    compute_mapping_stats;
+    concat_mapping_stats;
+    collect_reference_info;
+    sample_report;
+    get_best_consensus_files;
+    simplify_reference_fasta;
+    output;
+} from './lib/processes'
 
 
-process trim {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("demultiplexed.fastq.gz")
-    output:
-        tuple val(meta), path("trimmed.fastq")
-    """
-    seqtk trimfq -b ${params.trim_length} -e ${params.trim_length} demultiplexed.fastq.gz > trimmed.fastq
-    """
-}
-
-
-process seqtk_stats {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("seqs.fastq")
-    output:
-        tuple val(meta), path("stats.txt")
-    """
-    seqkit stats -T seqs.fastq > stats.txt
-    """
-}
-
-
-process fastqc {
-    label "opr_general"
-    cpus 4
-    input:
-        tuple val(meta), path("seqs.fastq")
-    output:
-        tuple val(meta), path("fastqc")
-    """
-    mkdir -p fastqc
-    fastqc -q -t ${task.cpus} -o fastqc seqs.fastq
-    """
-}
-
-
-process classify_centrifuge {
-    label "opr_centrifuge"
-    cpus 1
-    input:
-        tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
-    output:
-        tuple val(meta),
-            path("classification-${target_db}.tsv"),
-            path("classification-report-${target_db}.tsv"),
-            path("classification-kraken-${target_db}.tsv"),
-            path("classification-${target_db}.html")
-    """
-    centrifuge \
-        --mm \
-        -x ${db_path}/${target_db} \
-        -U seqs.fastq \
-        --report-file classification-report-${target_db}.tsv \
-        -S classification-${target_db}.tsv
-    centrifuge-kreport \
-        -x ${db_path}/${target_db} classification-${target_db}.tsv > classification-kraken-${target_db}.tsv
-    ktImportTaxonomy \
-        -tax ${db_path}/taxonomy \
-        -m 3 -t 5 \
-        classification-kraken-${target_db}.tsv \
-        -o classification-${target_db}.html
-    """
-}
-
-
-process filter_contaminants {
-    label "opr_clean"
-    cpus 4
-    input:
-        tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
-    output:
-        tuple val(meta), path('filtered.fastq'), path("clean_stats.tsv")
-    """
-    contaminants=(${contaminants.join(" ")})
-    fn_input=seqs.fastq
-
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats_tmp.tsv
-    echo -n "nofilter\t" >> stats_tmp.tsv
-    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
-
-    for i in "\${!contaminants[@]}"
-    do
-        c=\${contaminants[\$i]}
-        db=db_\$((i+1)).fna.gz
-        fn_out=filtered_no_\${c}.fastq
-
-        fn_sam=filter_\${c}.sam
-
-        minimap2 \
-            -x map-ont \
-            -a \$db \
-            -t ${task.cpus} \
-            \$fn_input \
-        | samtools fastq \
-            -f 4 \
-            --reference \$db \
-            -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
-
-        echo -n "\${c}\t" >> stats_tmp.tsv
-        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
-
-        fn_input=\$fn_out
-    done
-    cp \$fn_input filtered.fastq
-    mv stats_tmp.tsv clean_stats.tsv
-    """
-}
-
-
-process filter_virus_target {
-    label "opr_target_mapping"
-    cpus 4
-    input:
-        tuple val(meta), path('seqs.fastq'), path(db_path)
-    output:
-        tuple val(meta), path('filtered.fastq')
-    """
-    if [[ -f ${db_path}/${meta.mapping_target}.mmi ]]; then
-        fname_ref_index=${db_path}/${meta.mapping_target}.mmi
-    elif [[ -f ${db_path}/${meta.mapping_target}.fasta ]]; then
-        fname_ref_index=${db_path}/${meta.mapping_target}.fasta
-    else
-        echo "No file ${db_path}/${meta.mapping_target}.fasta or ${db_path}/${meta.mapping_target}.mmi found as reference file to map" >&2
-        exit 1
-    fi
-
-    minimap2 \
-        -x map-ont \
-        -a \$fname_ref_index \
-        -t ${task.cpus} \
-        seqs.fastq \
-    | samtools fastq \
-        -F 4 \
-        --reference reference.fasta > filtered.fastq
-    """
-}
-
-
-process assemble_canu {
-    label "opr_draft_assembly"
-    cpus 8
-    memory '30.GB'
-    input:
-        tuple val(meta),
-            path("seqs.fastq"),
-            val(subsampling_sizes),
-            val(min_readlengths),
-            val(min_overlaps),
-            val(genome_size),
-            val(cor_out_coverage)
-    output:
-        tuple val(meta), path("assemblies.fasta"), path("assembly_stats_${meta.mapping_target}.tsv")
-    """
-    subsampling_sizes=(${subsampling_sizes.join(" ")})
-    min_readlengths=(${min_readlengths.join(" ")})
-    min_overlaps=(${min_overlaps.join(" ")})
-
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
-    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
-    seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-
-    for i in "\${!subsampling_sizes[@]}"
-    do
-        n_reads=\${subsampling_sizes[\$i]}
-        min_readlen=\${min_readlengths[\$i]}
-        min_overlap=\${min_overlaps[\$i]}
-
-        # check if the subsampled file exists, else subsample
-        fname_minlen=minlen_\${min_readlen}.fastq
-        if [ ! -f \$fname_minlen ]; then
-            reformat.sh qin=33 ow=t in=seqs.fastq out=\$fname_minlen minlen=\$min_readlen
-            echo -n "minlen_\${min_readlen}\t" >> stats.tsv
-            seqkit stats -T \$fname_minlen | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-        fi
-        fname_subsampled=seqs_\${n_reads}_minlen_\${min_readlen}.fastq
-        if [ ! -f \$fname_subsampled ]; then
-            reformat.sh qin=33 ow=t samplereadstarget=\$n_reads in=\$fname_minlen out=\$fname_subsampled
-            echo -n "subsample_\${n_reads}_minlen_\${min_readlen}\t" >> stats.tsv
-            seqkit stats -T \$fname_subsampled | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-        fi
-
-        outdir=attempt_\$i
-        prefix=attempt_\$i
-        fname_contigs=\${outdir}/\${prefix}.contigs.fasta
-
-        set +e
-        canu \
-            -nanopore-raw \$fname_subsampled \
-            -fast \
-            -d \$outdir \
-            -p \$prefix \
-            genomeSize=$genome_size \
-            minReadLength=\$min_readlen \
-            minOverlapLength=\$min_overlap \
-            corOutCoverage=$cor_out_coverage \
-            maxThreads=$task.cpus \
-            maxMemory=${task.memory.toGiga()}g
-
-        canu_status=\$?
-        set -e
-        if [[ \$canu_status -eq 0 ]] && [[ -f \$fname_contigs ]] && [[ -s \$fname_contigs ]]; then
-            mv \$fname_contigs assemblies.fasta
-            break
-        else
-            continue
-        fi
-    done
-
-    # remove potentially large fastq files.
-    rm minlen_*.fastq
-
-    # creates empty file if not exist
-    touch assemblies.fasta
-    mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
-    """
-}
-
-
-process prepare_blast_search {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("contigs.fasta")
-    output:
-        tuple val(meta), path("sorted-contigs.fasta")
-    """
-    seqkit sort --by-length --reverse contigs.fasta \
-    | seqkit rename > sorted-contigs.fasta
-    """
-}
-
-
-process contigs_stats {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("sorted-contigs.fasta")
-    output:
-        tuple val(meta), path("stats.tsv")
-    """
-    seqkit stats sorted-contigs.fasta > stats.tsv
-    """
-}
-
-
-process contigs_readlengths {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("sorted-contigs.fasta")
-    output:
-        tuple val(meta), path("readlengths.txt")
-    """
-    readlength.sh qin=33 in=sorted-contigs.fasta bin=1 out=readlengths.txt
-    """
-}
-
-
-process blast {
-    label "opr_general"
-    cpus 4
-    input:
-        tuple val(meta), path("sorted-contigs.fasta"), path(db_path), val(target)
-    output:
-        tuple val(meta), path("blast-results.xml")
-    """
-    blastn \
-        -num_threads ${task.cpus} \
-        -db ${db_path}/${target} \
-        -query sorted-contigs.fasta \
-        -out blast-results.xml \
-        -outfmt 5 \
-        -max_target_seqs 1
-    """
-}
-
-
-process extract_blasthits {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta), path("blast-results.xml")
-    output:
-        tuple val(meta), path("blast-hits-${meta.mapping_target}.csv")
-    """
-    #!/usr/bin/env python
-    import pandas as pd
-    from xml.etree import ElementTree
-    rows = []
-    try:
-        root = ElementTree.parse('blast-results.xml').getroot()
-        for hit in root.findall(".//Hit[Hit_num='1']"):
-            try:
-                accession = hit.find('Hit_accession').text
-                fasta_header = hit.find('Hit_def').text.replace(',', '').replace(';', '')
-                # sometimes, the description contains the | symbol, so we have to split around it.
-                id_and_description, family, organism = fasta_header.rsplit('|', 2)
-                description = id_and_description.split('|', 1)[1].strip()
-                length = int(hit.find('Hit_len').text)
-                bit_score = float(hit.find(".//Hsp_bit-score").text)
-                rows.append([accession, description, family.strip(), organism.strip(), length, bit_score])
-            except (ValueError, AttributeError):
-                continue
-    except ElementTree.ParseError:
-        # empty file with no blast hits
-        pass
-    hits = pd.DataFrame(rows, columns=['Reference', 'Description', 'Family', 'Organism', 'Length', 'Bitscore'])
-    hits.to_csv('blast-hits-${meta.mapping_target}.csv', header=True, index=False)
-    """
-}
-
-
-process get_ref_fasta {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(ref_id), path(db_path), val(db_name)
-    output:
-        tuple val(ref_id), path("ref.fasta")
-    """
-    blastdbcmd -entry ${ref_id} -db ${db_path}/${db_name} -out ref.fasta
-    """
-}
-
-
-process map_to_ref {
-    label "opr_map"
-    cpus 8
-    input:
-        tuple val(meta), path("trimmed.fastq"), path("ref.fasta")
-    output:
-        tuple val(meta), path("ref.fasta"), path("sorted.bam"), path("sorted.bam.bai")
-    """
-    minimap2 -ax map-ont ref.fasta trimmed.fastq -t ${task.cpus} | samtools view -b -o mapped.bam
-    samtools sort --threads ${task.cpus} -o sorted.bam mapped.bam
-    samtools index sorted.bam
-    """
-}
-
-
-process calc_coverage {
-    label "opr_general"
-    cpus 8
-    input:
-        tuple val(meta), path("sorted.bam"), path("sorted.bam.bai")
-    output:
-        tuple val(meta), path("coverage.txt")
-    """
-    samtools depth -a sorted.bam > coverage.txt
-    """
-}
-
-
-process medaka_consensus {
-    label "opr_medaka"
-    cpus 2
-    input:
-        tuple val(meta),
-            path("ref.fasta"),
-            path("sorted.bam"),
-            path("sorted.bam.bai"),
-            path(model),
-            val(min_depth)
-    output:
-        tuple val(meta), path('consensus.fasta')
-    """
-    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
-    medaka sequence consensus.hdf ref.fasta consensus.fasta --fill_char N --min_depth ${min_depth}
-    """
-}
-
-
-process simple_consensus {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta),
-            path("ref.fasta"),
-            path("sorted.bam"),
-            path("sorted.bam.bai"),
-            val(min_depth),
-            val(min_share)
-    output:
-        tuple val(meta), path("cons.fasta")
-    """
-    samtools consensus \
-    -a --mark-ins --show-del yes --show-ins yes \
-    --mode simple \
-    --min-depth $min_depth \
-    --call-fract $min_share \
-    -f fasta sorted.bam \
-    | sed 's/^> *\\([^ ]*\\)/>Mapped_to_\\1/' \
-    > consensus_draft.fasta
-
-    consensus_correction ref.fasta consensus_draft.fasta sorted.bam \
-    --call-fract $min_share \
-    --min-depth $min_depth \
-    --output cons.fasta
-    """
-}
-
-
-process compute_mapping_stats {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(meta),
-        path('ref.fasta'),
-        path('sorted.bam'),
-        path('sorted.bam.bai'),
-        path('cons.fasta'),
-        path('depth.txt')
-    output:
-        tuple val(meta), path("mapping_stats.csv")
-    """
-    ref_id=\$(head -n 1 ref.fasta | sed 's/>//' | awk '{print \$1}')
-    ref_len=\$(seqtk size ref.fasta | awk '{print \$2}')
-    num_mapped_reads=\$(samtools view -F 4 -c sorted.bam)
-    n_count=\$(seqtk comp cons.fasta | awk '{print \$9}')
-    cons_length=\$(seqtk comp cons.fasta | awk '{print \$2}')
-    avg_coverage=\$(awk '{sum+=\$3} END {if (NR > 0) print sum/NR; else print 0}' depth.txt)
-    echo "\$ref_id\t\$ref_len\t\$num_mapped_reads\t\$n_count\t\$cons_length\t\$avg_coverage" > mapping_stats.csv
-    """
-}
-
-
-process concat_mapping_stats {
-    label "opr_general"
-    cpus 1
-    input:
-        tuple val(samplename), path("collected_stats_*.tsv")
-    output:
-        tuple val(samplename), path('all_stats.tsv')
-    """
-    echo "Reference\tReferenceLength\tNumberOfMappedReads\tNCount\tConsensusLength\tAverageCoverage" > all_stats.tsv
-    cat collected_stats_*.tsv >> all_stats.tsv
-    """
-}
-
-
-process sample_report {
-    label "wf_common"
-    cpus 1
-    input:
-        tuple val(samplename),
-            path('clean_stats.tsv'),
-            val(assembly_modes),
-            path(assembly_stats),
-            path(blast_hits),
-            path('mapping_stats.tsv')
-    output:
-        tuple val(samplename), path("${samplename}.html"), path("${samplename}_consensus_stats.tsv")
-    """
-    workflow-glue report_sample \
-        --prefix ${samplename} \
-        --outdir . \
-        --mapping-stats mapping_stats.tsv \
-        --clean-read-stats clean_stats.tsv \
-        --assembly-modes ${assembly_modes.join(" ")} \
-        --assembly-read-stats ${assembly_stats.join(" ")} \
-        --blast-hits ${blast_hits.join(" ")}
-    """
-}
-
-
-// See https://github.com/nextflow-io/nextflow/issues/1636. This is the only way to
-// publish files from a workflow whilst decoupling the publish from the process steps.
-// The process takes a tuple containing the filename and the name of a sub-directory to
-// put the file into. If the latter is `null`, puts it into the top-level directory.
-process output {
-    // publish inputs to output directory
-    label "wf_common"
-    cpus 1
-    publishDir (
-        params.out_dir,
-        mode: "copy",
-        saveAs: {
-            dirname ? (fname_out ? "$dirname/$fname_out" : "$dirname/$fname_in") : fname_in
-        }
-    )
-    input:
-        tuple path(fname_in), val(dirname), val(fname_out)
-    output:
-        path(fname_in)
-    """
-    """
-}
-
-
-// workflow module
 workflow pipeline {
     take:
         samples
     main:
+        db_config = new DatabaseInput(params)
+
         // trimming
-        trimmed = samples | map{ meta, reads, stats -> [meta, reads] } | trim
-        trim_stats = trimmed | seqtk_stats
-        trim_fastqc = trimmed | fastqc
+        trimmed = samples
+        | map{ meta, reads, stats -> [meta, reads] }
+        | trim
+        | map { meta, reads -> [meta + ["trimmed_reads": reads], reads] }
+
+        // contaminant filtering
+        cleaned = trimmed
+        | map{ meta, reads -> [meta, reads, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
+        | filter_contaminants
 
         // metagenomic read classification with centrifuge
         classification = trimmed
-        | combine(Channel.of(params.virus_db))
-        | combine(Channel.from(params.centrifuge_classification_libraries))
+        | combine(Channel.of(db_config.classificationDir))
+        | combine(Channel.from(db_config.classificationLibraries))
         | classify_centrifuge
 
-        // contaminant filtering
-        db_files = params.contamination_filters.collect{ filter -> params.contamination_databases[filter] }
-        cleaned = trimmed
-        | map{ meta, reads -> [meta, reads, db_files, params.contamination_filters] }
-        | filter_contaminants
+        // get readstats
+        lenquals_trim = trimmed
+        | map {meta, reads -> [meta.alias, reads]}
+        | lengths_and_qualities_trimmed
+    
+        lenquals_clean = cleaned.reads
+        | map {meta, reads -> [meta.alias, reads]}
+        | lengths_and_qualities_cleaned
 
         // mapping reads to given virus targets to filter them
-        mapped_to_virus_target = cleaned
-        | combine(Channel.from(params.targets))
-        | map{ meta, reads, stats, target -> [meta + ["mapping_target": target], reads, params.virus_db]}
+        mapped_to_virus_target = cleaned.reads
+        | combine(Channel.from(db_config.virusTargets))
+        | map{ meta, reads, target -> [meta + ["mapping_target": target.target], reads, target.path] }
         | filter_virus_target
 
         // assembly to get queries to find references
         def assembly_params = [
-            params.assembly_parameters.collect { it.n_reads },
-            params.assembly_parameters.collect { it.min_readlen },
-            params.assembly_parameters.collect { it.min_overlap },
-            params.assembly_target_genome_size,
-            params.assembly_cor_out_coverage
+            params.canu_min_read_length,
+            params.canu_min_overlap_length,
+            params.canu_read_sampling_bias,
+            params.canu_genome_size,
+            params.canu_cor_out_coverage,
+            params.canu_stop_on_low_coverage,
+            params.canu_min_input_coverage,
+            params.canu_max_input_coverage
         ]
 
         to_assemble_targeted = mapped_to_virus_target
         | map { meta, reads -> [meta, reads] + assembly_params }
 
         if (params.assemble_notarget) {
-            to_assemble_notarget = cleaned
-            | map { meta, reads, stats -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
+            to_assemble_notarget = cleaned.reads
+            | map { meta, reads -> [meta + ["mapping_target": "no-target"], reads] + assembly_params }
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        assemblies = to_assemble_notarget | mix(to_assemble_targeted) | assemble_canu
-
-        // TODO: if no draft assembly -> longest reads? (or are the longest reads automatically in the assemblies?)
-        // read in old pipeline!
+        assemblies = to_assemble_notarget
+        | mix(to_assemble_targeted)
+        | assemble_canu
 
         // database search for references using blast
-        blast_queries = assemblies | map { meta, contigs, stats -> [meta, contigs] } | prepare_blast_search
-        blast_query_stats = blast_queries | contigs_stats
-        blast_query_lengths = blast_queries | contigs_readlengths
-    
+        blast_queries = assemblies.contigs
+        | pop_bubbles
+        | prepare_blast_search
+
+        collected_contigs_infos = blast_queries
+        | canu_contig_info
+        | map { meta, contig_info -> [meta.alias, contig_info]}
+        | groupTuple(by: 0)
+
         blast_hits = blast_queries
-        | map { meta, contigs -> [meta, contigs, params.virus_db, params.all_target] }
+        | map { meta, contigs -> [meta, contigs, db_config.blastDir, db_config.blastPrefix] }
         | blast
         | extract_blasthits
 
         // get mapping targets from blast hits stored in .csv files
         sample_ref = blast_hits
-        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[0]) }}
+        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[1]) }}
         | map {samplename, target_filter, blast_hit -> [samplename, blast_hit]}
         | unique
 
@@ -575,7 +132,7 @@ workflow pipeline {
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
         | unique
-        | map { ref_id -> [ref_id, params.virus_db, params.all_target]}
+        | map { ref_id -> [ref_id, db_config.blastDir, db_config.blastPrefix] }
         | get_ref_fasta
 
         // add custom reference files here
@@ -609,8 +166,11 @@ workflow pipeline {
         | concat(custom_sample_ref_ids)
         | unique
 
+        simpliefied_ref_seqs = extended_ref_seqs
+        | simplify_reference_fasta
+
         reads_and_ref = extended_sample_ref
-        | combine(extended_ref_seqs)
+        | combine(simpliefied_ref_seqs)
         | filter { samplename, ref_id_1, ref_id_2, ref_seq -> ref_id_1 == ref_id_2 }
         | map { samplename, ref_id_1, ref_id_2, ref_seq -> [samplename, ref_id_1, ref_seq] }
         | combine(trimmed)
@@ -618,83 +178,122 @@ workflow pipeline {
         | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
         // Map against references
-        mapped_to_ref = reads_and_ref | map_to_ref
+        mapped_to_ref = reads_and_ref
+        | map_to_ref
 
-        // get coverages
-        coverage = mapped_to_ref | map { meta, ref, bam, bai -> [meta, bam, bai]} | calc_coverage
-
-        if (params.consensus_method == 'simple') {
-            consensi = mapped_to_ref
-            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
-            | simple_consensus
-        } else if (params.consensus_method == 'medaka') {
-            consensi = mapped_to_ref
-            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
-            | medaka_consensus
+        if (params.consensus_method == 'medaka_variant') {
+            medaka_out = mapped_to_ref
+            | map { meta, ref, bam, bai -> [
+                meta, ref, bam, bai,
+                meta.trimmed_reads,
+                params.medaka_consensus_model,
+                params.consensus_min_depth] }
+            | medaka_variant_consensus
+            consensi = medaka_out.consensus
+            variants = medaka_out.variants
+            coverage = medaka_out.depth
+        } else {
+            if (params.consensus_method == 'simple') {
+                consensi = mapped_to_ref
+                | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
+                | simple_consensus
+            } else if (params.consensus_method == 'medaka') {
+                consensi = mapped_to_ref
+                | map { meta, ref, bam, bai -> [
+                    meta, ref, bam, bai,
+                    meta.trimmed_reads,
+                    params.medaka_consensus_model,
+                    params.consensus_min_depth] }
+                | medaka_consensus
+            }
+            coverage = mapped_to_ref
+            | map { meta, ref, bam, bai -> [meta, bam, bai]}
+            | calc_coverage
+            variants = Channel.empty()
         }
 
-        // TODO: create & export vcf files
-        // TODO: replace header in consensus fasta files! (Do already in consensus step!)
+        reference_info = empty_fasta
+        | mix(extended_ref_seqs | map {refid, refseq -> refseq})
+        | collect
+        | collect_reference_info
 
         // compute the stats for the reads mapped to the different targets and build a big table.
-        collected_mapping_stats = mapped_to_ref
+        mapping_stats = mapped_to_ref
         | map {meta, ref, bam, bai -> [meta.alias, meta.consensus_target, meta, ref, bam, bai]}
         | join(consensi | map {meta, cons -> [meta.alias, meta.consensus_target, cons]}, by: [0, 1])
         | join(coverage | map {meta, cov -> [meta.alias, meta.consensus_target, cov]}, by: [0, 1])
         | map {samplename, target_name, meta, ref, bam, bai, cons, cov -> [meta, ref, bam, bai, cons, cov]}
         | compute_mapping_stats
         | map {meta, stats -> [meta.alias, stats]}
+
+        // mix in empty files for cases, where no target was detected 
+        // in order to still create a report
+        samplenames = samples
+        | map{ meta, reads, stats -> meta.alias }
+
+        collected_mapping_stats = samplenames
+        | empty_tsv
+        | mix(mapping_stats)
         | groupTuple(by: 0)
         | concat_mapping_stats
 
-        // Create the report.
-        collected_clean_stats = cleaned
-        | map { meta, reads, stats -> [meta.alias, stats] }
-
+        // Create the report
         assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
 
-        collected_assembly_stats = assemblies
-        | map {meta, contigs, stats -> [meta.alias, stats]}
+        collected_assembly_stats = assemblies.stats
+        | map {meta, stats -> [meta.alias, stats]}
         | groupTuple(by: 0)
 
         collected_blast_hits = blast_hits
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
 
-        sample_reports = collected_clean_stats
+        sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
+        | join(collected_contigs_infos, by: 0)
+        | join(lenquals_trim, by: 0)
+        | join(lenquals_clean, by: 0)
+        | combine(Channel.of(db_config.virusConfigFileName))
+        | combine(reference_info)
         | sample_report
+
+        collected_consensi = consensi
+        | map {meta, consensus -> [meta.alias, consensus]}
+        | groupTuple(by: 0)
+
+        best_consensi = sample_results.consensus_stats
+        | join(collected_consensi, by: 0)
+        | get_best_consensus_files
 
         // define output
         ch_to_publish = Channel.empty()
         | mix(
-            trim_stats | map { meta, stats -> [stats, "$meta.alias/trim_stats", null] },
-            trim_fastqc | map { meta, fastqc -> [fastqc, "$meta.alias/trim_stats", null] },
+            // centrifuge classification
             classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
-            cleaned | map { meta, reads, stats -> [stats, "$meta.alias/clean", null] },
-            assemblies | map { meta, assemblies, stats -> [assemblies, "$meta.alias/assembly/$meta.mapping_target", null] },
-            assemblies | map { meta, assemblies, stats -> [stats, "$meta.alias/assembly/$meta.mapping_target", null] },
-            blast_hits | map { meta, hits -> [hits, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            blast_query_stats | map { meta, stats -> [stats, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            blast_query_lengths | map { meta, lengths -> [lengths, "$meta.alias/blast-hits/$meta.mapping_target", null] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus/mapping", "${meta.consensus_target}.fasta"] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam"] },
-            mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus/mapping", "${meta.consensus_target}.bam.bai"] },
-            consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
-            coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus/consensus/${meta.consensus_target}", null] },
-            // Report related output
-            collected_mapping_stats | map { alias, stats -> [stats, "$alias/sample_stats", null]},
-            sample_reports | map { alias, html_report, consensus_stats -> [html_report, "$alias/report", null]},
-            sample_reports | map { alias, html_report, consensus_stats -> [consensus_stats, "$alias/report", null]},
-            // targets_and_filters | map {alias, stats -> [stats, "$alias/sample_stats", null]}, // TODO: remove this from here and instead join with collected_mapping_stats
+            // contigs
+            assemblies.contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
+            // consensus
+            mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
+            mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
+            consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
+            coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
+            variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },
+            // selected consensi
+            best_consensi | map { alias, consensus_dir -> [consensus_dir, "$alias", "selected_consensus"] },
+            // report and tables
+            sample_results.report | map { alias, report -> [report, "$alias", "report_${alias}.html"] },
+            sample_results.read_stats | map { alias, read_stats -> [read_stats, "$alias/tables", "reads.tsv"] },
+            sample_results.contig_stats | map { alias, contig_stats -> [contig_stats, "$alias/tables", "contigs.tsv"] },
+            sample_results.consensus_stats | map { alias, consensus_stats -> [consensus_stats, "$alias/tables", "consensus.tsv"] },
             // advanced output
-            cleaned | filter { params.advanced_output.cleaned_reads } | map { meta, reads, stats -> [reads, "$meta.alias/clean", null] },
+            cleaned.reads | filter { params.output_cleaned_reads } | map { meta, reads -> [reads, "$meta.alias/clean", null] }
         )
 
     emit:
@@ -704,12 +303,21 @@ workflow pipeline {
 
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
+
+// check the system requirements before starting the workflow
+new SystemRequirements(true).checkSystemRequirements(
+    params.min_disk_space_work_gb,
+    params.min_disk_space_out_gb,
+    params.min_ram_gb,
+    params.min_cpus,
+    params.out_dir,
+    session.workDir.toString()
+)
+
 workflow {
-    Pinguscript.ping_start(nextflow, workflow, params)
     samples = fastq_ingress([
         "input": params.fastq,
-        "stats": true,
-        "sample_sheet": params.sample_sheet
+        "stats": true
     ])
     pipeline(samples)
     pipeline.out.results
@@ -718,14 +326,13 @@ workflow {
     | output
 }
 
+
 workflow.onComplete {
     File outputFile = new File("${params.out_dir}/params.json")
     def json = new JsonBuilder(params)
     outputFile.withWriter('UTF-8') { writer -> writer.write(json.toPrettyString()) }
-    // notify that the workflow is complete
-    Pinguscript.ping_complete(nextflow, workflow, params)
 }
 
+
 workflow.onError {
-    Pinguscript.ping_error(nextflow, workflow, params)
 }

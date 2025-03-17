@@ -86,7 +86,7 @@
                     "type": "string",
                     "default": "simple",
                     "description": "Method to generate consensus sequence",
-                    "enum": ["simple", "bayesian", "medaka"]
+                    "enum": ["simple", "medaka_variant", "medaka"]
                 },
                 "analyse_unclassified": {
                     "type": "boolean",
@@ -99,21 +99,8 @@
             "allOf": [
                 {
                     "required": [
-                        "fastq"
-                    ]
-                },
-                {
-                    "oneOf": [
-                        {
-                            "required": [
-                                "basecaller_cfg"
-                            ]
-                        },
-                        {
-                            "required": [
-                                "consensus_method"
-                            ]
-                        }
+                        "fastq",
+                        "consensus_method"
                     ]
                 }
             ]
@@ -213,11 +200,6 @@
             "description": "Everything else.",
             "default": "",
             "properties": {
-                "disable_ping": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable to prevent sending a workflow ping."
-                },
                 "help": {
                     "type": "boolean",
                     "default": false,
