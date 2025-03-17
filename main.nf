@@ -125,7 +125,6 @@ workflow pipeline {
         }
         | map { samplename, target_filter, blast_hit -> [samplename, blast_hit] }
         | unique
-        | view { "sample_ref: ${it}" }
 
         // Get BLAST-derived reference sequences
         ref_seqs = sample_ref
@@ -133,8 +132,6 @@ workflow pipeline {
         | unique
         | map { ref_id -> [ref_id, db_config.blastDir, db_config.blastPrefix] }
         | get_ref_fasta
-        | view { "ref_seqs: ${it}" }
-
 
         // Split custom_ref_fasta if provided
         custom_ref_fasta = params.custom_ref_fasta ? 
@@ -147,29 +144,23 @@ workflow pipeline {
             def ref_id = fasta.baseName
             [ref_id, fasta]
         }
-        | view { "custom_ref_files: ${it}" }
         
         // Extract sample names
         samplenames = samples
         | map{ meta, reads, stats -> meta.alias }
-        | view { "samplenames: ${it}" }
 
         // Extract custom_refs
         custom_refs = custom_ref_files.map { ref_id, fasta -> ref_id }
-        | view { "custom_refs: ${it}"}
 
         // combine each sample with every custom reference
         custom_sample_refs = samplenames
         | combine(custom_refs)
-        | view { "custom_sample_refs: ${it}" }
 
         extended_sample_ref = sample_ref
         | mix(custom_sample_refs)
-        | view { "extended_sample_ref: ${it}" }
 
         extended_ref_seqs = ref_seqs
         | mix(custom_ref_files)
-        | view { "extended_sample_ref_seqs: ${it}" }
 
         // Match reads with reference sequences for consensus generation
         simpliefied_ref_seqs = extended_ref_seqs
@@ -186,7 +177,6 @@ workflow pipeline {
         // Map reads against references for final consensus generation
         mapped_to_ref = reads_and_ref
         | map_to_ref
-        | view { "reads_and_ref: ${it}" }
 
         if (params.consensus_method == 'medaka_variant') {
             medaka_out = mapped_to_ref
