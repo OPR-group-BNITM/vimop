@@ -92,6 +92,36 @@ EOF
 }
 
 
+def seqstatsHeader(String fnameOut) {
+    return """
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > $fnameOut
+    """
+}
+
+
+def isNotEmptyCheck(String fname) {
+    if (fname.endsWith(".gz")) {
+        return " \$(zcat asm.correctedReads.fasta.gz | wc -l) -ne 0 "
+    }
+    return " -s ${fname} "
+}
+
+
+def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
+    return """
+    echo -n "${rowIdentifier}\t" >> ${fnameOut}
+    if [[ ${isNotEmptyCheck(fnameIn)} ]]
+    then
+        seqkit stats -T ${fnameIn} \\
+        | tail -n 1 \\
+        | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> ${fnameOut}
+    else
+        echo "0\t0\t0\t0.0\t0" >> ${fnameOut}
+    fi
+    """
+}
+
+
 process filter_contaminants {
     label "general"
     cpus 8
@@ -105,9 +135,8 @@ process filter_contaminants {
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
 
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats_tmp.tsv
-    echo -n "nofilter\t" >> stats_tmp.tsv
-    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
+    ${seqstatsHeader("stats_tmp.tsv")}
+    ${seqstatsLine("nofilter", "\$fn_input", "stats_tmp.tsv")}
 
     for i in "\${!contaminants[@]}"
     do
@@ -127,8 +156,7 @@ process filter_contaminants {
             --reference \$db \
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
-        echo -n "\${c}\t" >> stats_tmp.tsv
-        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
+        ${seqstatsLine("\${c}", "\$fn_out", "stats_tmp.tsv")}
 
         fn_input=\$fn_out
     done
@@ -198,15 +226,6 @@ process assemble_canu {
 
     conda activate env
 
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
-    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
-    if [ -s seqs.fastq ]
-    then
-        seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    else
-        echo "0\t0\t0\t0.0\t0" >> stats.tsv
-    fi
-
     set -e
 
     touch asm.contigs.fasta
@@ -217,16 +236,9 @@ process assemble_canu {
         gzip asm.correctedReads.fasta
     fi
 
-    echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
-
-    n_lines_corrected=\$(zcat asm.correctedReads.fasta.gz | wc -l)
-
-    if [[ \$n_lines_corrected -ne 0 ]]
-    then
-        seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    else
-        echo "0\t0\t0\t0.0\t0" >> stats.tsv
-    fi
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("all_" + meta.mapping_target, "seqs.fastq", "stats.tsv")}
+    ${seqstatsLine("corrected_" + meta.mapping_target, "asm.correctedReads.fasta.gz", "stats.tsv")}
 
     if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
     then
@@ -247,6 +259,7 @@ process assemble_canu {
         if [[ -s longest_reads.fasta ]]
         then
             cd-hit-est \\
+                -n ${params.nocontigs_cdhit_wordlen} \\
                 -c ${params.nocontigs_cdhit_thresh} \\
                 -T ${task.cpus} \\
                 -M ${task.memory.toMega()} \\
@@ -270,6 +283,65 @@ process assemble_canu {
     """
 }
 
+
+// process restassembly_canu {
+//     label "canu"
+//     cpus 16
+//     memory '24 GB'
+//     input:
+//         tuple val(meta), path("seqs.fastq"), path("contigs_*.fasta")
+//     output:
+//         tuple val(meta), path("new.contigs.fasta"), emit: contigs
+//         tuple val(meta), path("restassembly.stats.tsv"), emit: stats
+//     """
+//     # TODO
+//     # - filter reads longer than minlen basepairs
+//     # - quit if not reads are left
+
+//     - rename and merge the existing contigs
+
+//     touch new.contigs.fasta
+
+//     iteration=1
+
+//     while [[ \$iteration -le ${params.reassemble_max_iter} ]]
+//     do
+//         cd-hit-est \\
+//             -n ${params.reassemble_cdhit_wordlen} \\
+//             -c ${params.reassemble_cdhit_thresh} \\
+//             -i current.contigs.fasta \\
+//             -o clustered.contigs.fasta
+
+//         mv clustered.contigs.fasta current.contigs.fasta
+
+//         minimap2 \\
+//             -ax map-ont \\
+//             -t ${task.cpus} \\
+//             --secondary=no \\
+//             current.contigs.fasta \\
+//             filtered.fastq \\
+//         | samtools fastq -f 4 > re.filtered.fastq
+
+//         mv re.filtered.fastq filtered.fastq
+        
+//         # - check if reads are left (else quit)
+//         # TODO !!!!!!
+
+//         # - assemble the reads (with canu)
+//         # TODO !!!!!!
+
+//         # - check if new contigs were built (else quit)
+//         # TODO !!!!!!
+
+//         # - rename the new contigs
+//         # TODO !!!!!!
+//         # - append them to new.contigs.fasta
+//         # TODO !!!!!!
+//         # - append them to current contigs.fasta (for re-clustering)
+//         # TODO !!!!!!
+//     done
+//     """
+// }
 
 process pop_bubbles {
     label "general"
