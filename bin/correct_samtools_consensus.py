@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import numpy as np
 from Bio.Seq import Seq
@@ -105,8 +107,8 @@ def main():
     consensus_corrected_str, vcf_ins, vcf_del = correct_consensus_indels(str(consensus.seq), valid_dels, bool(args.vcf))
     consensus_record = SeqRecord(
         Seq(consensus_corrected_str),
-        id=f"CorrectedConsensus_{consensus.id}",
-        description=f"Corrected consensus mapped to {consensus.id}"
+        id=consensus.id,
+        description=consensus.description
     )
     with open(args.output, "w") as f_out:
         SeqIO.write(consensus_record, f_out, "fasta")
