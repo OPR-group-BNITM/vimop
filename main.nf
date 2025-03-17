@@ -47,6 +47,7 @@ workflow pipeline {
         trimmed = samples
         | map{ meta, reads, stats -> [meta, reads] }
         | trim
+        | map { meta, reads -> [meta + ["trimmed_reads": reads], reads] }
 
         // contaminant filtering
         cleaned = trimmed
@@ -182,7 +183,11 @@ workflow pipeline {
 
         if (params.consensus_method == 'medaka_variant') {
             medaka_out = mapped_to_ref
-            | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
+            | map { meta, ref, bam, bai -> [
+                meta, ref, bam, bai,
+                meta.trimmed_reads,
+                params.medaka_consensus_model,
+                params.consensus_min_depth] }
             | medaka_variant_consensus
             consensi = medaka_out.consensus
             variants = medaka_out.variants
@@ -194,7 +199,11 @@ workflow pipeline {
                 | simple_consensus
             } else if (params.consensus_method == 'medaka') {
                 consensi = mapped_to_ref
-                | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.medaka_consensus_model, params.consensus_min_depth] }
+                | map { meta, ref, bam, bai -> [
+                    meta, ref, bam, bai,
+                    meta.trimmed_reads,
+                    params.medaka_consensus_model,
+                    params.consensus_min_depth] }
                 | medaka_consensus
             }
             coverage = mapped_to_ref
@@ -275,6 +284,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
+            variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },
             // selected consensi
             best_consensi | map { alias, consensus_dir -> [consensus_dir, "$alias", "selected_consensus"] },
             // report and tables

@@ -447,7 +447,7 @@ process calc_coverage {
     output:
         tuple val(meta), path("coverage.txt")
     """
-    samtools depth -a sorted.bam > coverage.txt
+    samtools depth -aa -J sorted.bam > coverage.txt
     """
 }
 
@@ -478,16 +478,38 @@ process medaka_variant_consensus {
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path(model),
+            path("trimmed.fastq"),
+            val(model),
             val(min_depth)
     output:
         tuple val(meta), path("consensus.${meta.consensus_target}.fasta"), emit: consensus
         tuple val(meta), path("variants.${meta.consensus_target}.vcf.gz"), emit: variants
         tuple val(meta), path("depth.${meta.consensus_target}.txt"), emit: depth
     """
-    samtools depth -aa -J calls_to_ref.bam > depth.txt
+    samtools depth -aa -J sorted.bam > depth.txt
 
-    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    model_choice="default"
+
+    if [[ ${model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            medaka_cmd="\$medaka_cmd --model \$model_path"
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        medaka_cmd="\$medaka_cmd --model ${model}:variant"
+        model_choice=${model}:variant
+    fi
+
+    \$medaka_cmd
+
     medaka vcf consensus.hdf ref.fasta variants.vcf
 
     bcftools sort variants.vcf -o sorted.vcf
@@ -508,7 +530,7 @@ process medaka_variant_consensus {
         --fasta-ref ref.fasta \\
         -o consensus_draft.fasta filtered.vcf.gz
 
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
@@ -536,16 +558,38 @@ process medaka_consensus {
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path(model),
+            path("trimmed.fastq"),
+            val(model),
             val(min_depth)
     output:
         tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
-    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    model_choice="default"
+
+    if [[ ${model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model consensus trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            medaka_cmd="\$medaka_cmd --model \$model_path"
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        medaka_cmd="\$medaka_cmd --model ${model}:consensus"
+        model_choice=${model}:consensus
+    fi
+
+    \$medaka_cmd
+
     medaka sequence consensus.hdf ref.fasta consensus_draft.fasta --fill_char N --min_depth ${min_depth}
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
