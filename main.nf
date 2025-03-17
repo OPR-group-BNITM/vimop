@@ -22,6 +22,7 @@ include {
     blast;
     extract_blasthits;
     get_ref_fasta;
+    split_custom_ref;
     map_to_ref;
     calc_coverage;
     medaka_consensus;
@@ -112,57 +113,62 @@ workflow pipeline {
         | blast
         | extract_blasthits
 
-        // get mapping targets from blast hits stored in .csv files
+        // Get mapping targets from BLAST hits stored in CSV files
         sample_ref = blast_hits
-        | flatMap {meta, hits -> hits.readLines().drop(1).collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[1]) }}
-        | map {samplename, target_filter, blast_hit -> [samplename, blast_hit]}
+        | flatMap { meta, hits -> 
+            hits.readLines()
+                .drop(1)
+                .collect { line -> tuple(meta.alias, meta.mapping_target, line.split(',')[1]) } 
+        }
+        | map { samplename, target_filter, blast_hit -> [samplename, blast_hit] }
         | unique
+        | view { "sample_ref: ${it}" }
 
-        // get custom accessions for references given by user
-        custom_refs = Channel.from(params.custom_sample_ref)
-        // add custom references to the sample_ref channel
-        sample_ref = sample_ref
-        | concat(custom_refs)
-        | unique
-
-        // get the targets
+        // Get BLAST-derived reference sequences
         ref_seqs = sample_ref
         | map { samplename, ref_id -> ref_id }
         | unique
         | map { ref_id -> [ref_id, db_config.blastDir, db_config.blastPrefix] }
         | get_ref_fasta
+        | view { "ref_seqs: ${it}" }
 
-        // add custom reference files here
-        custom_sample_ref_files = Channel.from(params.custom_sample_ref_files)
 
-        // read custom reference files
-        custom_sample_ref_id_seqs = custom_sample_ref_files
-        | map { sample, file_path ->
-            lines = file(file_path).readLines()
-            matches = lines.findAll { line -> line =~ /^>/ } // get Fasta headers
-                        .collectMany { line -> (line =~ /(?<=>)[^\s]+/).findAll() } // Extract entry_ids from the header
-            // Assert that there is only one sequence per file
-            assert matches.size() == 1 : "ERROR: Custom reference file must contain only one sequence: ${file_path}"
-            custom_sample_ref_ids = matches.collect { match -> [sample, match] }.flatten() // Pair each match with the sample
-            custom_sample_ref_seqs = matches.collect { match -> [match, file_path] }.flatten() // Pair each match with the file_path
-            [custom_sample_ref_ids, custom_sample_ref_seqs]
+        // Split custom_ref_fasta if provided
+        custom_ref_fasta = params.custom_ref_fasta ? 
+                            Channel.fromPath(params.custom_ref_fasta) : 
+                            Channel.empty()
+
+        custom_ref_files = split_custom_ref(custom_ref_fasta)
+        | flatten()
+        | map { fasta ->
+            def ref_id = fasta.baseName
+            [ref_id, fasta]
         }
+        | view { "custom_ref_files: ${it}" }
+        
+        // Extract sample names
+        samplenames = samples
+        | map{ meta, reads, stats -> meta.alias }
+        | view { "samplenames: ${it}" }
 
-        custom_ref_seqs = custom_sample_ref_id_seqs // [ref_id, path_to_ref_seq]
-        | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_seqs] }
+        // Extract custom_refs
+        custom_refs = custom_ref_files.map { ref_id, fasta -> ref_id }
+        | view { "custom_refs: ${it}"}
 
-        custom_sample_ref_ids = custom_sample_ref_id_seqs // [sample, ref_id]
-        | flatMap { custom_sample_ref_ids, custom_sample_ref_seqs -> [custom_sample_ref_ids] }
-
-        // extend the reference sequences with the custom ones
-        extended_ref_seqs = ref_seqs
-        | concat(custom_ref_seqs)
-        | unique
+        // combine each sample with every custom reference
+        custom_sample_refs = samplenames
+        | combine(custom_refs)
+        | view { "custom_sample_refs: ${it}" }
 
         extended_sample_ref = sample_ref
-        | concat(custom_sample_ref_ids)
-        | unique
+        | mix(custom_sample_refs)
+        | view { "extended_sample_ref: ${it}" }
 
+        extended_ref_seqs = ref_seqs
+        | mix(custom_ref_files)
+        | view { "extended_sample_ref_seqs: ${it}" }
+
+        // Match reads with reference sequences for consensus generation
         reads_and_ref = extended_sample_ref
         | combine(extended_ref_seqs)
         | filter { samplename, ref_id_1, ref_id_2, ref_seq -> ref_id_1 == ref_id_2 }
@@ -171,9 +177,10 @@ workflow pipeline {
         | filter { samplename, ref_id, ref_seq, meta, reads -> samplename == meta.alias }
         | map { samplename, ref_id, ref_seq, meta, reads -> [meta + ["consensus_target": ref_id], reads, ref_seq] }
 
-        // Map against references
+        // Map reads against references for final consensus generation
         mapped_to_ref = reads_and_ref
         | map_to_ref
+        | view { "reads_and_ref: ${it}" }
 
         // get coverages
         coverage = mapped_to_ref
