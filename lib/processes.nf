@@ -157,27 +157,27 @@ process assemble_canu {
     else
         echo "0\t0\t0\t0.0\t0" >> stats.tsv
     fi
-    
+
     outdir=.
 
     set +e
 
-        canu \
-            -nanopore-raw seqs.fastq \
-            -fast \
-            -p asm \
-            -d \$outdir \
-            genomeSize=$genome_size \
-            minReadLength=$min_read_length  \
-            minOverlapLength=$min_overlap_length \
-            corOutCoverage=$cor_out_coverage \
-            readSamplingBias=$read_sampling_bias \
-            stopOnLowCoverage=$stop_on_low_coverage \
-            minInputCoverage=$min_input_coverage \
-            maxThreads=${task.cpus} \
-            maxMemory=${task.memory.toGiga()}g
+    canu \
+        -nanopore-raw seqs.fastq \
+        -fast \
+        -p asm \
+        -d \$outdir \
+        genomeSize=$genome_size \
+        minReadLength=$min_read_length  \
+        minOverlapLength=$min_overlap_length \
+        corOutCoverage=$cor_out_coverage \
+        readSamplingBias=$read_sampling_bias \
+        stopOnLowCoverage=$stop_on_low_coverage \
+        minInputCoverage=$min_input_coverage \
+        maxThreads=${task.cpus} \
+        maxMemory=${task.memory.toGiga()}g
 
-        canu_status=\$?
+    canu_status=\$?  # Capture Canu's exit code
 
     set -e
 
@@ -185,7 +185,7 @@ process assemble_canu {
         touch asm.contigs.fasta
         touch asm.correctedReads.fasta
     fi
-    
+
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
     if [ -s asm.correctedReads.fasta ]
     then
@@ -412,7 +412,6 @@ process split_custom_ref {
     "
     """
 }
-
 
 
 process map_to_ref {
