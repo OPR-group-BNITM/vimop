@@ -37,8 +37,8 @@ process trim {
 
 process classify_centrifuge {
     label "centrifuge"
-    cpus 1
-    memory '10 GB'
+    cpus 12
+    memory '28 GB'
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
@@ -48,19 +48,47 @@ process classify_centrifuge {
             path("classification_kraken_${target_db}.tsv"),
             path("classification_${target_db}.html")
     """
-    centrifuge \
-        --mm \
-        -x ${db_path}/${target_db} \
-        -U seqs.fastq \
-        --report-file classification_report_${target_db}.tsv \
-        -S classification_${target_db}.tsv
-    centrifuge-kreport \
-        -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
-    ktImportTaxonomy \
-        -tax ${db_path}/taxonomy \
-        -m 3 -t 5 \
-        classification_kraken_${target_db}.tsv \
-        -o classification_${target_db}.html
+
+    if [ -s seqs.fastq ]
+    then
+        centrifuge \
+            -p ${task.cpus} \
+            --mm \
+            -x ${db_path}/${target_db} \
+            -U seqs.fastq \
+            --report-file classification_report_${target_db}.tsv \
+            -S classification_${target_db}.tsv
+        centrifuge-kreport \
+            -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
+        ktImportTaxonomy \
+            -tax ${db_path}/taxonomy \
+            -m 3 -t 5 \
+            classification_kraken_${target_db}.tsv \
+            -o classification_${target_db}.html
+    else
+        # write a report even if no sequences were available
+        touch classification_${target_db}.tsv
+        touch classification_report_${target_db}.tsv
+        touch classification_kraken_${target_db}.tsv
+
+        # Create an informative HTML file telling the user that no sequences were found
+        cat <<EOF > classification_${target_db}.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>No Sequences Found</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: red; }
+    </style>
+</head>
+<body>
+    <h1>No sequences were found</h1>
+    <p>For this barcode no sequences could be classified by centrifuge.</p>
+</body>
+</html>
+EOF
+    fi
     """
 }
 
@@ -133,7 +161,7 @@ process filter_virus_target {
 process assemble_canu {
     label "canu"
     cpus 16
-    memory '32 GB'
+    memory '24 GB'
     input:
         tuple val(meta),
             path("seqs.fastq"),
@@ -174,6 +202,7 @@ process assemble_canu {
         readSamplingBias=$read_sampling_bias \
         stopOnLowCoverage=$stop_on_low_coverage \
         minInputCoverage=$min_input_coverage \
+        maxInputCoverage=$max_input_coverage \
         maxThreads=${task.cpus} \
         maxMemory=${task.memory.toGiga()}g
 
@@ -181,15 +210,21 @@ process assemble_canu {
 
     set -e
 
-    if [[ \$canu_status -ne 0 ]]; then
-        touch asm.contigs.fasta
+    touch asm.contigs.fasta
+
+    if [[ ! -f asm.correctedReads.fasta.gz ]]
+    then
         touch asm.correctedReads.fasta
+        gzip asm.correctedReads.fasta
     fi
 
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
-    if [ -s asm.correctedReads.fasta ]
+
+    first_line_count=\$(gunzip -c asm.correctedReads.fasta.gz | head -n 1 | wc | awk '{print \$1}')
+
+    if [[ \$first_line_count -ne 0 ]]
     then
-        seqkit stats -T asm.correctedReads.fasta | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
+        seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
     else
         echo "0\t0\t0\t0.0\t0" >> stats.tsv
     fi
@@ -443,7 +478,104 @@ process calc_coverage {
     output:
         tuple val(meta), path("coverage.txt")
     """
-    samtools depth -a sorted.bam > coverage.txt
+    samtools depth -aa -J sorted.bam > coverage.txt
+    """
+}
+
+
+process simplify_reference_fasta {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path("ref.fasta")
+    output:
+        tuple val(meta), path("simple_ref.fasta")
+    """
+    #!/usr/bin/env python
+    from Bio import SeqIO
+    ref = SeqIO.read('ref.fasta', 'fasta')
+    with open('simple_ref.fasta', 'w') as f_out:
+        f_out.write(f">{ref.id}\\n{ref.seq}\\n") 
+    """
+}
+
+
+process medaka_variant_consensus {
+    label "medaka"
+    cpus 2
+    memory '24 GB'
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path("trimmed.fastq"),
+            val(model),
+            val(min_depth)
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta"), emit: consensus
+        tuple val(meta), path("variants.${meta.consensus_target}.vcf.gz"), emit: variants
+        tuple val(meta), path("depth.${meta.consensus_target}.txt"), emit: depth
+    """
+    samtools depth -aa -J sorted.bam > depth.txt
+
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    model_choice="default"
+
+    if [[ ${model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            medaka_cmd="\$medaka_cmd --model \$model_path"
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        medaka_cmd="\$medaka_cmd --model ${model}:variant"
+        model_choice=${model}:variant
+    fi
+
+    \$medaka_cmd
+
+    medaka vcf consensus.hdf ref.fasta variants.vcf
+
+    bcftools sort variants.vcf -o sorted.vcf
+    medaka tools annotate sorted.vcf ref.fasta sorted.bam annotated.vcf
+
+    bcftools filter -e "ALT='.'" annotated.vcf \\
+    | bcftools filter -o filtered.vcf -O v -e "INFO/DP<${min_depth}" -
+
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+
+    awk -v ref="\$refid" -v thresh=${min_depth} '{if (\$3<thresh) print \$1"\\t"\$2+1}' depth.txt  > mask.regions
+
+    bgzip filtered.vcf
+    tabix filtered.vcf.gz
+
+    bcftools consensus \\
+        --mask mask.regions \\
+        --fasta-ref ref.fasta \\
+        -o consensus_draft.fasta filtered.vcf.gz
+
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
+
+    # write a consensus of Ns in case there was nothing mapped at all.
+    if [ ! -s consensus_draft.fasta ]
+    then
+        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
+        echo "\$sequence" >> consensus.fasta
+    else
+        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
+    fi
+
+    mv depth.txt depth.${meta.consensus_target}.txt
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
+    mv filtered.vcf.gz variants.${meta.consensus_target}.vcf.gz
     """
 }
 
@@ -451,22 +583,44 @@ process calc_coverage {
 process medaka_consensus {
     label "medaka"
     cpus 2
-    memory '30 GB'
+    memory '24 GB'
     input:
         tuple val(meta),
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path(model),
+            path("trimmed.fastq"),
+            val(model),
             val(min_depth)
     output:
         tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
-    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    model_choice="default"
+
+    if [[ ${model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model consensus trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            medaka_cmd="\$medaka_cmd --model \$model_path"
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        medaka_cmd="\$medaka_cmd --model ${model}:consensus"
+        model_choice=${model}:consensus
+    fi
+
+    \$medaka_cmd
+
     medaka sequence consensus.hdf ref.fasta consensus_draft.fasta --fill_char N --min_depth ${min_depth}
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
@@ -505,7 +659,7 @@ process simple_consensus {
     > consensus_draft.fasta
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+    echo ">consensus method=samtools_simple reference=\$refid sample=${meta.alias}" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
