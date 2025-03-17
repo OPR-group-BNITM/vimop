@@ -38,7 +38,7 @@
                     "type": "string",
                     "default": "simple",
                     "description": "Method to generate consensus sequence",
-                    "enum": ["simple", "bayesian", "medaka"]
+                    "enum": ["simple", "medaka_variant", "medaka"]
                 },
                 "analyse_unclassified": {
                     "type": "boolean",

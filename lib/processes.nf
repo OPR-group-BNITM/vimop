@@ -452,6 +452,81 @@ process calc_coverage {
 }
 
 
+process simplify_reference_fasta {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path("ref.fasta")
+    output:
+        tuple val(meta), path("simple_ref.fasta")
+    """
+    #!/usr/bin/env python
+    from Bio import SeqIO
+    ref = SeqIO.read('ref.fasta', 'fasta')
+    with open('simple_ref.fasta', 'w') as f_out:
+        f_out.write(f">{ref.id}\\n{ref.seq}\\n") 
+    """
+}
+
+
+process medaka_variant_consensus {
+    label "medaka"
+    cpus 2
+    memory '24 GB'
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path(model),
+            val(min_depth)
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta"), emit: consensus
+        tuple val(meta), path("variants.${meta.consensus_target}.vcf.gz"), emit: variants
+        tuple val(meta), path("depth.${meta.consensus_target}.txt"), emit: depth
+    """
+    samtools depth -aa -J calls_to_ref.bam > depth.txt
+
+    medaka inference sorted.bam consensus.hdf --threads ${task.cpus} --model ${model}
+    medaka vcf consensus.hdf ref.fasta variants.vcf
+
+    bcftools sort variants.vcf -o sorted.vcf
+    medaka tools annotate sorted.vcf ref.fasta sorted.bam annotated.vcf
+
+    bcftools filter -e "ALT='.'" annotated.vcf \\
+    | bcftools filter -o filtered.vcf -O v -e "INFO/DP<${min_depth}" -
+
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+
+    awk -v ref="\$refid" -v thresh=${min_depth} '{if (\$3<thresh) print \$1"\\t"\$2+1}' depth.txt  > mask.regions
+
+    bgzip filtered.vcf
+    tabix filtered.vcf.gz
+
+    bcftools consensus \\
+        --mask mask.regions \\
+        --fasta-ref ref.fasta \\
+        -o consensus_draft.fasta filtered.vcf.gz
+
+    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+
+    # write a consensus of Ns in case there was nothing mapped at all.
+    if [ ! -s consensus_draft.fasta ]
+    then
+        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
+        echo "\$sequence" >> consensus.fasta
+    else
+        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
+    fi
+
+    mv depth.txt depth.${meta.consensus_target}.txt
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
+    mv filtered.vcf.gz variants.${meta.consensus_target}.vcf.gz
+    """
+}
+
+
 process medaka_consensus {
     label "medaka"
     cpus 2
@@ -509,7 +584,7 @@ process simple_consensus {
     > consensus_draft.fasta
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias}" > consensus.fasta
+    echo ">consensus method=samtools_simple reference=\$refid sample=${meta.alias}" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
