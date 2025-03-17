@@ -157,27 +157,27 @@ process assemble_canu {
     else
         echo "0\t0\t0\t0.0\t0" >> stats.tsv
     fi
-
+    
     outdir=.
 
     set +e
 
-    canu \
-        -nanopore-raw seqs.fastq \
-        -fast \
-        -p asm \
-        -d \$outdir \
-        genomeSize=$genome_size \
-        minReadLength=$min_read_length  \
-        minOverlapLength=$min_overlap_length \
-        corOutCoverage=$cor_out_coverage \
-        readSamplingBias=$read_sampling_bias \
-        stopOnLowCoverage=$stop_on_low_coverage \
-        minInputCoverage=$min_input_coverage \
-        maxThreads=${task.cpus} \
-        maxMemory=${task.memory.toGiga()}g
+        canu \
+            -nanopore-raw seqs.fastq \
+            -fast \
+            -p asm \
+            -d \$outdir \
+            genomeSize=$genome_size \
+            minReadLength=$min_read_length  \
+            minOverlapLength=$min_overlap_length \
+            corOutCoverage=$cor_out_coverage \
+            readSamplingBias=$read_sampling_bias \
+            stopOnLowCoverage=$stop_on_low_coverage \
+            minInputCoverage=$min_input_coverage \
+            maxThreads=${task.cpus} \
+            maxMemory=${task.memory.toGiga()}g
 
-    canu_status=\$?  # Capture Canu's exit code
+        canu_status=\$?
 
     set -e
 
@@ -185,7 +185,7 @@ process assemble_canu {
         touch asm.contigs.fasta
         touch asm.correctedReads.fasta
     fi
-
+    
     echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
     if [ -s asm.correctedReads.fasta ]
     then
@@ -265,7 +265,6 @@ process canu_contig_info {
     df.to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
     """
 }
-
 
 process blast {
     label "general"
@@ -381,6 +380,39 @@ process get_ref_fasta {
     blastdbcmd -entry ${ref_id} -db ${db_path}/${db_name} -out ref.fasta
     """
 }
+
+
+process split_custom_ref {
+    label "general"
+    cpus 1
+    input:
+        path fasta_file
+    output:
+        path("split_refs/*.fasta") optional true
+
+    script:
+    """
+    mkdir -p split_refs
+    python -c "
+    import os
+    from Bio import SeqIO
+
+    fasta_file = '${fasta_file}'
+    os.makedirs('split_refs', exist_ok=True)
+    records = list(SeqIO.parse(fasta_file, 'fasta'))
+
+    if not records:
+        print(f'WARNING: No records found in input FASTA {fasta_file}. Skipping.', flush=True)
+        exit(0)
+
+    for record in records:
+        ref_id = record.id
+        file_path = f'split_refs/{ref_id}.fasta'
+        SeqIO.write(record, file_path, 'fasta')
+    "
+    """
+}
+
 
 
 process map_to_ref {
