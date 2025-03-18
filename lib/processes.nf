@@ -301,7 +301,6 @@ process canu_contig_info {
     """
 }
 
-
 process blast {
     label "general"
     cpus 4
@@ -414,6 +413,34 @@ process get_ref_fasta {
         tuple val(ref_id), path("ref.fasta")
     """
     blastdbcmd -entry ${ref_id} -db ${db_path}/${db_name} -out ref.fasta
+    """
+}
+
+
+process split_custom_ref {
+    label "general"
+    cpus 1
+    input:
+        path fasta_file
+    output:
+        path("split_refs/*.fasta") optional true
+    """
+    #!/usr/bin/env python
+    import os
+    from Bio import SeqIO
+
+    fasta_file = '${fasta_file}'
+    os.makedirs('split_refs', exist_ok=True)
+    records = list(SeqIO.parse(fasta_file, 'fasta'))
+
+    if not records:
+        print(f'WARNING: No records found in input FASTA {fasta_file}. Skipping.', flush=True)
+        exit(0)
+
+    for record in records:
+        ref_id = record.id
+        file_path = f'split_refs/{ref_id}.fasta'
+        SeqIO.write(record, file_path, 'fasta')
     """
 }
 
