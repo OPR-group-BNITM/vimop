@@ -424,11 +424,8 @@ process split_custom_ref {
         path fasta_file
     output:
         path("split_refs/*.fasta") optional true
-
-    script:
     """
-    mkdir -p split_refs
-    python -c "
+    #!/usr/bin/env python
     import os
     from Bio import SeqIO
 
@@ -444,7 +441,6 @@ process split_custom_ref {
         ref_id = record.id
         file_path = f'split_refs/{ref_id}.fasta'
         SeqIO.write(record, file_path, 'fasta')
-    "
     """
 }
 
