@@ -306,7 +306,9 @@ process reassemble_canu {
     ${seqstatsHeader("reassembly.stats.tsv")}
     touch new.contigs.fasta
 
-    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
+    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.fastq
+
+    ${seqstatsLine("minlenreads_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
 
     i=0
     for fn_contig in contigs_*.fasta
@@ -317,7 +319,7 @@ process reassemble_canu {
             --output contigs_renamed\$i.fasta
         i=\$((i + 1))
     done
-    cat contigs_renamed*.fasta > current.contigs.fasta
+    cat contigs_renamed*.fasta > last.contigs.fasta
     rm contigs_renamed*.fasta
 
     i=0
@@ -325,19 +327,11 @@ process reassemble_canu {
     do
         i=\$((i + 1))
 
-        cd-hit-est \\
-            -n ${params.reassemble_cdhit_wordlen} \\
-            -c ${params.reassemble_cdhit_thresh} \\
-            -i current.contigs.fasta \\
-            -o clustered.contigs.fasta
-
-        mv clustered.contigs.fasta current.contigs.fasta
-
         minimap2 \\
             -ax map-ont \\
             -t ${task.cpus} \\
             --secondary=no \\
-            current.contigs.fasta \\
+            last.contigs.fasta \\
             filtered.fastq \\
         | samtools fastq -f 4 > re.filtered.fastq
 
@@ -352,7 +346,7 @@ process reassemble_canu {
         outdir=canu_output_\$i
         set +e
         canu \\
-            -nanopore-raw filtered.minlen.fastq \\
+            -nanopore-raw filtered.fastq \\
             -fast \\
             -p asm \\
             -d \$outdir \\
@@ -375,14 +369,21 @@ process reassemble_canu {
             break
         fi
 
+        cd-hit-est \\
+            -n ${params.reassemble_cdhit_wordlen} \\
+            -c ${params.reassemble_cdhit_thresh} \\
+            -i \$outdir/asm.contigs.fasta \\
+            -o clustered.contigs.\$i.fasta
+
         \$wfglue rename_seqs \\
-            --prefix newcontigs\$i_ \\
-            --input \$outdir/asm.contigs.fasta \\
+            --prefix newcontigs\${i}_ \\
+            --input clustered.contigs.\$i.fasta \\
             --output contigs.\$i.fasta
 
         cat contigs.\$i.fasta >> new.contigs.fasta
-        cat contigs.\$i.fasta >> current.contigs.fasta
+        cp contigs.\$i.fasta last.contigs.fasta
 
+        ${seqstatsLine("filteredreads_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
         ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
     done
 

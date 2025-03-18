@@ -26,8 +26,12 @@ def argparser():
 def main(args):
     with open(args.output, 'w') as f_out:
         for i, seq in enumerate(SeqIO.parse(args.input, 'fasta'), 1):
+            try:
+                nreads = int(seq.description.split("reads=")[1].split()[0])
+            except:
+                nreads = 1
             new_id = f'{args.prefix}{i}'
-            description = f'len={len(seq.seq)} reads=1 original_name={seq.id}'
+            description = f'len={len(seq.seq)} reads={nreads} original_name={seq.id}'
             new_record = SeqRecord(
                 id=new_id,
                 name=new_id,
