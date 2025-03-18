@@ -48,8 +48,7 @@ process classify_centrifuge {
             path("classification_kraken_${target_db}.tsv"),
             path("classification_${target_db}.html")
     """
-
-    if [ -s seqs.fastq ]
+    if [[ -s seqs.fastq ]]
     then
         centrifuge \
             -p ${task.cpus} \
@@ -93,9 +92,39 @@ EOF
 }
 
 
+def seqstatsHeader(String fnameOut) {
+    return """
+    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > $fnameOut
+    """
+}
+
+
+def isNotEmptyCheck(String fname) {
+    if (fname.endsWith(".gz")) {
+        return " \$(zcat asm.correctedReads.fasta.gz | wc -l) -ne 0 "
+    }
+    return " -s ${fname} "
+}
+
+
+def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
+    return """
+    echo -n "${rowIdentifier}\t" >> ${fnameOut}
+    if [[ ${isNotEmptyCheck(fnameIn)} ]]
+    then
+        seqkit stats -T ${fnameIn} \\
+        | tail -n 1 \\
+        | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> ${fnameOut}
+    else
+        echo "0\t0\t0\t0.0\t0" >> ${fnameOut}
+    fi
+    """
+}
+
+
 process filter_contaminants {
     label "general"
-    cpus 4
+    cpus 8
     memory '20 GB'
     input:
         tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
@@ -106,9 +135,8 @@ process filter_contaminants {
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
 
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats_tmp.tsv
-    echo -n "nofilter\t" >> stats_tmp.tsv
-    seqkit stats -T \$fn_input | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
+    ${seqstatsHeader("stats_tmp.tsv")}
+    ${seqstatsLine("nofilter", "\$fn_input", "stats_tmp.tsv")}
 
     for i in "\${!contaminants[@]}"
     do
@@ -128,8 +156,7 @@ process filter_contaminants {
             --reference \$db \
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
-        echo -n "\${c}\t" >> stats_tmp.tsv
-        seqkit stats -T \$fn_out | tail -n 1 | awk '{print \$4"\\t"\$5"\\t"\$6"\\t"\$7"\\t"\$8}' >> stats_tmp.tsv
+        ${seqstatsLine("\${c}", "\$fn_out", "stats_tmp.tsv")}
 
         fn_input=\$fn_out
     done
@@ -163,52 +190,42 @@ process assemble_canu {
     cpus 16
     memory '24 GB'
     input:
-        tuple val(meta),
-            path("seqs.fastq"),
-            val(min_read_length),
-            val(min_overlap_length),
-            val(read_sampling_bias),
-            val(genome_size),
-            val(cor_out_coverage),
-            val(stop_on_low_coverage),
-            val(min_input_coverage),
-            val(max_input_coverage)
+        tuple val(meta), path("seqs.fastq"), val(get_reads_if_no_contigs)
     output:
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
-    """        
-    echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > stats.tsv
-    echo -n "all_${meta.mapping_target}\t" >> stats.tsv
-    if [ -s seqs.fastq ]
-    then
-        seqkit stats -T seqs.fastq | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    else
-        echo "0\t0\t0\t0.0\t0" >> stats.tsv
-    fi
+    """
+    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
+    wfglue=\$(which workflow-glue)
+
+    source /opt/conda/etc/profile.d/conda.sh
+    export PATH="/opt/conda/bin:$PATH"
+    conda activate env
+
+    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
+
+    conda deactivate
 
     outdir=.
-
     set +e
-
-    canu \
-        -nanopore-raw seqs.fastq \
-        -fast \
-        -p asm \
-        -d \$outdir \
-        genomeSize=$genome_size \
-        minReadLength=$min_read_length  \
-        minOverlapLength=$min_overlap_length \
-        corOutCoverage=$cor_out_coverage \
-        readSamplingBias=$read_sampling_bias \
-        stopOnLowCoverage=$stop_on_low_coverage \
-        minInputCoverage=$min_input_coverage \
-        maxInputCoverage=$max_input_coverage \
-        maxThreads=${task.cpus} \
+    canu \\
+        -nanopore-raw filtered.minlen.fastq \\
+        -fast \\
+        -p asm \\
+        -d \$outdir \\
+        genomeSize=${params.canu_genome_size} \\
+        minReadLength=${params.canu_min_read_length} \\
+        minOverlapLength=${params.canu_min_overlap_length} \\
+        corOutCoverage=${params.canu_cor_out_coverage} \\
+        readSamplingBias=${params.canu_read_sampling_bias} \\
+        stopOnLowCoverage=${params.canu_stop_on_low_coverage} \\
+        minInputCoverage=${params.canu_min_input_coverage} \\
+        maxInputCoverage=${params.canu_max_input_coverage} \\
+        maxThreads=${task.cpus} \\
         maxMemory=${task.memory.toGiga()}g
-
-    canu_status=\$?  # Capture Canu's exit code
-
     set -e
+
+    conda activate env
 
     touch asm.contigs.fasta
 
@@ -218,21 +235,161 @@ process assemble_canu {
         gzip asm.correctedReads.fasta
     fi
 
-    echo -n "corrected_${meta.mapping_target}\t" >> stats.tsv
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("all_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
+    ${seqstatsLine("corrected_" + meta.mapping_target, "asm.correctedReads.fasta.gz", "stats.tsv")}
+    ${seqstatsLine("contigs_" + meta.mapping_target, "asm.contigs.fasta", "stats.tsv")}
 
-    first_line_count=\$(gunzip -c asm.correctedReads.fasta.gz | head -n 1 | wc | awk '{print \$1}')
-
-    if [[ \$first_line_count -ne 0 ]]
+    if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
     then
-        seqkit stats -T asm.correctedReads.fasta.gz | tail -n 1 | awk '{print \$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8}' >> stats.tsv
-    else
-        echo "0\t0\t0\t0.0\t0" >> stats.tsv
+        # no contigs, get some reads, prefer corrected reads if they are available
+        if [[ n_lines_corrected -gt 0 ]]
+        then
+            seqkit sort -l -r asm.correctedReads.fasta.gz \\
+            | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
+
+            read_type=corrected
+        else
+            seqkit fq2fa seqs.fastq | seqkit sort -l -r \\
+            | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
+
+            read_type=raw
+        fi
+
+        if [[ -s longest_reads.fasta ]]
+        then
+            cd-hit-est \\
+                -n ${params.nocontigs_cdhit_wordlen} \\
+                -c ${params.nocontigs_cdhit_thresh} \\
+                -T ${task.cpus} \\
+                -M ${task.memory.toMega()} \\
+                -i longest_reads.fasta \\
+                -o clustered.fasta
+
+            seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
+
+            # rename the reads and add header infos
+            \$wfglue rename_seqs \\
+                --prefix \${read_type}_read_ \\
+                --input selected.fasta \\
+                --output renamed.fasta
+
+            ${seqstatsLine("longestreads_" + meta.mapping_target, "renamed.fasta", "stats.tsv")}
+
+            # replace the empty contigs-file with the longest reads
+            mv renamed.fasta asm.contigs.fasta
+        fi
     fi
 
     mv stats.tsv assembly_stats_${meta.mapping_target}.tsv
     """
 }
 
+
+process reassemble_canu {
+    label "canu"
+    cpus 16
+    memory '24 GB'
+    input:
+        tuple val(meta), path("contigs_*.fasta"), path("seqs.fastq")
+    output:
+        tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
+        tuple val(meta), path("reassembly.stats.tsv"), emit: stats
+    """
+    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
+    wfglue=\$(which workflow-glue)
+
+    source /opt/conda/etc/profile.d/conda.sh
+    export PATH="/opt/conda/bin:$PATH"
+    conda activate env
+
+    ${seqstatsHeader("reassembly.stats.tsv")}
+    touch new.contigs.fasta
+
+    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.fastq
+
+    ${seqstatsLine("minlenreads_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
+
+    i=0
+    for fn_contig in contigs_*.fasta
+    do
+        \$wfglue rename_seqs \\
+            --prefix inputcontigs\${i}_ \\
+            --input \$fn_contig \\
+            --output contigs_renamed\$i.fasta
+        i=\$((i + 1))
+    done
+    cat contigs_renamed*.fasta > last.contigs.fasta
+    rm contigs_renamed*.fasta
+
+    i=0
+    while [[ \$i -lt ${params.reassemble_max_iter} ]]
+    do
+        i=\$((i + 1))
+
+        minimap2 \\
+            -ax map-ont \\
+            -t ${task.cpus} \\
+            --secondary=no \\
+            last.contigs.fasta \\
+            filtered.fastq \\
+        | samtools fastq -f 4 > re.filtered.fastq
+
+        mv re.filtered.fastq filtered.fastq
+
+        if [[ ! -s filtered.fastq ]]
+        then
+            break
+        fi
+
+        conda deactivate
+        outdir=canu_output_\$i
+        set +e
+        canu \\
+            -nanopore-raw filtered.fastq \\
+            -fast \\
+            -p asm \\
+            -d \$outdir \\
+            genomeSize=${params.canu_genome_size} \\
+            minReadLength=${params.canu_min_read_length} \\
+            minOverlapLength=${params.canu_min_overlap_length} \\
+            corOutCoverage=${params.canu_cor_out_coverage} \\
+            readSamplingBias=${params.canu_read_sampling_bias} \\
+            stopOnLowCoverage=${params.canu_stop_on_low_coverage} \\
+            minInputCoverage=${params.canu_min_input_coverage} \\
+            maxInputCoverage=${params.canu_max_input_coverage} \\
+            maxThreads=${task.cpus} \\
+            maxMemory=${task.memory.toGiga()}g
+        set -e
+
+        conda activate env
+
+        if [[ ! -s \$outdir/asm.contigs.fasta ]]
+        then
+            break
+        fi
+
+        cd-hit-est \\
+            -n ${params.reassemble_cdhit_wordlen} \\
+            -c ${params.reassemble_cdhit_thresh} \\
+            -i \$outdir/asm.contigs.fasta \\
+            -o clustered.contigs.\$i.fasta
+
+        \$wfglue rename_seqs \\
+            --prefix newcontigs\${i}_ \\
+            --input clustered.contigs.\$i.fasta \\
+            --output contigs.\$i.fasta
+
+        cat contigs.\$i.fasta >> new.contigs.fasta
+        cp contigs.\$i.fasta last.contigs.fasta
+
+        ${seqstatsLine("filteredreads_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
+        ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
+    done
+
+    mv new.contigs.fasta reassembly.contigs.fasta
+    """
+}
 
 process pop_bubbles {
     label "general"
