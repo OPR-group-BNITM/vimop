@@ -16,6 +16,7 @@ include {
     filter_contaminants;
     filter_virus_target;
     assemble_canu;
+    reassemble_canu;
     pop_bubbles;
     prepare_blast_search;
     canu_contig_info;
@@ -84,12 +85,30 @@ workflow pipeline {
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        assemblies = to_assemble_notarget
+        first_assemblies = to_assemble_notarget
         | mix(to_assemble_targeted)
         | assemble_canu
 
+        // Re-assemble
+        // try to assemble reads, that do not map to any previously created contig
+        cleaned_reads = cleaned.reads
+        | map { meta, reads -> [meta.alias, reads] }
+
+        re_assemblies = first_assemblies.contigs
+        | map { meta, contigs -> [meta.alias, contigs] }
+        | groupTuple(by: 0)
+        | join(cleaned_reads, by: 0)
+        | map { samplename, contigs, reads -> [["alias": samplename, "mapping_target": "re-assembly"], contigs, reads] }
+        | reassemble_canu
+
+        contigs = first_assemblies.contigs
+        | mix(re_assemblies.contigs)
+
+        assembly_stats = first_assemblies.stats
+        | mix(re_assemblies.stats)
+
         // database search for references using blast
-        blast_queries = assemblies.contigs
+        blast_queries = contigs
         | pop_bubbles
         | prepare_blast_search
 
@@ -154,11 +173,11 @@ workflow pipeline {
         | concat(custom_sample_ref_ids)
         | unique
 
-        simpliefied_ref_seqs = extended_ref_seqs
+        simplified_ref_seqs = extended_ref_seqs
         | simplify_reference_fasta
 
         reads_and_ref = extended_sample_ref
-        | combine(simpliefied_ref_seqs)
+        | combine(simplified_ref_seqs)
         | filter { samplename, ref_id_1, ref_id_2, ref_seq -> ref_id_1 == ref_id_2 }
         | map { samplename, ref_id_1, ref_id_2, ref_seq -> [samplename, ref_id_1, ref_seq] }
         | combine(trimmed)
@@ -228,7 +247,7 @@ workflow pipeline {
         // Create the report
         assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
 
-        collected_assembly_stats = assemblies.stats
+        collected_assembly_stats = assembly_stats
         | map {meta, stats -> [meta.alias, stats]}
         | groupTuple(by: 0)
 
@@ -265,7 +284,7 @@ workflow pipeline {
             classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
             classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
             // contigs
-            assemblies.contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
+            contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
             // consensus
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },

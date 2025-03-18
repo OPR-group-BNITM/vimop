@@ -200,33 +200,32 @@ process assemble_canu {
 
     source /opt/conda/etc/profile.d/conda.sh
     export PATH="/opt/conda/bin:$PATH"
+    conda activate env
+
+    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
+
     conda deactivate
 
     outdir=.
-
     set +e
-
-    canu \
-        -nanopore-raw seqs.fastq \
-        -fast \
-        -p asm \
-        -d \$outdir \
-        genomeSize=${params.canu_genome_size} \
-        minReadLength=${params.canu_min_read_length} \
-        minOverlapLength=${params.canu_min_overlap_length} \
-        corOutCoverage=${params.canu_cor_out_coverage} \
-        readSamplingBias=${params.canu_read_sampling_bias} \
-        stopOnLowCoverage=${params.canu_stop_on_low_coverage} \
-        minInputCoverage=${params.canu_min_input_coverage} \
-        maxInputCoverage=${params.canu_max_input_coverage} \
-        maxThreads=${task.cpus} \
+    canu \\
+        -nanopore-raw filtered.minlen.fastq \\
+        -fast \\
+        -p asm \\
+        -d \$outdir \\
+        genomeSize=${params.canu_genome_size} \\
+        minReadLength=${params.canu_min_read_length} \\
+        minOverlapLength=${params.canu_min_overlap_length} \\
+        corOutCoverage=${params.canu_cor_out_coverage} \\
+        readSamplingBias=${params.canu_read_sampling_bias} \\
+        stopOnLowCoverage=${params.canu_stop_on_low_coverage} \\
+        minInputCoverage=${params.canu_min_input_coverage} \\
+        maxInputCoverage=${params.canu_max_input_coverage} \\
+        maxThreads=${task.cpus} \\
         maxMemory=${task.memory.toGiga()}g
-
-    canu_status=\$?  # Capture Canu's exit code
+    set -e
 
     conda activate env
-
-    set -e
 
     touch asm.contigs.fasta
 
@@ -237,8 +236,9 @@ process assemble_canu {
     fi
 
     ${seqstatsHeader("stats.tsv")}
-    ${seqstatsLine("all_" + meta.mapping_target, "seqs.fastq", "stats.tsv")}
+    ${seqstatsLine("all_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
     ${seqstatsLine("corrected_" + meta.mapping_target, "asm.correctedReads.fasta.gz", "stats.tsv")}
+    ${seqstatsLine("contigs_" + meta.mapping_target, "asm.contigs.fasta", "stats.tsv")}
 
     if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
     then
@@ -274,6 +274,8 @@ process assemble_canu {
                 --input selected.fasta \\
                 --output renamed.fasta
 
+            ${seqstatsLine("longestreads_" + meta.mapping_target, "renamed.fasta", "stats.tsv")}
+
             # replace the empty contigs-file with the longest reads
             mv renamed.fasta asm.contigs.fasta
         fi
@@ -284,64 +286,109 @@ process assemble_canu {
 }
 
 
-// process restassembly_canu {
-//     label "canu"
-//     cpus 16
-//     memory '24 GB'
-//     input:
-//         tuple val(meta), path("seqs.fastq"), path("contigs_*.fasta")
-//     output:
-//         tuple val(meta), path("new.contigs.fasta"), emit: contigs
-//         tuple val(meta), path("restassembly.stats.tsv"), emit: stats
-//     """
-//     # TODO
-//     # - filter reads longer than minlen basepairs
-//     # - quit if not reads are left
+process reassemble_canu {
+    label "canu"
+    cpus 16
+    memory '24 GB'
+    input:
+        tuple val(meta), path("contigs_*.fasta"), path("seqs.fastq")
+    output:
+        tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
+        tuple val(meta), path("reassembly.stats.tsv"), emit: stats
+    """
+    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
+    wfglue=\$(which workflow-glue)
 
-//     - rename and merge the existing contigs
+    source /opt/conda/etc/profile.d/conda.sh
+    export PATH="/opt/conda/bin:$PATH"
+    conda activate env
 
-//     touch new.contigs.fasta
+    ${seqstatsHeader("reassembly.stats.tsv")}
+    touch new.contigs.fasta
 
-//     iteration=1
+    seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
 
-//     while [[ \$iteration -le ${params.reassemble_max_iter} ]]
-//     do
-//         cd-hit-est \\
-//             -n ${params.reassemble_cdhit_wordlen} \\
-//             -c ${params.reassemble_cdhit_thresh} \\
-//             -i current.contigs.fasta \\
-//             -o clustered.contigs.fasta
+    i=0
+    for fn_contig in contigs_*.fasta
+    do
+        \$wfglue rename_seqs \\
+            --prefix inputcontigs\${i}_ \\
+            --input \$fn_contig \\
+            --output contigs_renamed\$i.fasta
+        i=\$((i + 1))
+    done
+    cat contigs_renamed*.fasta > current.contigs.fasta
+    rm contigs_renamed*.fasta
 
-//         mv clustered.contigs.fasta current.contigs.fasta
+    i=0
+    while [[ \$i -lt ${params.reassemble_max_iter} ]]
+    do
+        i=\$((i + 1))
 
-//         minimap2 \\
-//             -ax map-ont \\
-//             -t ${task.cpus} \\
-//             --secondary=no \\
-//             current.contigs.fasta \\
-//             filtered.fastq \\
-//         | samtools fastq -f 4 > re.filtered.fastq
+        cd-hit-est \\
+            -n ${params.reassemble_cdhit_wordlen} \\
+            -c ${params.reassemble_cdhit_thresh} \\
+            -i current.contigs.fasta \\
+            -o clustered.contigs.fasta
 
-//         mv re.filtered.fastq filtered.fastq
-        
-//         # - check if reads are left (else quit)
-//         # TODO !!!!!!
+        mv clustered.contigs.fasta current.contigs.fasta
 
-//         # - assemble the reads (with canu)
-//         # TODO !!!!!!
+        minimap2 \\
+            -ax map-ont \\
+            -t ${task.cpus} \\
+            --secondary=no \\
+            current.contigs.fasta \\
+            filtered.fastq \\
+        | samtools fastq -f 4 > re.filtered.fastq
 
-//         # - check if new contigs were built (else quit)
-//         # TODO !!!!!!
+        mv re.filtered.fastq filtered.fastq
 
-//         # - rename the new contigs
-//         # TODO !!!!!!
-//         # - append them to new.contigs.fasta
-//         # TODO !!!!!!
-//         # - append them to current contigs.fasta (for re-clustering)
-//         # TODO !!!!!!
-//     done
-//     """
-// }
+        if [[ ! -s filtered.fastq ]]
+        then
+            break
+        fi
+
+        conda deactivate
+        outdir=canu_output_\$i
+        set +e
+        canu \\
+            -nanopore-raw filtered.minlen.fastq \\
+            -fast \\
+            -p asm \\
+            -d \$outdir \\
+            genomeSize=${params.canu_genome_size} \\
+            minReadLength=${params.canu_min_read_length} \\
+            minOverlapLength=${params.canu_min_overlap_length} \\
+            corOutCoverage=${params.canu_cor_out_coverage} \\
+            readSamplingBias=${params.canu_read_sampling_bias} \\
+            stopOnLowCoverage=${params.canu_stop_on_low_coverage} \\
+            minInputCoverage=${params.canu_min_input_coverage} \\
+            maxInputCoverage=${params.canu_max_input_coverage} \\
+            maxThreads=${task.cpus} \\
+            maxMemory=${task.memory.toGiga()}g
+        set -e
+
+        conda activate env
+
+        if [[ ! -s \$outdir/asm.contigs.fasta ]]
+        then
+            break
+        fi
+
+        \$wfglue rename_seqs \\
+            --prefix newcontigs\$i_ \\
+            --input \$outdir/asm.contigs.fasta \\
+            --output contigs.\$i.fasta
+
+        cat contigs.\$i.fasta >> new.contigs.fasta
+        cat contigs.\$i.fasta >> current.contigs.fasta
+
+        ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
+    done
+
+    mv new.contigs.fasta reassembly.contigs.fasta
+    """
+}
 
 process pop_bubbles {
     label "general"
