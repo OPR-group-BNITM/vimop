@@ -172,7 +172,7 @@ workflow pipeline {
         | mix(custom_ref_files)
 
         // Match reads with reference sequences for consensus generation
-        simpliefied_ref_seqs = extended_ref_seqs
+        simplified_ref_seqs = extended_ref_seqs
         | simplify_reference_fasta
 
         reads_and_ref = extended_sample_ref
