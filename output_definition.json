@@ -1,0 +1,116 @@
+{
+  "files": {
+    "run-summary-report": {
+      "filepath": "nf-report-*.html",
+      "title": "Run summary report",
+      "description": "Global workflow summary report for the entire run",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "aggregated"
+    },
+    "barcode-html-report": {
+      "filepath": "barcode*/report_barcode*.html",
+      "title": "Barcode-specific HTML reports",
+      "description": "Per-barcode HTML report",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "consensus-fastas": {
+      "filepath": "barcode*/consensus/*.consensus.fasta",
+      "title": "Consensus FASTA sequences",
+      "description": "Per-barcode consensus FASTA sequences",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "reference-fastas": {
+      "filepath": "barcode*/consensus/*.reference.fasta",
+      "title": "Reference FASTA sequences",
+      "description": "Per-barcode reference FASTA sequences",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "bam-files": {
+      "filepath": "barcode*/consensus/*.reads.bam",
+      "title": "BAM alignment files",
+      "description": "Per-barcode BAM files",
+      "mime-type": "application/bam",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "bam-indexes": {
+      "filepath": "barcode*/consensus/*.reads.bam.bai",
+      "title": "BAM index files",
+      "description": "BAM index files for each barcode",
+      "mime-type": "application/bai",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "depth-files": {
+      "filepath": "barcode*/consensus/*.depth.txt",
+      "title": "Depth files",
+      "description": "Per-barcode depth coverage text files",
+      "mime-type": "text/plain",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "selected-consensus-fastas": {
+      "filepath": "barcode*/selected_consensus/*.fasta",
+      "title": "Selected consensus FASTA sequences",
+      "description": "Selected consensus FASTA sequences (e.g., LASV L and S segments)",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "assembly-contigs": {
+      "filepath": "barcode*/assembly/*.contigs.fasta",
+      "title": "Assembly contigs",
+      "description": "Assembly contigs FASTA files",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "classification-html": {
+      "filepath": "barcode*/classification/*classification_refseq*genbank_viral.html",
+      "title": "Classification HTML reports",
+      "description": "Kraken/RefSeq classification HTML reports",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "classification-tsv": {
+      "filepath": "barcode*/classification/*classification_refseq*genbank_viral.tsv",
+      "title": "Classification TSV",
+      "description": "Kraken/RefSeq classification TSV files",
+      "mime-type": "text/tsv",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "classification-summary": {
+      "filepath": "barcode*/classification/*classification_report_refseq*genbank_viral.tsv",
+      "title": "Classification summary",
+      "description": "Kraken/RefSeq classification summary TSV files",
+      "mime-type": "text/tsv",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "filtered-fastq": {
+      "filepath": "barcode*/clean/filtered.fastq",
+      "title": "Filtered FASTQ",
+      "description": "Filtered FASTQ files for each barcode",
+      "mime-type": "text/fastq",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "summary-tables": {
+      "filepath": "barcode*/tables/*.tsv",
+      "title": "Summary tables",
+      "description": "Per-barcode summary TSVs: consensus.tsv, contigs.tsv, reads.tsv",
+      "mime-type": "text/tsv",
+      "optional": false,
+      "type": "per-sample"
+    }
+  }
+}
