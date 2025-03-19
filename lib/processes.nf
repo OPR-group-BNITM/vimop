@@ -488,6 +488,25 @@ process extract_blasthits {
     #!/usr/bin/env python
     import pandas as pd
     from xml.etree import ElementTree
+    column_names = [
+        'Query',
+        'Reference',
+        'Description',
+        'Family',
+        'Organism',
+        'Segment',
+        'Orientation',
+        'HitLength',
+        'Bitscore',
+        'QueryFrom',
+        'QueryTo',
+        'HitFrom',
+        'HitTo',
+        'IdenticalPositions',
+        'AlignmentLength',
+        'Gaps',
+        'WorkflowMappingTarget',
+    ]
     rows = []
     try:
         root = ElementTree.parse('blast-results.xml').getroot()
@@ -533,29 +552,10 @@ process extract_blasthits {
                         })
                 except (ValueError, AttributeError):
                     continue
-        hits = pd.DataFrame(rows)
     except ElementTree.ParseError:
         # empty file with no blast hits
-        column_names = [
-            'Query',
-            'Reference',
-            'Description',
-            'Family',
-            'Organism',
-            'Segment',
-            'Orientation',
-            'HitLength',
-            'Bitscore',
-            'QueryFrom',
-            'QueryTo',
-            'HitFrom',
-            'HitTo',
-            'IdenticalPositions',
-            'AlignmentLength',
-            'Gaps',
-            'WorkflowMappingTarget',
-        ]
-        hits = pd.DataFrame(columns=column_names)
+        pass
+    hits = pd.DataFrame(rows, columns=column_names)
     hits.to_csv('blast-hits-${meta.mapping_target}.csv', header=True, index=False)
     """
 }
