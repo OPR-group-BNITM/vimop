@@ -1,265 +1,448 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
-    "title": "oprseq/nanoflow",
-    "workflow_title": "Nanoflow",
-    "description": "Virus metagenomics nanopore sequencing analysis workflow",
-    "demo_url": "",
-    "aws_demo_url": "",
-    "url": "",
-    "type": "object",
-    "resources": {
-        "recommended": {
-            "cpus": 32,
-            "memory": "32GB"
-        },
-        "minimum": {
-            "cpus": 4,
-            "memory": "2GB"
-        },
-        "run_time": "Variable depending on sequencing depth",
-        "arm_support": false
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/OPR-group-BNITM/nanoflow/nextflow_schema.json",
+  "title": "OPR-group-BNITM/nanoflow pipeline parameters",
+  "description": "Reference based virus assembly with automatic reference selection from ONT reads.",
+  "type": "object",
+  "resources": {
+    "recommended": {
+        "cpus": 32,
+        "memory": "32GB"
     },
-    "definitions": {
-        "input": {
-            "title": "Input Options",
-            "type": "object",
-            "fa_icon": "fas fa-arrow-right",
-            "description": "Parameters for finding and handling input data for analysis.",
-            "properties": {
-                "fastq": {
-                    "type": "string",
-                    "title": "FASTQ",
-                    "format": "path",
-                    "description": "FASTQ files to use in the analysis.",
-                    "help_text": "This accepts one of three cases: (i) the path to a single FASTQ file; (ii) the path to a top-level directory containing FASTQ files; (iii) the path to a directory containing one level of sub-directories which in turn contain FASTQ files. In the first and second case, a sample name can be supplied with `--sample`. In the last case, the data is assumed to be multiplexed with the names of the sub-directories as barcodes. In this case, a sample sheet can be provided with `--sample_sheet`."
-                },
-                "out_dir": {
-                    "type": "string",
-                    "title": "Output directory",
-                    "format": "directory-path",
-                    "description": "Directory for output of all workflow results.",
-                    "help_text": "The directory where all workflow outputs will be saved. Accepts absolute or relative paths."
-                },
-                "trim_length": {
-                    "type": "integer",
-                    "title": "Trim length",
-                    "description": "Number of bases to trim from the start of each read.",
-                    "help_text": "The number of nts to remove from the start of each read. This is useful for removing adapter sequences or other unwanted bases."
-                },
-                "virus_db": {
-                    "type": "string",
-                    "title": "Database directory",
-                    "format": "directory-path",
-                    "description": "Directory containing virus database.",
-                    "help_text": "The directory containing the virus databases used filtering, read classification and blast-searches."
-                },
-                "centrifuge_classification_libraries": {
-                    "type": "array",
-                    "title": "Centrifuge classification libraries",
-                    "description": "Centrifuge classification libraries to use.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "help_text": "The Centrifuge classification libraries to use for classification of reads. The index files are in the virus database directory and end with cf."
-                },
-                "contamination_filters": {
-                    "type": "array",
-                    "title": "Contamination filters",
-                    "description": "Contamination filters to apply.",
-                    "items": {
-                        "type": "string",
-                        "enum": ["reagent", "human_dna", "human_rna"]
-                    },
-                    "help_text": "minimap2 is used to map the reads against these contaminants. Reads that map are filtered out."
-                },
-                "contamination_databases": {
-                    "type": "object",
-                    "title": "Contamination Databases",
-                    "description": "Paths to contamination databases used for filtering.",
-                    "additionalProperties": {
-                    "type": "string"
-                    },
-                    "help_text": "Dictionary mapping contamination database types to their file paths. Paths are constructed using the `virus_db` directory."
-                },
-                "consensus_method": {
-                    "type": "string",
-                    "default": "simple",
-                    "description": "Method to generate consensus sequence",
-                    "enum": ["simple", "medaka_variant", "medaka"]
-                },
-                "analyse_unclassified": {
-                    "type": "boolean",
-                    "title": "Analyse unclassified reads",
-                    "default": false,
-                    "description": "Analyse unclassified reads from input directory. By default the workflow will not process reads in the unclassified directory.",
-                    "help_text": "If selected and if the input is a multiplex directory the workflow will also process the unclassified directory."
-                }
-            },
-            "allOf": [
-                {
-                    "required": [
-                        "fastq",
-                        "consensus_method"
-                    ]
-                }
-            ]
-        },
-        "samples": {
-            "title": "Sample Options",
-            "type": "object",
-            "fa_icon": "fas fa-vials",
-            "description": "Parameters that relate to samples such as sample sheets and sample names.",
-            "properties": {
-                "sample_sheet": {
-                    "type": "string",
-                    "title": "Sample sheet",
-                    "format": "file-path",
-                    "description": "A CSV file used to map barcodes to sample aliases. The sample sheet can be provided when the input data is a directory containing sub-directories with FASTQ files.",
-                    "help_text": "The sample sheet is a CSV file with, minimally, columns named `barcode` and `alias`. Extra columns are allowed. A `type` column is required for certain workflows and should have the following values; `test_sample`, `positive_control`, `negative_control`, `no_template_control`."
-                }
-            }
-        },
-        "output": {
-            "title": "Output Options",
-            "type": "object",
-            "fa_icon": "fas fa-arrow-left",
-            "description": "Parameters for saving and naming workflow outputs.",
-            "properties": {
-                "out_dir": {
-                    "type": "string",
-                    "title": "Output directory",
-                    "default": "output",
-                    "format": "directory-path",
-                    "description": "Directory for output of all workflow results."
-                }
-            }
-        },
-        "advanced_options": {
-            "title": "Advanced Options",
-            "type": "object",
-            "fa_icon": "far fa-question-circle",
-            "description": "Advanced options for configuring processes inside the workflow.",
-            "help_text": "These advanced options do not need to be changed for typical use, but allow fine tuning of workflows for users who want more control over the workflow.",
-            "properties": {
-                "reference": {
-                    "type": "string",
-                    "title": "Reference FASTA",
-                    "format": "file-path",
-                    "description": "Enter the full path to a custom reference genome you would like to use.",
-                    "help_text": "The workflow defaults to the IRMA consensus reference. This option allows you to specify a path to an alternative reference."
-                },
-                "blastdb": {
-                    "type": "string",
-                    "title": "Typing BLAST Database",
-                    "format": "file-path",
-                    "description": "blastdb file used for typing.",
-                    "help_text": "The workflow provides the INSaFLU blastdb. If you would like to supply an alternative then provide the full path to the file here."
-                },
-                "min_coverage": {
-                    "type": "integer",
-                    "title": "Minimum depth coverage",
-                    "description": "Coverage threshold for masking bases in the consensus.",
-                    "help_text": "Any bases that are covered below 20x are masked (i.e. represented by 'N') by default in the consensus, this threshold can be changed using this parameter.",
-                    "minimum": 0,
-                    "default": 20
-                },
-                "min_qscore": {
-                    "type": "number",
-                    "title": "Minimum read Q-score",
-                    "description": "Minimum read quality score for fastcat.",
-                    "help_text": "Any reads which are below quality score of 9 are not used by default. This parameter allows you to customise that. For more information on quality scores please see this blog post: https://labs.epi2me.io/quality-scores",
-                    "minimum": 0,
-                    "default": 9
-                },
-                "downsample": {
-                    "type": "integer",
-                    "title": "Downsampling read threshold",
-                    "description": "Number of reads to downsample to in each direction, leave blank for no downsampling.",
-                    "help_text": "The workflow for each segment will first filter reads to include only those that are ±10% of the segment length before downsampling to the specified integer (taking an even split from forward and reverse reads). This downsampled data is then used in variant calling.",
-                    "minimum": 2
-                },
-                "medaka_consensus_model": {
-                    "type": "string",
-                    "title": "Medaka consensus model",
-                    "description": "The name of a Medaka model to use. By default the workflow will select an appropriate Medaka model from the basecaller configuration provided. Entering a name here will override the automated selection and use the Medaka model named here.",
-                    "help_text": "The workflow will attempt to map the basecalling model used to a suitable Medaka consensus model. You can override this by providing a model with this option instead."
-                },
-                "rbk": {
-                    "type": "boolean",
-                    "title": "rbk",
-                    "description": "Set when using data created with the RBK protocol.",
-                    "help_text": "This prevents shorter reads being filtered out and also turns off downsampling as this is not appropriate for the shorter reads generated with RBK.",
-                    "default": false
-                }
-            }
-        },
-        "misc": {
-            "title": "Miscellaneous Options",
-            "type": "object",
-            "description": "Everything else.",
-            "default": "",
-            "properties": {
-                "help": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Display help text.",
-                    "fa_icon": "fas fa-question-circle",
-                    "hidden": true
-                },
-                "version": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Display version and exit.",
-                    "fa_icon": "fas fa-question-circle",
-                    "hidden": true
-                }
-            }
-        }
+    "minimum": {
+        "cpus": 4,
+        "memory": "2GB"
     },
-    "allOf": [
-        {
-            "$ref": "#/definitions/input"
+    "run_time": "30 minutes when number of cores >= samples",
+    "arm_support": false
+  },
+  "definitions": {
+    "generic_options": {
+      "title": "Generic options",
+      "type": "object",
+      "fa_icon": "fas fa-file-import",
+      "description": "Less common options for the pipeline, typically set in a config file.",
+      "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.",
+      "properties": {
+        "help": {
+          "type": "boolean",
+          "default": false,
+          "description": "Display help text.",
+          "fa_icon": "fas fa-question-circle",
+          "hidden": true
         },
-        {
-            "$ref": "#/definitions/samples"
+        "version": {
+          "type": "boolean",
+          "default": false,
+          "description": "Display version and exit.",
+          "fa_icon": "fas fa-question-circle",
+          "hidden": true
         },
-        {
-            "$ref": "#/definitions/output"
+        "validate_params": {
+          "type": "boolean",
+          "description": "Boolean whether to validate parameters against the schema at runtime",
+          "default": true,
+          "fa_icon": "fas fa-check-square",
+          "hidden": true
         },
-        {
-            "$ref": "#/definitions/advanced_options"
+        "show_hidden_params": {
+          "type": "boolean"
         },
-        {
-            "$ref": "#/definitions/misc"
-        }
-    ],
-    "properties": {
+        "monochrome_logs": {
+          "type": "boolean",
+          "hidden": true,
+          "fa_icon": "fas fa-book-open"
+        },
+        "schema": {
+          "type": "string",
+          "default": "./nextflow_schema.json",
+          "hidden": true,
+          "fa_icon": "fas fa-clipboard-list"
+        },
+        "cleanup": {
+          "type": "boolean",
+          "default": true,
+          "hidden": true,
+          "description": "Clean up work directories after running pipeline",
+          "fa_icon": "fas fa-broom"
+        },
         "aws_image_prefix": {
-            "type": "string",
-            "hidden": true
+          "type": "string",
+          "hidden": true
         },
         "aws_queue": {
             "type": "string",
             "hidden": true
         },
-        "_reference": {
-            "type": "string",
-            "hidden": true
+      }
+    },
+    "input": {
+      "title": "Input Options",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "fastq": {
+          "type": "string",
+          "description": "Path to input FASTQ files directory, can be RUN directories with barcode subdirectories or single barcode directories",
+          "format": "path",
+          "help_text": "Directory containing FASTQ files, e.g., 'HAM-2025-RUN001/barcode01'",
+          "fa_icon": "far fa-folder"
         },
-        "_blastdb": {
-            "type": "string",
-            "hidden": true
-        },
-        "monochrome_logs": {
-            "type": "boolean"
-        },
-        "validate_params": {
-            "type": "boolean",
-            "default": true
-        },
-        "show_hidden_params": {
-            "type": "boolean"
+      },
+      "required": ["fastq"],
+      "fa_icon": "fas fa-folder-open"
+    },
+    "samples": {
+        "title": "Sample Options",
+        "type": "object",
+        "fa_icon": "fas fa-vials",
+        "description": "Parameters that relate to samples such as sample sheets and sample names.",
+        "properties": {
+            "sample_sheet": {
+                "type": "string",
+                "title": "Sample sheet",
+                "format": "file-path",
+                "description": "A CSV file used to map barcodes to sample aliases. The sample sheet can be provided when the input data is a directory containing sub-directories with FASTQ files.",
+                "help_text": "The sample sheet is a CSV file with, minimally, columns named `barcode` and `alias`. Extra columns are allowed. A `type` column is required for certain workflows and should have the following values; `test_sample`, `positive_control`, `negative_control`, `no_template_control`."
+            }
         }
+    },
+    "output": {
+      "title": "Output Options",
+      "type": "object",
+      "fa_icon": "fas fa-arrow-left",
+      "description": "Parameters for saving and naming outputs",
+      "properties": {
+        "out_dir": {
+          "type": "string",
+          "default": "output",
+          "description": "Output directory, should be the RUN directory where the subdirectory with the output for each sample is created",
+          "help_text": "Directory where the final results and reports will be saved. Can be absolute or relative path.",
+          "fa_icon": "fas fa-folder"
+        },
+        "output_cleaned_reads": {
+          "type": "boolean",
+          "description": "Output cleaned reads",
+          "help_text": "If enabled, cleaned reads after contamination removal will be written to output directory.",
+          "fa_icon": "fas fa-folder-plus"
+        }
+      }
+    },
+    "databases": {
+      "title": "Databases",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "base_db": {
+          "type": "string",
+          "description": "Path to general database directory",
+          "format": "directory-path",
+          "help_text": "Path to base directory that contains the virus, contaminants and classification data base",
+          "fa_icon": "fas fa-database"
+        },
+        "virus_db": {
+          "type": "string",
+          "description": "Path to virus database directory",
+          "format": "directory-path",
+          "help_text": "Path to virus database that contains all virus sequences for BLAST search and consensus creation",
+          "fa_icon": "fas fa-server"
+        },
+        "virus_db_config": {
+          "type": "string",
+          "description": "Configuration file for the virus database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for the virus database.",
+          "fa_icon": "far fa-file-alt"
+        },
+        "contaminants_db": {
+          "type": "string",
+          "description": "Path to contaminants database directory",
+          "format": "directory-path",
+          "help_text": "Path to contaminants database (e.g., human DNA/RNA, prokaryotic contaminants).",
+          "fa_icon": "fas fa-server"
+        },
+        "contaminants_db_config": {
+          "type": "string",
+          "description": "Configuration file for the contaminants database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for contaminants database.",
+          "fa_icon": "far fa-file-alt"
+        },
+        "classification_db": {
+          "type": "string",
+          "description": "Path to classification database directory containing .cf files for centrifuge",
+          "format": "directory-path",
+          "help_text": "Path to a classification database used by centrifuge, should contain .cf files.",
+          "fa_icon": "fas fa-server"
+        }
+      },
+      "help_text": "",
+      "fa_icon": "fas fa-database"
+    },
+    "classification": {
+      "title": "Classification",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "centrifuge_classification_libraries": {
+          "type": "string",
+          "default": "all",
+          "description": "Centrifuge classification libraries to use",
+          "pattern": "([^,]+,?)+",
+          "help_text": "Specify which centrifuge libraries to use (e.g., 'all' or comma-separated list of libraries).",
+          "fa_icon": "fas fa-chart-pie"
+        }
+      },
+      "fa_icon": "fas fa-chart-pie"
+    },
+    "clean_and_filter": {
+      "title": "Clean and filter",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "trim_length": {
+          "type": "integer",
+          "default": 30,
+          "hidden": true,
+          "help_text": "Minimum read length after trimming to keep the read. Shorter reads will be discarded.",
+          "description": "Trim length for reads",
+          "fa_icon": "fas fa-cut"
+        },
+        "contamination_filters": {
+          "type": "string",
+          "default": "reagent,human_dna,human_rna",
+          "description": "Filters for contamination removal",
+          "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "targets": {
+          "type": "string",
+          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
+          "description": "Comma-separated list of target viruses",
+          "fa_icon": "fas fa-bullseye"
+        }
+      },
+      "fa_icon": "fas fa-filter"
+    },
+    "assembly": {
+      "title": "Assembly",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "assemble_notarget": {
+          "type": "boolean",
+          "default": true,
+          "help_text": "Whether to also assemble reads that were not assigned to any specific target.",
+          "description": "Assemble non-target reads",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "canu_min_read_length": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu minimum read length",
+          "help_text": "reads shorter than this threshold are excluded from the assembly process. Must be no smaller than min_overlap_length.",
+          "fa_icon": "fas fa-sort-amount-down-alt"
+        },
+        "canu_min_overlap_length": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu minimum overlap length",
+          "help_text": "Overlaps shorter than this value are disregarded. Setting this too low may introduce false overlaps; too high may fragment the assembly.",
+          "fa_icon": "fas fa-ruler-horizontal"
+        },
+        "canu_genome_size": {
+          "type": "integer",
+          "default": 30000,
+          "description": "Estimated total genome size for Canu",
+          "help_text": "An estimate of the genome size to be assembled. Accepts suffixed values (e.g., '3.7m' for 3.7 million bases).",
+          "fa_icon": "fas fa-arrows-alt-h"
+        },
+        "canu_read_sampling_bias": {
+          "type": "integer",
+          "default": 5,
+          "description": "Canu read sampling bias",
+          "help_text": "Bias towards selecting longer reads during downsampling.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "canu_max_input_coverage": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu maximum input coverage",
+          "help_text": "Maximum coverage to use for the assembly input. Controls how many reads are used in the beginning of the assembly.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "canu_cor_out_coverage": {
+          "type": "integer",
+          "default": 10000,
+          "description": "Canu corrected output coverage",
+          "help_text": "Controls how many reads will be corrected in the correction phase.",
+          "fa_icon": "fas fa-times"
+        },
+        "canu_stop_on_low_coverage": {
+          "type": "integer",
+          "default": 0,
+          "description": "Canu stop on low coverage",
+          "help_text": "If coverage drops below this value, Canu will stop. Set to 0 to disable stopping.",
+          "fa_icon": "far fa-hand-paper"
+        },
+        "canu_min_input_coverage": {
+          "type": "integer",
+          "default": 0,
+          "description": "Canu minimum input coverage",
+          "help_text": "Minimum required coverage before Canu starts assembling. Set to 0 so that Canu always tries to assemble the given reads.",
+          "fa_icon": "far fa-hand-paper"
+        }
+      },
+      "fa_icon": "fas fa-puzzle-piece"
+    },
+    "references_for_consensus": {
+      "title": "References for consensus",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "map_to_target_minimap_window_size": {
+          "type": "integer",
+          "default": 5,
+          "description": "Minimap2 window size",
+          "hidden": true,
+          "help_text": "Minimap2 window size used during target mapping. Smaller values may increase sensitivity.",
+          "fa_icon": "far fa-window-maximize"
+        },
+        "map_to_target_minimap_kmer_size": {
+          "type": "integer",
+          "default": 11,
+          "description": "Minimap2 k-mer size",
+          "hidden": true,
+          "help_text": "K-mer size used by Minimap2 for seed generation during target alignment.",
+          "fa_icon": "fas fa-arrows-alt-h"
+        },
+        "custom_ref_fasta": {
+          "type": "string",
+          "description": "Custom reference FASTA",
+          "help_text": "Optional: Provide a custom FASTA file for consensus generation. Will be used for every sample in the run.",
+          "fa_icon": "fas fa-file-alt"
+        }
+      },
+      "fa_icon": "fas fa-file-export"
+    },
+    "consensus": {
+      "title": "Consensus",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "consensus_method": {
+          "type": "string",
+          "default": "medaka_variant",
+          "description": "Consensus method to use",
+          "help_text": "Method used for consensus generation. Defaults to 'medaka_variant'.",
+          "fa_icon": "fas fa-signal"
+        },
+        "medaka_consensus_model": {
+          "type": "string",
+          "default": "auto",
+          "description": "Medaka model to use for consensus creation",
+          "help_text": "Specify a Medaka model (e.g., 'r941_min_high_g303') or 'auto' to automatically select based on input data.",
+          "fa_icon": "far fa-chart-bar"
+        },
+        "consensus_min_depth": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum depth for consensus base",
+          "help_text": "Minimum coverage depth required at a position to call a consensus base.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "consensus_min_share": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele share for consensus base",
+          "help_text": "Fraction of reads supporting a base required for it to be called in the consensus (e.g., 0.7 = 70%).",
+          "fa_icon": "fas fa-align-right"
+        }
+      },
+      "fa_icon": "fas fa-chart-bar"
+    },
+    "misc": {
+      "title": "Miscellaneous Options",
+      "type": "object",
+      "description": "Everything else.",
+      "default": "",
+      "properties": {
+          "database_defaults": {
+            "type": "object",
+            "hidden": true,
+            "help_text": "These should not be changed. Set the variables base_db, virus_db, blast_db, contaminants_db or classification_db instead.",
+            "description": "Database defaults"
+          },
+          "min_disk_space_work_gb": {
+            "type": "integer",
+            "default": 100,
+            "description": "Minimum disk space for work directory (GB)",
+            "help_text": "Minimum required disk space in GB for the Nextflow work directory to ensure workflow stability.",
+            "hidden": true
+          },
+          "min_disk_space_out_gb": {
+            "type": "integer",
+            "default": 10,
+            "description": "Minimum disk space for output directory (GB)",
+            "help_text": "Minimum required disk space in GB for the output directory.",
+            "hidden": true
+          },
+          "min_ram_gb": {
+            "type": "integer",
+            "default": 30,
+            "description": "Minimum RAM (GB)",
+            "help_text": "Minimum required RAM in GB for pipeline steps.",
+            "hidden": true
+          },
+          "min_cpus": {
+            "type": "integer",
+            "default": 16,
+            "description": "Minimum CPUs",
+            "help_text": "Minimum number of CPUs to run the workflow efficiently.",
+            "hidden": true
+          }
+      }
     }
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/generic_options"
+    },
+    {
+      "$ref": "#/definitions/input"
+    },
+    {
+      "$ref": "#/definitions/output"
+    },
+    {
+      "$ref": "#/definitions/databases"
+    },
+    {
+      "$ref": "#/definitions/classification"
+    },
+    {
+      "$ref": "#/definitions/clean_and_filter"
+    },
+    {
+      "$ref": "#/definitions/assembly"
+    },
+    {
+      "$ref": "#/definitions/references_for_consensus"
+    },
+    {
+      "$ref": "#/definitions/consensus"
+    },
+    {
+      "$ref": "#/definitions/misc"
+    }
+  ]
 }
