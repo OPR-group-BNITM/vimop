@@ -4,6 +4,7 @@ import yaml
 import os
 
 from typing import List, Type
+import base64
 
 from bokeh.models import Title
 from dominate.tags import (
@@ -99,8 +100,12 @@ class OprLogo(div):
             'OPR_logo_v01-light.cropped.png'
         )
 
+        # Convert image to Base64
+        with open(fname_logo, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+
         super().__init__(
-            img(src=fname_logo, style="height: 75px;", alt="OPR Logo"),
+            img(src=f"data:image/png;base64,{encoded_string}", style="height: 75px;", alt="OPR Logo"),
             tagname='div',
             className="d-flex"
         )
