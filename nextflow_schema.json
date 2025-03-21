@@ -59,7 +59,7 @@
       "fa_icon": "fas fa-arrow-left",
       "description": "Parameters for saving and naming outputs",
       "properties": {
-       "out_dir": {
+      "out_dir": {
           "title": "Output directory",
           "type": "string",
           "default": "output",
@@ -166,7 +166,7 @@
           "type": "integer",
           "default": 30,
           "hidden": true,
-          "help_text": "Minimum read length after trimming to keep the read. Shorter reads will be discarded.",
+          "help_text": "Number of bases that get removed from both sides of each read.",
           "description": "Trim length for reads",
           "fa_icon": "fas fa-cut"
         },
