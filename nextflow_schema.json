@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://raw.githubusercontent.com/OPR-group-BNITM/nanoflow/nextflow_schema.json",
-  "title": "OPR-group-BNITM/nanoflow pipeline",
-  "workflow_title": "nanoflow: Virus Assembly and Analysis",
+  "title": "OPR-group-BNITM/vimop",
+  "workflow_title": "ViMOP: Virus metagenomics outbreak preparedness workflow",
   "description": "Reference-based virus assembly with automatic reference selection from ONT reads.",
   "demo_url": "https://my-bucket.s3.amazonaws.com/nanoflow/nanoflow-demo.tar.gz",
   "aws_demo_url": "https://my-bucket.s3.amazonaws.com/nanoflow/aws.nextflow.config",
