@@ -304,8 +304,8 @@
         "medaka_consensus_model": {
           "type": "string",
           "default": "auto",
-          "description": "Medaka model to use for consensus creation",
-          "help_text": "Specify a Medaka model or 'auto'.",
+          "description": "The name of a Medaka model to use. By default the workflow will select an appropriate Medaka model from the basecaller configuration provided. Entering a name here will override the automated selection and use the Medaka model named here.",
+          "help_text": "The workflow will attempt to map the basecalling model used to a suitable Medaka consensus model. You can override this by providing a model with this option instead.",
           "fa_icon": "far fa-chart-bar"
         },
         "consensus_min_depth": {
