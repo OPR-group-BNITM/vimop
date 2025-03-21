@@ -1,4 +1,6 @@
-from .util import get_named_logger, wf_parser  # noqa: ABS101
+#!/usr/bin/env python3
+
+import argparse
 import pandas as pd
 import yaml
 import os
@@ -210,56 +212,6 @@ class OprReport(Report):
         self.nav.add_link('main', link, f'#{href}')
         with self.main_content:
             return Section(href, title, overflow=overflow)
-
-
-def argparser():
-    parser = wf_parser("report_sample")
-    parser.add_argument(
-        '--pipeline-version',
-        help='The version of this pipeline.',
-        required=True,
-    )
-    parser.add_argument(
-        '--samplename',
-        help='The name of your sample.',
-        required=True,
-    )
-    parser.add_argument(
-        '--virus-db-config',
-        help='Config file of the virus data base (yaml).',
-        required=True,
-    )
-    parser.add_argument(
-        '--consensus-stats',
-        help='.tsv file with consensus and mapping statistics.',
-        required=True,
-    )
-    parser.add_argument(
-        '--reads-stats',
-        help='.tsv file with read statistics',
-        required=True,
-    )
-    parser.add_argument(
-        '--contigs-stats',
-        help='.tsv file with contigs statistics',
-        required=True,
-    )
-    parser.add_argument(
-        '--trimmed-read-distribution',
-        help='.tsv file with lengths and qualities of the trimmed reads.',
-        required=True,
-    )
-    parser.add_argument(
-        '--cleaned-read-distribution',
-        help='.tsv file with lengths and qualities of the trimmed reads.',
-        required=True,
-    )
-    parser.add_argument(
-        '--out',
-        help='Output filename',
-        default='report.html'
-    )
-    return parser
 
 
 def histogram_plot(data, title, xaxis_label):
@@ -511,8 +463,54 @@ def read_tsv(fname):
     return pd.read_csv(fname, sep='\t').fillna('')
 
 
-def main(args):
-    logger = get_named_logger("Report")
+def main():
+    parser = argparse.ArgumentParser("report_sample")
+    parser.add_argument(
+        '--pipeline-version',
+        help='The version of this pipeline.',
+        required=True,
+    )
+    parser.add_argument(
+        '--samplename',
+        help='The name of your sample.',
+        required=True,
+    )
+    parser.add_argument(
+        '--virus-db-config',
+        help='Config file of the virus data base (yaml).',
+        required=True,
+    )
+    parser.add_argument(
+        '--consensus-stats',
+        help='.tsv file with consensus and mapping statistics.',
+        required=True,
+    )
+    parser.add_argument(
+        '--reads-stats',
+        help='.tsv file with read statistics',
+        required=True,
+    )
+    parser.add_argument(
+        '--contigs-stats',
+        help='.tsv file with contigs statistics',
+        required=True,
+    )
+    parser.add_argument(
+        '--trimmed-read-distribution',
+        help='.tsv file with lengths and qualities of the trimmed reads.',
+        required=True,
+    )
+    parser.add_argument(
+        '--cleaned-read-distribution',
+        help='.tsv file with lengths and qualities of the trimmed reads.',
+        required=True,
+    )
+    parser.add_argument(
+        '--out',
+        help='Output filename',
+        default='report.html'
+    )
+    args = parser.parse_args()
 
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
@@ -535,3 +533,7 @@ def main(args):
         virus_db_config,
         args.out,
     )
+
+
+if __name__ == '__main__':
+    main()

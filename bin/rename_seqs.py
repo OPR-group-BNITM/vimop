@@ -1,10 +1,12 @@
-from .util import get_named_logger, wf_parser  # noqa: ABS101
+#!/usr/bin/env python3
+
+import argparse
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
 
-def argparser():
-    parser = wf_parser("rename_seqs")
+def main():
+    parser = argparse.ArgumentParser("rename_seqs")
     parser.add_argument(
         '--prefix',
         help='Prefix to add before numbering',
@@ -20,10 +22,8 @@ def argparser():
         help='Output fasta file',
         required=True,
     )
-    return parser
+    args = parser.parse_args()
 
-
-def main(args):
     with open(args.output, 'w') as f_out:
         for i, seq in enumerate(SeqIO.parse(args.input, 'fasta'), 1):
             try:
@@ -39,3 +39,7 @@ def main(args):
                 seq=seq.seq
             )
             SeqIO.write(new_record, f_out, 'fasta')
+
+
+if __name__ == '__main__':
+    main()

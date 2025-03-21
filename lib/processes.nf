@@ -195,8 +195,8 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
-    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
-    wfglue=\$(which workflow-glue)
+    # remember where rename_seqs.py is, because sourcing the conda stuff seems to overwrite the path 
+    rename_seqs=\$(which rename_seqs.py)
 
     source /opt/conda/etc/profile.d/conda.sh
     export PATH="/opt/conda/bin:$PATH"
@@ -269,7 +269,7 @@ process assemble_canu {
             seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
 
             # rename the reads and add header infos
-            \$wfglue rename_seqs \\
+            \$rename_seqs \\
                 --prefix \${read_type}_read_ \\
                 --input selected.fasta \\
                 --output renamed.fasta
@@ -296,8 +296,8 @@ process reassemble_canu {
         tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
         tuple val(meta), path("reassembly.stats.tsv"), emit: stats
     """
-    # remember where workflow-glue is, because sourcing the conda stuff seems to overwrite the path 
-    wfglue=\$(which workflow-glue)
+    # remember where rename_seqs.py is, because sourcing the conda stuff seems to overwrite the path 
+    rename_seqs=\$(which rename_seqs.py)
 
     source /opt/conda/etc/profile.d/conda.sh
     export PATH="/opt/conda/bin:$PATH"
@@ -313,7 +313,7 @@ process reassemble_canu {
     i=0
     for fn_contig in contigs_*.fasta
     do
-        \$wfglue rename_seqs \\
+        \$rename_seqs \\
             --prefix inputcontigs\${i}_ \\
             --input \$fn_contig \\
             --output contigs_renamed\$i.fasta
@@ -375,7 +375,7 @@ process reassemble_canu {
             -i \$outdir/asm.contigs.fasta \\
             -o clustered.contigs.\$i.fasta
 
-        \$wfglue rename_seqs \\
+        \$rename_seqs \\
             --prefix newcontigs\${i}_ \\
             --input clustered.contigs.\$i.fasta \\
             --output contigs.\$i.fasta
@@ -967,22 +967,22 @@ process sample_report {
         tuple val(samplename), path('stats_contigs.tsv'), emit: contig_stats
         tuple val(samplename), path('stats_consensus.tsv'), emit: consensus_stats
     """
-    workflow-glue mergestats_reads \
+    mergestats_reads.py \
         --clean-read-stats clean_stats.tsv \
         --out stats_reads.tsv
 
-    workflow-glue mergestats_contig \
+    mergestats_contig.py \
         --blast-hits ${blast_hits.join(" ")} \
         --contig-info ${contig_infos.join(" ")} \
         --out stats_contigs.tsv
 
-    workflow-glue mergestats_consensus \
+    mergestats_consensus.py \
         --virus-db-config virus_db_config.yaml \
         --mapping-stats mapping_stats.tsv \
         --reference-info reference_info.tsv \
         --out stats_consensus.tsv
 
-    workflow-glue sample_html_report \
+    sample_html_report.py \
         --pipeline-version ${workflow.manifest.version} \
         --samplename ${samplename} \
         --virus-db-config virus_db_config.yaml \
@@ -1004,7 +1004,7 @@ process get_best_consensus_files {
     output:
         tuple val(samplename), path('out')
     """
-    workflow-glue get_curated_consensus_genomes \
+    get_curated_consensus_genomes.py \
         --consensus-stats consensus_stats.tsv \
         --consensus-files cons_*.fasta \
         --out-dir out
