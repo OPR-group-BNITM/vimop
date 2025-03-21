@@ -142,7 +142,6 @@ class DatabaseInput {
 
         // classification
         this.classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
-
-        // TODO: check for each classification library, that at least one file exists
+        this.classificationLibraries.each { libname -> assertFile("${this.classificationDir}/${libname}.1.cf") }
     }
 }

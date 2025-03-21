@@ -42,9 +42,10 @@ class SystemRequirements {
         return dirObj
     }
 
-    static boolean checkDiskSpace(String dir, long minRequiredGB) {
+    boolean checkDiskSpace(String dir, long minRequiredGB) {
         def file = findExistingParentDirectory(dir)
         def freeSpaceGB = file.usableSpace / (1024 * 1024 * 1024)
+        log("Detected ${String.format('%.1f', freeSpaceGB)} GB free in directory ${dir} (Required: ${minRequiredGB} GB)")
         return freeSpaceGB >= minRequiredGB
     }
 
@@ -60,8 +61,10 @@ class SystemRequirements {
         }
     }
 
-    static boolean checkCpus(int minCpus) {
-        return Runtime.runtime.availableProcessors() >= minCpus
+    boolean checkCpus(int minCpus) {
+        def availableCPUs = Runtime.runtime.availableProcessors()
+        log("Detected ${availableCPUs} CPUs (Required: ${minCpus})")
+        return availableCPUs >= minCpus
     }
 
     void checkSystemRequirements(
