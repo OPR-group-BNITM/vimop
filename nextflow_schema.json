@@ -350,6 +350,11 @@
           "default": 100,
           "description": "Minimum disk space for the work directory of the workflow"
         },
+        "min_disk_space_out_gb": {
+          "type": "number",
+          "default": 10,
+          "description": "Minimum disk space for the output directory of the workflow"
+        },
         "database_defaults": {
           "type": "object",
           "description": "Config files for the databases",
