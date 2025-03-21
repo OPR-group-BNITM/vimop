@@ -1,31 +1,9 @@
-from .util import get_named_logger, wf_parser  # noqa: ABS101
+#!/usr/bin/env python3
+
+import argparse
 import pandas as pd
 import numpy as np
 import yaml
-
-
-def argparser():
-    parser = wf_parser("mergestats_consensus")
-    parser.add_argument(
-        '--virus-db-config',
-        help='Config file of the virus data base (yaml).',
-        required=True,
-    )
-    parser.add_argument(
-        '--mapping-stats',
-        help='tsv file with mapping statistics for each target.'
-    )
-    parser.add_argument(
-        "--reference-info",
-        help='.tsv file with information about the reference genomes.',
-        required=True,
-    )
-    parser.add_argument(
-        '--out',
-        help='.tsv file to write transformed data to.',
-        default='out.tsv',
-    )
-    return parser
 
 
 def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
@@ -78,8 +56,29 @@ def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
     return merged
 
 
-def main(args):
-    logger = get_named_logger('Merge consensus statistics')
+def main():
+
+    parser = argparse.ArgumentParser("mergestats_consensus")
+    parser.add_argument(
+        '--virus-db-config',
+        help='Config file of the virus data base (yaml).',
+        required=True,
+    )
+    parser.add_argument(
+        '--mapping-stats',
+        help='tsv file with mapping statistics for each target.'
+    )
+    parser.add_argument(
+        "--reference-info",
+        help='.tsv file with information about the reference genomes.',
+        required=True,
+    )
+    parser.add_argument(
+        '--out',
+        help='.tsv file to write transformed data to.',
+        default='out.tsv',
+    )
+    args = parser.parse_args()
 
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
@@ -91,3 +90,7 @@ def main(args):
         mapstats, reference_info, virus_db_config   
     )
     consensus_stats.to_csv(args.out, sep='\t')
+
+
+if __name__ == '__main__':
+    main()
