@@ -1,25 +1,5 @@
-from .util import get_named_logger, wf_parser  # noqa: ABS101
+import argparse
 import pandas as pd
-
-
-def argparser():
-    parser = wf_parser('Merge contigs and blast info')
-    parser.add_argument(
-        '--blast-hits',
-        help='csv files with targets by filtering method (need to match assembly modes).',
-        nargs='*'
-    )
-    parser.add_argument(
-        '--contig-info',
-        help='Tab-separated file with contig stats.',
-        nargs='*'
-    )
-    parser.add_argument(
-        '--out',
-        help='.tsv file to write transformed data to.',
-        default='out.tsv',
-    )
-    return parser
 
 
 def df_read_and_merge(fnames, sep='\t'):
@@ -77,9 +57,25 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
     return filtered.astype({'Hit length': int})
 
 
-def main(args):
-    '''Run the entry point.'''
-    logger = get_named_logger('Merge contigs and blast info')
+def main():
+
+    parser = argparse.ArgumentParser('Merge contigs and blast info')
+    parser.add_argument(
+        '--blast-hits',
+        help='csv files with targets by filtering method (need to match assembly modes).',
+        nargs='*'
+    )
+    parser.add_argument(
+        '--contig-info',
+        help='Tab-separated file with contig stats.',
+        nargs='*'
+    )
+    parser.add_argument(
+        '--out',
+        help='.tsv file to write transformed data to.',
+        default='out.tsv',
+    )
+    args = parser.parse_args()
 
     blast_hits = df_read_and_merge(args.blast_hits, sep=',')
     contigs = df_read_and_merge(args.contig_info)
@@ -87,3 +83,6 @@ def main(args):
     contigs_stats = merge_contigs_blasthits(contigs, blast_hits)
     contigs_stats.to_csv(args.out, sep='\t')
 
+
+if __name__ == '__main__':
+    main()

@@ -1,11 +1,17 @@
-from .util import get_named_logger, wf_parser  # noqa: ABS101
+import argparse
 import os
 import shutil
 import pandas as pd
 
 
-def argparser():
-    parser = wf_parser("mergestats_consensus")
+def reference_id_from_fasta(fname):
+    with open(fname) as f:
+        return next(f).split('reference=')[1].split()[0]
+
+
+def main():
+
+    parser = argparse.ArgumentParser("mergestats_consensus")
     parser.add_argument(
         '--consensus-stats',
         help='tsv file with consensus statistics.',
@@ -21,15 +27,7 @@ def argparser():
         help='.tsv file to write transformed data to.',
         default='out.tsv',
     )
-    return parser
-
-
-def reference_id_from_fasta(fname):
-    with open(fname) as f:
-        return next(f).split('reference=')[1].split()[0]
-
-
-def main(args):
+    args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
 
@@ -55,3 +53,7 @@ def main(args):
             seqs_by_id[refid],
             os.path.join(args.out_dir, fname_out)
         )
+
+
+if __name__ == '__main__':
+    main()
