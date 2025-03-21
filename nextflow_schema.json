@@ -258,7 +258,7 @@
           "description": "Max number of reads to use before clustering (no-contigs path).",
           "fa_icon": "fas fa-sort-numeric-up"
         },
-        "nocontings_nreads": {
+        "nocontigs_nreads": {
           "type": "integer",
           "default": 100,
           "description": "Number of reads to sample for no-contigs scenario.",

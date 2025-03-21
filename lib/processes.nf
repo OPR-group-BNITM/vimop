@@ -266,7 +266,7 @@ process assemble_canu {
                 -i longest_reads.fasta \\
                 -o clustered.fasta
 
-            seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
+            seqkit head -n ${params.nocontigs_nreads} clustered.fasta > selected.fasta
 
             # rename the reads and add header infos
             \$wfglue rename_seqs \\
