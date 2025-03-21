@@ -1,3 +1,9 @@
+// This file includes or is derived from code developed by Oxford Nanopore Technologies Plc.
+// Copyright (c) 2020-, Oxford Nanopore Technologies Plc. All rights reserved.
+// 
+// This file is subject to the terms described in the LICENSE file in the root of this repository.
+
+
 import java.nio.file.NoSuchFileException
 
 import ArgumentParser
