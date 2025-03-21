@@ -59,7 +59,7 @@
       "fa_icon": "fas fa-arrow-left",
       "description": "Parameters for saving and naming outputs",
       "properties": {
-       "output_dir": {
+       "out_dir": {
           "title": "Output directory",
           "type": "string",
           "default": "output",
@@ -330,11 +330,6 @@
       "description": "Everything else.",
       "default": "",
       "properties": {
-        "out_dir": {
-          "type": "string",
-          "default": "output",
-          "hidden": true
-        },
         "cleanup": {
           "type": "boolean",
           "default": true,
