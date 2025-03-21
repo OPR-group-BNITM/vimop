@@ -73,7 +73,7 @@
       "type": "per-sample"
     },
     "classification-html": {
-      "filepath": "*/classification/*classification_*.html",
+      "filepath": "*/classification/classification_*.html",
       "title": "Classification HTML reports",
       "description": "Classification HTML reports",
       "mime-type": "text/html",
@@ -81,7 +81,7 @@
       "type": "per-sample"
     },
     "classification-tsv": {
-      "filepath": "*/classification/*classification_*.tsv",
+      "filepath": "*/classification/classification_*.tsv",
       "title": "Classification TSV",
       "description": "Classification TSV files",
       "mime-type": "text/tsv",
