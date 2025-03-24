@@ -141,7 +141,7 @@ class DatabaseInput {
         assertFile("${this.blastDir}/${this.blastPrefix}.ndb")
 
         // classification
-        this.classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
-        this.classificationLibraries.each { libname -> assertFile("${this.classificationDir}/${libname}.1.cf") }
+        this.classificationLibrary = dbParams.centrifuge_classification_library
+        assertFile("${this.classificationDir}/${this.classificationLibrary}.1.cf")
     }
 }

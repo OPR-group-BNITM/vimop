@@ -111,11 +111,11 @@
       "fa_icon": "fas fa-database",
       "description": "Advanced settings including classification, databases, filtering, assembly, and consensus parameters.",
       "properties": {
-        "centrifuge_classification_libraries": {
+        "centrifuge_classification_library": {
           "type": "string",
           "default": "all",
-          "description": "Centrifuge classification libraries to use",
-          "help_text": "Specify which centrifuge libraries to use (e.g., 'all' or comma-separated list of libraries).",
+          "description": "Centrifuge classification library to use",
+          "help_text": "Specify which centrifuge library to use.",
           "fa_icon": "fas fa-chart-pie"
         },
         "base_db": {
