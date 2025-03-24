@@ -291,7 +291,7 @@ def html_report(
                     'Reads': 'Number of reads in this group',
                     'Mean length': 'Mean read length within this read group',
                 },
-                'Reads left after each filtering step'
+                'Reads in groups due to host/contaminant filtering'
             ).legend(cols)
         with tabs_readstats.add_tab("Distributions trimmed"):
             try:
