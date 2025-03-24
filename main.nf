@@ -107,6 +107,7 @@ workflow pipeline {
 
         assembly_stats = first_assemblies.stats
         | mix(re_assemblies.stats)
+        | view { "assembly_stats: ${it}" }
 
         // database search for references using blast
         blast_queries = contigs
@@ -117,6 +118,7 @@ workflow pipeline {
         | canu_contig_info
         | map { meta, contig_info -> [meta.alias, contig_info]}
         | groupTuple(by: 0)
+        | view { "collected_contigs_infos: ${it}" }
 
         blast_hits = blast_queries
         | map { meta, contigs -> [meta, contigs, db_config.blastDir, db_config.blastPrefix] }
