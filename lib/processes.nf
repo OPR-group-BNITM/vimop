@@ -1,3 +1,8 @@
+// Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+// This file is part of ViMOP and is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for full license details.
+
+
 nextflow.enable.dsl = 2
 
 

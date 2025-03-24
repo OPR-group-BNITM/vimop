@@ -1,3 +1,7 @@
+# Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+# This file is part of ViMOP and is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for full license details.
+
 import subprocess
 import re
 import pytest
@@ -5,7 +9,6 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import pysam
-import os
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
