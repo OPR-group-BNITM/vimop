@@ -26,3 +26,7 @@ TODO
 ## Database
 
 TODO
+
+## Acknowledgements
+
+This product includes software developed by Oxford Nanopore Technologies Plc.
