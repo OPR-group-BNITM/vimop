@@ -1,3 +1,7 @@
+// Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+// This file is part of ViMOP and is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for full license details.
+
 import org.yaml.snakeyaml.Yaml
 
 
@@ -142,7 +146,6 @@ class DatabaseInput {
 
         // classification
         this.classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
-
-        // TODO: check for each classification library, that at least one file exists
+        this.classificationLibraries.each { libname -> assertFile("${this.classificationDir}/${libname}.1.cf") }
     }
 }

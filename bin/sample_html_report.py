@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+# This file is part of ViMOP and is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for full license details.
+
 import argparse
 import pandas as pd
 import yaml
@@ -11,7 +15,8 @@ import base64
 from bokeh.models import Title
 from dominate.tags import (
     h1, p, div, section, html_tag,
-    a, button, img
+    a, button, img, ul, li, strong,
+    span
 )
 
 import ezcharts as ezc
@@ -243,12 +248,30 @@ def histogram_plot(data, title, xaxis_label):
     return plot
 
 
+class Legends:
+
+    def __init__(self, descriptions: dict, default_title: str = None):
+        self.descriptions = descriptions
+        self.default_title = default_title if default_title else ""
+
+    def legend(self, columns: list, title: str = None):
+        with div(style="font-size: 0.9em; margin-top: 1em; color: #5c5c5c;"):
+            title = title if title else self.default_title
+            p(title, style="font-size: 1em; font-weight: bold; margin-bottom: 0.3em;")
+            with ul(style="padding-left: 1.2em; margin: 0;"):
+                for col in columns:
+                    with li():
+                        strong(f"{col}: ")
+                        span(self.descriptions[col])
+
+
 def html_report(
         pipeline_version,
         samplename,
         df_mapping_stats,
         df_clean_read_stats,
         df_contig_stats,
+        df_assembly_stats,
         df_lenqual_trim,
         df_lenqual_clean,
         virus_db_config,
@@ -261,16 +284,20 @@ def html_report(
     with report.add_section("Read Statistics", "Read Statistics"):
         tabs_readstats = NoMarginTabs()
         with tabs_readstats.add_tab("Table"):
+            cols = ['Stage', 'Reads', 'Mean length']
             DataTable.from_pandas(
-                df_clean_read_stats[['Stage', 'Reads', 'Mean length']].round({'Mean length': 0}).astype({'Mean length': int}),
+                df_clean_read_stats[cols].round({'Mean length': 0}).astype({'Mean length': int}),
                 use_index=False,
                 export=False
             )
-            p(
-                """
-                Reads left after each filtering step.
-                """
-            )
+            Legends(
+                {
+                    'Stage': 'Host/contaminant filtering step',
+                    'Reads': 'Number of reads in this group',
+                    'Mean length': 'Mean read length within this read group',
+                },
+                'Reads in groups due to host/contaminant filtering'
+            ).legend(cols)
         with tabs_readstats.add_tab("Distributions trimmed"):
             try:
                 with Grid(columns=2):
@@ -304,6 +331,22 @@ def html_report(
     }
 
     section_name = 'Consensus'
+    consensus_legends = Legends(
+        {
+            'Reference': 'ID of the reference sequence',
+            'Family': 'Virus family',
+            'Organism': 'Name of the species',
+            'Segment': 'Identifier of the segment. Unsegmented for single segment virus genomes',
+            'Length': 'Length of the reference genome',
+            'Coverage': 'Percent of the reference genome that were succesfully called',
+            'Description': 'Data base description of the reference',
+            'Positions called': 'Number of bases called',
+            'Ambiguous positions': 'Number of ambiguous positions set to "N"',
+            'Mapped reads': 'Number of reads aligned to the reference genome',
+            'Average read coverage': 'Average number of reads per reference genome position',
+        },
+        "Reference-based genome assembly statistics",
+    )
     with report.add_section(section_name, section_name):
         tabs_consensus = NoMarginTabs()
         for organism_label, mapstats in mapstats_curated.groupby("Organism Label"):
@@ -315,7 +358,7 @@ def html_report(
                     'Segment',
                     'Length',
                     'Coverage',
-                    'Description'
+                    'Description',
                 ]
                 cols_details = [
                     'Reference',
@@ -327,7 +370,7 @@ def html_report(
                     'Positions called',
                     'Ambiguous positions',
                     'Mapped reads',
-                    'Average read coverage'
+                    'Average read coverage',
                 ]
                 cols_all = list(set(cols_overview + cols_details))
                 mapstats_segments = mapstats[cols_all]
@@ -357,32 +400,17 @@ def html_report(
                 tabs = NoMarginTabs()
                 with tabs.add_tab("Overview"):
                     DataTable.from_pandas(mapstats_segments[cols_overview], use_index=False, export=True)
-                    p(
-                        """
-                        Targets used for consensus building.
-                        Coverage is reported in percent.
-                        """
-                    )
+                    consensus_legends.legend(cols_overview)
                 with tabs.add_tab("Details"):
                     DataTable.from_pandas(mapstats_segments[cols_details].round(round), use_index=False, export=True)
-                    p(
-                        """
-                        Targets used for consensus building.
-                        Coverage is reported in percent.
-                        """
-                    )
+                    consensus_legends.legend(cols_details)
         with tabs_consensus.add_tab("Non-Curated"):
             df_mapstats = df_mapping_stats[df_mapping_stats['Curated'] == False]
             tabs = NoMarginTabs()
             with tabs.add_tab("Overview"):
                 cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
                 DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
-                p(
-                    """
-                    Targets used for consensus building.
-                    Coverage is reported in percent.
-                    """
-                )
+                consensus_legends.legend(cols)
             with tabs.add_tab("Details"):
                 cols = [
                     'Reference',
@@ -397,24 +425,14 @@ def html_report(
                 ]
                 round = {'Average read coverage': 1}
                 DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
-                p(
-                    """
-                    Targets used for consensus building.
-                    Coverage is reported in percent.
-                    """
-                )
+                consensus_legends.legend(cols)
         with tabs_consensus.add_tab("All"):
             df_mapstats = df_mapping_stats
             tabs = NoMarginTabs()
             with tabs.add_tab("Overview"):
                 cols = ['Reference', 'Family', 'Organism', 'Length', 'Coverage', 'Description']
                 DataTable.from_pandas(df_mapstats[cols], use_index=False, export=True)
-                p(
-                    """
-                    Targets used for consensus building.
-                    Coverage is reported in percent.
-                    """
-                )
+                consensus_legends.legend(cols)
             with tabs.add_tab("Details"):
                 cols = [
                     'Reference',
@@ -429,33 +447,62 @@ def html_report(
                 ]
                 round = {'Average read coverage': 1}
                 DataTable.from_pandas(df_mapstats[cols].round(round), use_index=False, export=True)
-                p(
-                    """
-                    Targets used for consensus building.
-                    Coverage is reported in percent.
-                    """
-                )
+                consensus_legends.legend(cols)
 
     section_name = "Contigs"
     with report.add_section(section_name, section_name):
-        cols = [
-            'Filter',
-            'Contig',
-            'Length',
-            'Number of reads',
-            'Blast Hit',
-            'Organism',
-            'Hit length',
-            'Contig alignment coverage',
-            'Reference alignment coverage',
-            'Sequence Identity',
-        ]
-        digits = {
-            'Contig alignment coverage': 2,
-            'Reference alignment coverage': 2,
-            'Sequence Identity': 2,
-        }
-        DataTable.from_pandas(df_contig_stats.round(digits)[cols], use_index=False, export=True)
+        tabs_contigs = NoMarginTabs()
+        with tabs_contigs.add_tab("Contigs"):
+            cols = [
+                'Filter',
+                'Contig',
+                'Length',
+                'Number of reads',
+                'Blast Hit',
+                'Organism',
+                'Hit length',
+                'Contig alignment coverage',
+                'Reference alignment coverage',
+                'Sequence Identity',
+            ]
+            digits = {
+                'Contig alignment coverage': 2,
+                'Reference alignment coverage': 2,
+                'Sequence Identity': 2,
+            }
+            DataTable.from_pandas(df_contig_stats.round(digits)[cols], use_index=False, export=True)
+            Legends(
+                {
+                    'Filter': 'Filter used on reads before assembly',
+                    'Contig': 'Contig identifier',
+                    'Length': 'Length of the contig in base pairs',
+                    'Number of reads': 'Number of (corrected) reads used by canu to build this contig',
+                    'Blast Hit': 'Virus reference genome found with blast search',
+                    'Organism': 'Organism of the blast hit',
+                    'Hit length': 'Length of the blast hit reference genome in base pairs',
+                    'Contig alignment coverage': 'Share of the contig aligned by blast',
+                    'Reference alignment coverage': 'Share of the reference aligned by blast',
+                    'Sequence Identity': 'Sequence similarity of the aligned parts',
+                },
+                'Contigs and targets found'
+            ).legend(cols)
+        with tabs_contigs.add_tab("Assembly Statistics"):
+            cols = ['Stage', 'Sequence type', 'Reads/Contigs', 'Mean length']
+            digits = {
+                'Reads/Contigs': 0,
+                'Mean length': 1,
+            }
+            DataTable.from_pandas(df_assembly_stats[cols], use_index=False, export=True)
+            Legends(
+                {
+                    'Stage': 'Assembly run (e.g. for a given filter, no-filter or re-assemblies)',
+                    'Sequence type': 'Type of the sequence',
+                    'Reads/Contigs': 'Number of reads or contigs',
+                    'Mean length': 'Mean length of reads or contigs in base pairs',
+                },
+                'Read and contig numbers in the different assembly runs'
+            ).legend(cols)
+
     report.write(fname_out)
 
 
@@ -496,6 +543,11 @@ def main():
         required=True,
     )
     parser.add_argument(
+        '--assembly-stats',
+        help='.tsv file with assembly statistics',
+        required=True,
+    )
+    parser.add_argument(
         '--trimmed-read-distribution',
         help='.tsv file with lengths and qualities of the trimmed reads.',
         required=True,
@@ -518,6 +570,7 @@ def main():
     consensus_stats = read_tsv(args.consensus_stats)
     clean_read_stats = read_tsv(args.reads_stats)
     contigs_stats = read_tsv(args.contigs_stats)
+    assembly_stats = read_tsv(args.assembly_stats)
 
     lenqual_trim = read_tsv(args.trimmed_read_distribution)
     lenqual_clean = read_tsv(args.cleaned_read_distribution)
@@ -528,6 +581,7 @@ def main():
         consensus_stats,
         clean_read_stats,
         contigs_stats,
+        assembly_stats,
         lenqual_trim,
         lenqual_clean,
         virus_db_config,

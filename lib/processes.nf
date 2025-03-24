@@ -1,3 +1,8 @@
+// Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+// This file is part of ViMOP and is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for full license details.
+
+
 nextflow.enable.dsl = 2
 
 
@@ -236,7 +241,7 @@ process assemble_canu {
     fi
 
     ${seqstatsHeader("stats.tsv")}
-    ${seqstatsLine("all_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
+    ${seqstatsLine("raw_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
     ${seqstatsLine("corrected_" + meta.mapping_target, "asm.correctedReads.fasta.gz", "stats.tsv")}
     ${seqstatsLine("contigs_" + meta.mapping_target, "asm.contigs.fasta", "stats.tsv")}
 
@@ -266,7 +271,7 @@ process assemble_canu {
                 -i longest_reads.fasta \\
                 -o clustered.fasta
 
-            seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
+            seqkit head -n ${params.nocontigs_nreads} clustered.fasta > selected.fasta
 
             # rename the reads and add header infos
             \$rename_seqs \\
@@ -308,7 +313,7 @@ process reassemble_canu {
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.fastq
 
-    ${seqstatsLine("minlenreads_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
+    ${seqstatsLine("input_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
 
     i=0
     for fn_contig in contigs_*.fasta
@@ -381,15 +386,17 @@ process reassemble_canu {
             --output contigs.\$i.fasta
 
         cat contigs.\$i.fasta >> new.contigs.fasta
-        cp contigs.\$i.fasta last.contigs.fasta
+        mv contigs.\$i.fasta last.contigs.fasta
 
-        ${seqstatsLine("filteredreads_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
+        ${seqstatsLine("raw_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
+        ${seqstatsLine("corrected_reassembly\$i", "\$outdir/asm.correctedReads.fasta.gz", "reassembly.stats.tsv")}
         ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
     done
 
     mv new.contigs.fasta reassembly.contigs.fasta
     """
 }
+
 
 process pop_bubbles {
     label "general"
@@ -457,6 +464,7 @@ process canu_contig_info {
     df.to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
     """
 }
+
 
 process blast {
     label "general"
@@ -967,30 +975,35 @@ process sample_report {
         tuple val(samplename), path('stats_contigs.tsv'), emit: contig_stats
         tuple val(samplename), path('stats_consensus.tsv'), emit: consensus_stats
     """
-    mergestats_reads.py \
-        --clean-read-stats clean_stats.tsv \
+    mergestats_reads.py \\
+        --clean-read-stats clean_stats.tsv \\
         --out stats_reads.tsv
 
-    mergestats_contig.py \
-        --blast-hits ${blast_hits.join(" ")} \
-        --contig-info ${contig_infos.join(" ")} \
+    mergestats_contig.py \\
+        --blast-hits ${blast_hits.join(" ")} \\
+        --contig-info ${contig_infos.join(" ")} \\
         --out stats_contigs.tsv
 
-    mergestats_consensus.py \
-        --virus-db-config virus_db_config.yaml \
-        --mapping-stats mapping_stats.tsv \
-        --reference-info reference_info.tsv \
+    mergestats_assembly.py \\
+        --stats ${assembly_stats.join(" ")} \\
+        --out stats_assembly.tsv
+
+    mergestats_consensus.py \\
+        --virus-db-config virus_db_config.yaml \\
+        --mapping-stats mapping_stats.tsv \\
+        --reference-info reference_info.tsv \\
         --out stats_consensus.tsv
 
-    sample_html_report.py \
-        --pipeline-version ${workflow.manifest.version} \
-        --samplename ${samplename} \
-        --virus-db-config virus_db_config.yaml \
-        --reads-stats stats_reads.tsv \
-        --contigs-stats stats_contigs.tsv \
-        --consensus-stats stats_consensus.tsv \
-        --trimmed-read-distribution trimmed_read_stats.tsv \
-        --cleaned-read-distribution cleaned_read_stats.tsv \
+    sample_html_report.py \\
+        --pipeline-version ${workflow.manifest.version} \\
+        --samplename ${samplename} \\
+        --virus-db-config virus_db_config.yaml \\
+        --reads-stats stats_reads.tsv \\
+        --contigs-stats stats_contigs.tsv \\
+        --consensus-stats stats_consensus.tsv \\
+        --assembly-stats stats_assembly.tsv \\
+        --trimmed-read-distribution trimmed_read_stats.tsv \\
+        --cleaned-read-distribution cleaned_read_stats.tsv \\
         --out report.html
     """
 }
