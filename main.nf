@@ -51,15 +51,24 @@ workflow pipeline {
         | trim
         | map { meta, reads -> [meta + ["trimmed_reads": reads], reads] }
 
-        // contaminant filtering
-        cleaned = trimmed
-        | map { meta, reads -> [meta, reads, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
-        | filter_contaminants
-
         // metagenomic read classification with centrifuge
         classification = trimmed
         | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
         | classify_centrifuge
+
+        if(params.centrifuge_filter_do_it) {
+            to_clean = classification.centrifuge_out
+            | map { meta, classifications -> [meta, meta.trimmed_reads, classifications, db_config.virus_taxids] }
+            | filter_with_centrifuge
+        } else {
+            to_clean = trimmed
+            | read_stats
+        }
+
+        // contaminant filtering
+        cleaned = to_clean
+        | map { meta, reads, stats -> [meta, reads, stats, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
+        | filter_contaminants
 
         // get readstats
         lenquals_trim = trimmed
@@ -277,10 +286,10 @@ workflow pipeline {
         ch_to_publish = Channel.empty()
         | mix(
             // centrifuge classification
-            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
+            classification.centrifuge_out | map { meta, classification -> [classification, "$meta.alias/classification", null] },
+            classification.report | map { meta, report -> [report, "$meta.alias/classification", null] },
+            classification.kraken_style | map { meta, kraken -> [kraken, "$meta.alias/classification", null] },
+            classification.krona_html | map { meta, html -> [html, "$meta.alias/classification", null] },
             // contigs
             contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
             // consensus
