@@ -267,6 +267,7 @@ def html_report(
         df_mapping_stats,
         df_clean_read_stats,
         df_contig_stats,
+        df_assembly_stats,
         df_lenqual_trim,
         df_lenqual_clean,
         virus_db_config,
@@ -446,39 +447,57 @@ def html_report(
 
     section_name = "Contigs"
     with report.add_section(section_name, section_name):
-        cols = [
-            'Filter',
-            'Contig',
-            'Length',
-            'Number of reads',
-            'Blast Hit',
-            'Organism',
-            'Hit length',
-            'Contig alignment coverage',
-            'Reference alignment coverage',
-            'Sequence Identity',
-        ]
-        digits = {
-            'Contig alignment coverage': 2,
-            'Reference alignment coverage': 2,
-            'Sequence Identity': 2,
-        }
-        DataTable.from_pandas(df_contig_stats.round(digits)[cols], use_index=False, export=True)
-        Legends(
-            {
-                'Filter': 'Filter used on reads before assembly',
-                'Contig': 'Contig identifier',
-                'Length': 'Length of the contig in base pairs',
-                'Number of reads': 'Number of (corrected) reads used by canu to build this contig',
-                'Blast Hit': 'Virus reference genome found with blast search',
-                'Organism': 'Organism of the blast hit',
-                'Hit length': 'Length of the blast hit reference genome in base pairs',
-                'Contig alignment coverage': 'Share of the contig aligned by blast',
-                'Reference alignment coverage': 'Share of the reference aligned by blast',
-                'Sequence Identity': 'Sequence similarity of the aligned parts',
-            },
-            'Contigs and targets found'
-        ).legend(cols)
+        tabs_contigs = NoMarginTabs()
+        with tabs_contigs.add_tab("Contigs"):
+            cols = [
+                'Filter',
+                'Contig',
+                'Length',
+                'Number of reads',
+                'Blast Hit',
+                'Organism',
+                'Hit length',
+                'Contig alignment coverage',
+                'Reference alignment coverage',
+                'Sequence Identity',
+            ]
+            digits = {
+                'Contig alignment coverage': 2,
+                'Reference alignment coverage': 2,
+                'Sequence Identity': 2,
+            }
+            DataTable.from_pandas(df_contig_stats.round(digits)[cols], use_index=False, export=True)
+            Legends(
+                {
+                    'Filter': 'Filter used on reads before assembly',
+                    'Contig': 'Contig identifier',
+                    'Length': 'Length of the contig in base pairs',
+                    'Number of reads': 'Number of (corrected) reads used by canu to build this contig',
+                    'Blast Hit': 'Virus reference genome found with blast search',
+                    'Organism': 'Organism of the blast hit',
+                    'Hit length': 'Length of the blast hit reference genome in base pairs',
+                    'Contig alignment coverage': 'Share of the contig aligned by blast',
+                    'Reference alignment coverage': 'Share of the reference aligned by blast',
+                    'Sequence Identity': 'Sequence similarity of the aligned parts',
+                },
+                'Contigs and targets found'
+            ).legend(cols)
+        with tabs_contigs.add_tab("Assembly Statistics"):
+            cols = ['Stage', 'Sequence type', 'Reads/Contigs', 'Mean length']
+            digits = {
+                'Reads/Contigs': 0,
+                'Mean length': 1,
+            }
+            DataTable.from_pandas(df_assembly_stats[cols], use_index=False, export=True)
+            Legends(
+                {
+                    'Stage': 'Assembly run (e.g. for a given filter, no-filter or re-assemblies)',
+                    'Sequence type': 'Type of the sequence',
+                    'Reads/Contigs': 'Number of reads or contigs',
+                    'Mean length': 'Mean length of reads or contigs in base pairs',
+                },
+                'Read and contig numbers in the different assembly runs'
+            ).legend(cols)
 
     report.write(fname_out)
 
@@ -520,6 +539,11 @@ def main():
         required=True,
     )
     parser.add_argument(
+        '--assembly-stats',
+        help='.tsv file with assembly statistics',
+        required=True,
+    )
+    parser.add_argument(
         '--trimmed-read-distribution',
         help='.tsv file with lengths and qualities of the trimmed reads.',
         required=True,
@@ -542,6 +566,7 @@ def main():
     consensus_stats = read_tsv(args.consensus_stats)
     clean_read_stats = read_tsv(args.reads_stats)
     contigs_stats = read_tsv(args.contigs_stats)
+    assembly_stats = read_tsv(args.assembly_stats)
 
     lenqual_trim = read_tsv(args.trimmed_read_distribution)
     lenqual_clean = read_tsv(args.cleaned_read_distribution)
@@ -552,6 +577,7 @@ def main():
         consensus_stats,
         clean_read_stats,
         contigs_stats,
+        assembly_stats,
         lenqual_trim,
         lenqual_clean,
         virus_db_config,
