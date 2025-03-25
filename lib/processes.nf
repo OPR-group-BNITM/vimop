@@ -106,7 +106,7 @@ def seqstatsHeader(String fnameOut) {
 
 def isNotEmptyCheck(String fname) {
     if (fname.endsWith(".gz")) {
-        return " \$(zcat asm.correctedReads.fasta.gz | wc -l) -ne 0 "
+        return " \$(zcat ${fname} | wc -l) -ne 0 "
     }
     return " -s ${fname} "
 }
@@ -284,7 +284,7 @@ process assemble_canu {
     if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
     then
         # no contigs, get some reads, prefer corrected reads if they are available
-        if [[ n_lines_corrected -gt 0 ]]
+        if [[ ${isNotEmptyCheck("asm.correctedReads.fasta.gz")} ]]
         then
             seqkit sort -l -r asm.correctedReads.fasta.gz \\
             | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
