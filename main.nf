@@ -16,7 +16,9 @@ include {
     empty_tsv;
     empty_fasta;
     trim;
+    read_stats;
     classify_centrifuge;
+    filter_with_centrifuge;
     filter_contaminants;
     filter_virus_target;
     assemble_canu;
