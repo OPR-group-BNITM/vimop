@@ -19,7 +19,7 @@ def main():
         help='Centrifuge output file'
     )
     parser.add_argument(
-        '--taxids',
+        '--virus-taxids',
         required=True,
         help='File with virus taxIDs (one per line)'
     )
@@ -41,14 +41,28 @@ def main():
     )
     args = parser.parse_args()
 
-    with open(args.taxids) as f:
-        # 0 is unmapped
-        taxids_virus = set(map(int, f))
+    with open(args.virus_taxids) as f:
+        # 0 is unclassified
+        taxids_virus = set(int(line.strip()) for line in f if line.strip()).union({0})
 
     # get reads to remove
-    df = pd.read_csv(args.centrifuge, sep='\t')
-    mask = ((df['score'] > args.min_score) & (~df['taxID'].isin(taxids_virus.union(0))))
-    remove = set(df.loc[mask, 'readID'])
+    remove = set()
+    with open(args.centrifuge) as f_centrifuge: 
+        header = next(f_centrifuge).strip().split('\t')
+        i_readid = header.index('readID')
+        i_taxid = header.index('taxID')
+        i_score = header.index('score')
+        for line in f_centrifuge:
+            try:
+                cols = line.strip().split('\t')
+                score = float(cols[i_score])
+                taxid = int(cols[i_taxid])
+                if taxid not in taxids_virus and score >= args.min_score:
+                    remove.add(cols[i_readid])
+            except:
+                # sometimes columns are not properly formatted (e.g. taxids with a .1)
+                # so we skip and simply keep those reads
+                continue
 
     # filter the reads
     with open(args.out, 'w') as out_f:

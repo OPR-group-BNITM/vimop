@@ -140,10 +140,10 @@ process filter_with_centrifuge {
 
     filter_reads_by_centrifuge_classification.py \\
         --centrifuge classification.tsv \\
-        --reads reads.fastq \\
+        --fastq reads.fastq \\
         --out centrifuge_filtered.fastq \\
         --virus-taxids virus_taxids.txt \\
-        --min-score params.centrifuge_filter_min_score
+        --min-score ${params.centrifuge_filter_min_score}
 
     ${seqstatsLine("centrifuge-filtered", "centrifuge_filtered.fastq", "stats.tsv")}
     """
