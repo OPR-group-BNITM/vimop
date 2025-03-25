@@ -48,35 +48,35 @@ process classify_centrifuge {
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
         tuple val(meta),
-            path("classification_${target_db}.tsv"),
-            path("classification_report_${target_db}.tsv"),
-            path("classification_kraken_${target_db}.tsv"),
-            path("classification_${target_db}.html")
+            path("classification.tsv"),
+            path("classification_report.tsv"),
+            path("classification_kraken.tsv"),
+            path("classification.html")
     """
     if [[ -s seqs.fastq ]]
     then
-        centrifuge \
-            -p ${task.cpus} \
-            --mm \
-            -x ${db_path}/${target_db} \
-            -U seqs.fastq \
-            --report-file classification_report_${target_db}.tsv \
-            -S classification_${target_db}.tsv
-        centrifuge-kreport \
-            -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
-        ktImportTaxonomy \
-            -tax ${db_path}/taxonomy \
-            -m 3 -t 5 \
-            classification_kraken_${target_db}.tsv \
-            -o classification_${target_db}.html
+        centrifuge \\
+            -p ${task.cpus} \\
+            --mm \\
+            -x ${db_path}/${target_db} \\
+            -U seqs.fastq \\
+            --report-file classification_report.tsv \\
+            -S classification.tsv
+        centrifuge-kreport \\
+            -x ${db_path}/${target_db} classification.tsv > classification_kraken.tsv
+        ktImportTaxonomy \\
+            -tax ${db_path}/taxonomy \\
+            -m 3 -t 5 \\
+            classification_kraken.tsv \\
+            -o classification.html
     else
         # write a report even if no sequences were available
-        touch classification_${target_db}.tsv
-        touch classification_report_${target_db}.tsv
-        touch classification_kraken_${target_db}.tsv
+        touch classification.tsv
+        touch classification_report.tsv
+        touch classification_kraken.tsv
 
         # Create an informative HTML file telling the user that no sequences were found
-        cat <<EOF > classification_${target_db}.html
+        cat <<EOF > classification.html
 <!DOCTYPE html>
 <html>
 <head>
@@ -127,21 +127,57 @@ def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
 }
 
 
+process filter_with_centrifuge {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
+    output:
+        tuple val(meta), path('centrifuge_filtered.fastq'), path('stats.tsv')
+    """
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("nofilter", "seqs.fastq", "stats.tsv")}
+
+    filter_reads_by_centrifuge_classification.py \\
+        --centrifuge classification.tsv \\
+        --fastq seqs.fastq \\
+        --out centrifuge_filtered.fastq \\
+        --virus-taxids virus_taxids.txt \\
+        --min-score ${params.centrifuge_filter_min_score}
+
+    ${seqstatsLine("centrifuge-filtered", "centrifuge_filtered.fastq", "stats.tsv")}
+    """
+}
+
+
+process read_stats {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path(reads)
+    output:
+        tuple val(meta), path('seqs.fastq'), path('stats.tsv')
+    """
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("nofilter", "seqs.fastq", "stats.tsv")}
+    """
+}
+
+
 process filter_contaminants {
     label "general"
     cpus 8
     memory '20 GB'
     input:
-        tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
+        tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path('db_*.fna.gz'), val(contaminants)
     output:
         tuple val(meta), path('filtered.fastq'), emit: reads
         tuple val(meta.alias), path("clean_stats.tsv"), emit: stats
     """
+    cp read_stats.tsv stats_tmp.tsv
+
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
-
-    ${seqstatsHeader("stats_tmp.tsv")}
-    ${seqstatsLine("nofilter", "\$fn_input", "stats_tmp.tsv")}
 
     for i in "\${!contaminants[@]}"
     do
@@ -151,14 +187,14 @@ process filter_contaminants {
 
         fn_sam=filter_\${c}.sam
 
-        minimap2 \
-            -x map-ont \
-            -a \$db \
-            -t ${task.cpus} \
-            \$fn_input \
-        | samtools fastq \
-            -f 4 \
-            --reference \$db \
+        minimap2 \\
+            -x map-ont \\
+            -a \$db \\
+            -t ${task.cpus} \\
+            \$fn_input \\
+        | samtools fastq \\
+            -f 4 \\
+            --reference \$db \\
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
         ${seqstatsLine("\${c}", "\$fn_out", "stats_tmp.tsv")}

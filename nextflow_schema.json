@@ -81,22 +81,6 @@
       "type": "object",
       "fa_icon": "fas fa-file-export",
       "properties": {
-        "map_to_target_minimap_window_size": {
-          "type": "integer",
-          "default": 5,
-          "description": "Minimap2 window size",
-          "hidden": true,
-          "help_text": "Minimap2 window size used during target mapping.",
-          "fa_icon": "far fa-window-maximize"
-        },
-        "map_to_target_minimap_kmer_size": {
-          "type": "integer",
-          "default": 11,
-          "description": "Minimap2 k-mer size",
-          "hidden": true,
-          "help_text": "K-mer size used by Minimap2 for seed generation.",
-          "fa_icon": "fas fa-arrows-alt-h"
-        },
         "custom_ref_fasta": {
           "type": "string",
           "description": "Custom reference FASTA",
@@ -111,11 +95,11 @@
       "fa_icon": "fas fa-database",
       "description": "Advanced settings including classification, databases, filtering, assembly, and consensus parameters.",
       "properties": {
-        "centrifuge_classification_libraries": {
+        "centrifuge_classification_library": {
           "type": "string",
           "default": "all",
-          "description": "Centrifuge classification libraries to use",
-          "help_text": "Specify which centrifuge libraries to use (e.g., 'all' or comma-separated list of libraries).",
+          "description": "Centrifuge classification library to use",
+          "help_text": "Specify which centrifuge library to use.",
           "fa_icon": "fas fa-chart-pie"
         },
         "base_db": {
@@ -165,7 +149,6 @@
         "trim_length": {
           "type": "integer",
           "default": 30,
-          "hidden": true,
           "help_text": "Number of bases that get removed from both sides of each read.",
           "description": "Trim length for reads",
           "fa_icon": "fas fa-cut"
@@ -177,10 +160,33 @@
           "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
           "fa_icon": "fas fa-sort-amount-down"
         },
+        "classification_virus_taxids": {
+            "type": "string",
+            "title": "Virus TaxID file",
+            "format": "file-path",
+            "mime-type": "txt",
+            "description": "Virus TaxIDs",
+            "help_text": "A simple txt file with one column of all taxids that are viruses. This is used when removing non-viral reads using centrifuge."
+        },
+        "centrifuge_filter_do_it": {
+          "type": "boolean",
+          "title": "Use centrifuge filter",
+          "default": false,
+          "description": "Filter based on centrifuge classifications.",
+          "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_filter_min_score": {
+          "type": "integer",
+          "default": 100,
+          "description": "Minimum classification score",
+          "help_text": "Reads that are classified as non-viral with a score higher than or equal to this are removed.",
+          "fa_icon": "fas fa-sort-amount-down-alt"
+        },
         "targets": {
           "type": "string",
-          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
           "description": "Comma-separated list of target viruses",
+          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
           "fa_icon": "fas fa-bullseye"
         },
         "assemble_notarget": {
@@ -300,6 +306,20 @@
           "default": 2,
           "description": "Maximum number of reassembly iterations.",
           "fa_icon": "fas fa-redo"
+        },
+        "map_to_target_minimap_window_size": {
+          "type": "integer",
+          "default": 5,
+          "description": "Minimap2 window size",
+          "help_text": "Minimap2 window size used during target mapping.",
+          "fa_icon": "far fa-window-maximize"
+        },
+        "map_to_target_minimap_kmer_size": {
+          "type": "integer",
+          "default": 11,
+          "description": "Minimap2 k-mer size",
+          "help_text": "K-mer size used by Minimap2 for seed generation.",
+          "fa_icon": "fas fa-arrows-alt-h"
         },
         "medaka_consensus_model": {
           "type": "string",
