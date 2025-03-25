@@ -68,7 +68,7 @@ workflow pipeline {
 
         if(db_config.doFilterWithCentrifuge) {
             to_clean = classification
-            | map { meta, classification, report, kraken, html -> [meta, meta.trimmed_reads, classification, db_config.virus_taxids] }
+            | map { meta, classification, report, kraken, html -> [meta, meta.trimmed_reads, classification, db_config.virusTaxIDFile] }
             | filter_with_centrifuge
         } else {
             to_clean = trimmed
