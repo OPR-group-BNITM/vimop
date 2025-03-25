@@ -55,12 +55,14 @@ workflow pipeline {
         | trim
         | map { meta, reads -> [meta + ["trimmed_reads": reads], reads] }
 
-        // metagenomic read classification with centrifuge
-        classification = trimmed
-        | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
-        | classify_centrifuge
+        if (db_config.doClassify) {
+            // metagenomic read classification with centrifuge
+            classification = trimmed
+            | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
+            | classify_centrifuge
+        }
 
-        if(params.centrifuge_filter_do_it) {
+        if(db_config.doFilterWithCentrifuge) {
             to_clean = classification.centrifuge_out
             | map { meta, classifications -> [meta, meta.trimmed_reads, classifications, db_config.virus_taxids] }
             | filter_with_centrifuge

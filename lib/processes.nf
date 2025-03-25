@@ -47,10 +47,11 @@ process classify_centrifuge {
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
-        tuple val(meta), path("classification.tsv"), emit: centrifuge_out
-        tuple val(meta), path("classification_report.tsv"), emit: classification_report
-        tuple val(meta), path("classification_kraken.tsv"), emit: classification_kraken_style
-        tuple val(meta), path("classification.html"), emit: krona_html
+        tuple val(meta),
+            path("classification.tsv"),
+            path("classification_report.tsv"),
+            path("classification_kraken.tsv"),
+            path("classification.html")
     """
     if [[ -s seqs.fastq ]]
     then
