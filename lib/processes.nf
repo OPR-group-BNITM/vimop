@@ -130,6 +130,7 @@ def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
 process filter_with_centrifuge {
     label "general"
     cpus 1
+    memory '3 GB'
     input:
         tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
     output:
