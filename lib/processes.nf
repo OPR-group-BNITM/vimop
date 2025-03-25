@@ -131,7 +131,7 @@ process filter_with_centrifuge {
     label "general"
     cpus 1
     input:
-        tuple val(meta), path('reads.fastq'), path('classification.tsv'), path('virus_taxids.txt')
+        tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
     output:
         tuple val(meta), path('centrifuge_filtered.fastq'), path('stats.tsv')
     """
@@ -140,7 +140,7 @@ process filter_with_centrifuge {
 
     filter_reads_by_centrifuge_classification.py \\
         --centrifuge classification.tsv \\
-        --fastq reads.fastq \\
+        --fastq seqs.fastq \\
         --out centrifuge_filtered.fastq \\
         --virus-taxids virus_taxids.txt \\
         --min-score ${params.centrifuge_filter_min_score}
