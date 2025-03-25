@@ -5,7 +5,6 @@
 # See the LICENSE file in the root of this repository for full license details.
 
 import argparse
-import pandas as pd
 from Bio import SeqIO
 
 
