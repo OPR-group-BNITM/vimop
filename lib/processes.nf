@@ -120,8 +120,8 @@ process classify_contigs {
             -x ${db_path}/${target_db} classification.tsv > classification_kraken.tsv
     else
         # write a report even if no sequences were available
-        touch classification_report.tsv
-        touch classification_kraken.tsv
+        echo -e "taxID\tname\ttaxRank" > classification_report.tsv
+        echo -e "taxID\treadID" > classification.tsv
     fi
     """
 }
@@ -138,13 +138,18 @@ process extract_contig_classification {
     import pandas as pd
     report = pd.read_csv('classification_report.tsv', sep='\t')
     classification = pd.read_csv('classification.tsv', sep='\t')
+
+    if report.empty or classification.empty:
+        with open('classification_summary_${meta.mapping_target}.csv', 'w') as f:
+            f.write('readID,taxRank,name')
     
-    summary = classification[['taxID', 'readID']].merge(report[['taxID', 'name', 'taxRank']], on='taxID', how='left')
-    summary['taxRank'] = summary['taxRank'].fillna('unclassified')
-    summary['name'] = summary['name'].fillna('no name')
-    summary = summary.drop(columns=['taxID'])
-    summary.to_csv('classification_summary_${meta.mapping_target}.csv', index=False)
-    """ 
+    else:
+        summary = classification[['taxID', 'readID']].merge(report[['taxID', 'name', 'taxRank']], on='taxID', how='left')
+        summary['taxRank'] = summary['taxRank'].fillna('unclassified')
+        summary['name'] = summary['name'].fillna('no name')
+        summary = summary.drop(columns=['taxID'])
+        summary.to_csv('classification_summary_${meta.mapping_target}.csv', index=False)
+    """
 }
 
 
