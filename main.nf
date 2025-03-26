@@ -128,19 +128,16 @@ workflow pipeline {
         contig_classification = contigs
         | map { meta, contigs -> [meta, contigs] }
         | combine(Channel.of(db_config.classificationDir))
-        | combine(Channel.from(db_config.classificationLibraries))
+        | combine(Channel.from(db_config.classificationLibrary))
         | classify_contigs
         | extract_contig_classification
-        | view { "contig_classifications: ${it}" }
 
         collected_contig_class_info = contig_classification
         | map { meta, contig_classification -> [meta.alias, contig_classification] }
         | groupTuple(by: 0)
-        | view { "collected_contig_class_info: ${it}" }
 
         assembly_stats = first_assemblies.stats
         | mix(re_assemblies.stats)
-        | view { "assembly_stats: ${it}" }
 
         // database search for references using blast
         blast_queries = contigs
@@ -151,13 +148,11 @@ workflow pipeline {
         | canu_contig_info
         | map { meta, contig_info -> [meta.alias, contig_info]}
         | groupTuple(by: 0)
-        | view { "collected_contigs_infos: ${it}" }
 
         blast_hits = blast_queries
         | map { meta, contigs -> [meta, contigs, db_config.blastDir, db_config.blastPrefix] }
         | blast
         | extract_blasthits
-        | view { "blast_hits: ${it}" }
 
         // Get mapping targets from BLAST hits stored in CSV files
         sample_ref = blast_hits
@@ -360,7 +355,6 @@ new SystemRequirements(true).checkSystemRequirements(
 workflow {
     samples = fastq_ingress([
         "input": params.fastq,
-        "sample_sheet": params.sample_sheet,
         "stats": true
     ])
     pipeline(samples)
