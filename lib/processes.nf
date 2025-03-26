@@ -206,7 +206,7 @@ process read_stats {
     label "general"
     cpus 1
     input:
-        tuple val(meta), path(reads)
+        tuple val(meta), path('seqs.fastq')
     output:
         tuple val(meta), path('seqs.fastq'), path('stats.tsv')
     """
