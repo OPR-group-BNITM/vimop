@@ -1,3 +1,7 @@
+// Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+// This file is part of ViMOP and is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for full license details.
+
 import org.yaml.snakeyaml.Yaml
 
 
@@ -12,7 +16,10 @@ class DatabaseInput {
     List<String> contaminationFilters
     List<String> contaminationFilterFiles
     List<Map<String, String>> virusTargets
-    List<String> classificationLibraries
+    String classificationLibrary
+    String virusTaxIDFile
+    boolean doClassify
+    boolean doFilterWithCentrifuge
 
     static void exitError(String message) {
         throw new RuntimeException(message)
@@ -141,8 +148,21 @@ class DatabaseInput {
         assertFile("${this.blastDir}/${this.blastPrefix}.ndb")
 
         // classification
-        this.classificationLibraries = dbParams.centrifuge_classification_libraries.tokenize(",")
+        this.classificationLibrary = dbParams.centrifuge_classification_library
+        if(this.classificationLibrary == null || this.classificationLibrary.trim() == "") {
+            this.doClassify = false
+            this.doFilterWithCentrifuge = false
+        } else {
+            this.doClassify = true
+            assertFile("${this.classificationDir}/${this.classificationLibrary}.1.cf")
 
-        // TODO: check for each classification library, that at least one file exists
+            this.doFilterWithCentrifuge = dbParams.centrifuge_filter_do_it
+            if(this.doFilterWithCentrifuge) {
+                this.virusTaxIDFile = getFile(
+                    dbParams.classification_virus_taxids,
+                    "${this.classificationDir}/${dbParams.database_defaults.classification_virus_taxids}"
+                )
+            }
+        }
     }
 }

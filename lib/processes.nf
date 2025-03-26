@@ -1,3 +1,8 @@
+// Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+// This file is part of ViMOP and is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for full license details.
+
+
 nextflow.enable.dsl = 2
 
 
@@ -43,35 +48,35 @@ process classify_centrifuge {
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
         tuple val(meta),
-            path("classification_${target_db}.tsv"),
-            path("classification_report_${target_db}.tsv"),
-            path("classification_kraken_${target_db}.tsv"),
-            path("classification_${target_db}.html")
+            path("classification.tsv"),
+            path("classification_report.tsv"),
+            path("classification_kraken.tsv"),
+            path("classification.html")
     """
     if [[ -s seqs.fastq ]]
     then
-        centrifuge \
-            -p ${task.cpus} \
-            --mm \
-            -x ${db_path}/${target_db} \
-            -U seqs.fastq \
-            --report-file classification_report_${target_db}.tsv \
-            -S classification_${target_db}.tsv
-        centrifuge-kreport \
-            -x ${db_path}/${target_db} classification_${target_db}.tsv > classification_kraken_${target_db}.tsv
-        ktImportTaxonomy \
-            -tax ${db_path}/taxonomy \
-            -m 3 -t 5 \
-            classification_kraken_${target_db}.tsv \
-            -o classification_${target_db}.html
+        centrifuge \\
+            -p ${task.cpus} \\
+            --mm \\
+            -x ${db_path}/${target_db} \\
+            -U seqs.fastq \\
+            --report-file classification_report.tsv \\
+            -S classification.tsv
+        centrifuge-kreport \\
+            -x ${db_path}/${target_db} classification.tsv > classification_kraken.tsv
+        ktImportTaxonomy \\
+            -tax ${db_path}/taxonomy \\
+            -m 3 -t 5 \\
+            classification_kraken.tsv \\
+            -o classification.html
     else
         # write a report even if no sequences were available
-        touch classification_${target_db}.tsv
-        touch classification_report_${target_db}.tsv
-        touch classification_kraken_${target_db}.tsv
+        touch classification.tsv
+        touch classification_report.tsv
+        touch classification_kraken.tsv
 
         # Create an informative HTML file telling the user that no sequences were found
-        cat <<EOF > classification_${target_db}.html
+        cat <<EOF > classification.html
 <!DOCTYPE html>
 <html>
 <head>
@@ -101,7 +106,7 @@ def seqstatsHeader(String fnameOut) {
 
 def isNotEmptyCheck(String fname) {
     if (fname.endsWith(".gz")) {
-        return " \$(zcat asm.correctedReads.fasta.gz | wc -l) -ne 0 "
+        return " \$(zcat ${fname} | wc -l) -ne 0 "
     }
     return " -s ${fname} "
 }
@@ -122,21 +127,58 @@ def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
 }
 
 
+process filter_with_centrifuge {
+    label "general"
+    cpus 1
+    memory '3 GB'
+    input:
+        tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
+    output:
+        tuple val(meta), path('centrifuge_filtered.fastq'), path('stats.tsv')
+    """
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("nofilter", "seqs.fastq", "stats.tsv")}
+
+    filter_reads_by_centrifuge_classification.py \\
+        --centrifuge classification.tsv \\
+        --fastq seqs.fastq \\
+        --out centrifuge_filtered.fastq \\
+        --virus-taxids virus_taxids.txt \\
+        --min-score ${params.centrifuge_filter_min_score}
+
+    ${seqstatsLine("centrifuge-filtered", "centrifuge_filtered.fastq", "stats.tsv")}
+    """
+}
+
+
+process read_stats {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path(reads)
+    output:
+        tuple val(meta), path('seqs.fastq'), path('stats.tsv')
+    """
+    ${seqstatsHeader("stats.tsv")}
+    ${seqstatsLine("nofilter", "seqs.fastq", "stats.tsv")}
+    """
+}
+
+
 process filter_contaminants {
     label "general"
     cpus 8
     memory '20 GB'
     input:
-        tuple val(meta), path('seqs.fastq'), path('db_*.fna.gz'), val(contaminants)
+        tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path('db_*.fna.gz'), val(contaminants)
     output:
         tuple val(meta), path('filtered.fastq'), emit: reads
         tuple val(meta.alias), path("clean_stats.tsv"), emit: stats
     """
+    cp read_stats.tsv stats_tmp.tsv
+
     contaminants=(${contaminants.join(" ")})
     fn_input=seqs.fastq
-
-    ${seqstatsHeader("stats_tmp.tsv")}
-    ${seqstatsLine("nofilter", "\$fn_input", "stats_tmp.tsv")}
 
     for i in "\${!contaminants[@]}"
     do
@@ -146,14 +188,14 @@ process filter_contaminants {
 
         fn_sam=filter_\${c}.sam
 
-        minimap2 \
-            -x map-ont \
-            -a \$db \
-            -t ${task.cpus} \
-            \$fn_input \
-        | samtools fastq \
-            -f 4 \
-            --reference \$db \
+        minimap2 \\
+            -x map-ont \\
+            -a \$db \\
+            -t ${task.cpus} \\
+            \$fn_input \\
+        | samtools fastq \\
+            -f 4 \\
+            --reference \$db \\
             -1 \${fn_out} -2 \${fn_out} -0 \${fn_out} -s \${fn_out} -n
 
         ${seqstatsLine("\${c}", "\$fn_out", "stats_tmp.tsv")}
@@ -236,14 +278,14 @@ process assemble_canu {
     fi
 
     ${seqstatsHeader("stats.tsv")}
-    ${seqstatsLine("all_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
+    ${seqstatsLine("raw_" + meta.mapping_target, "filtered.minlen.fastq", "stats.tsv")}
     ${seqstatsLine("corrected_" + meta.mapping_target, "asm.correctedReads.fasta.gz", "stats.tsv")}
     ${seqstatsLine("contigs_" + meta.mapping_target, "asm.contigs.fasta", "stats.tsv")}
 
     if [[ "${get_reads_if_no_contigs}" == "true" && ! -s asm.contigs.fasta ]]
     then
         # no contigs, get some reads, prefer corrected reads if they are available
-        if [[ n_lines_corrected -gt 0 ]]
+        if [[ ${isNotEmptyCheck("asm.correctedReads.fasta.gz")} ]]
         then
             seqkit sort -l -r asm.correctedReads.fasta.gz \\
             | seqkit head -n ${params.nocontigs_max_reads_precluster} > longest_reads.fasta
@@ -266,7 +308,7 @@ process assemble_canu {
                 -i longest_reads.fasta \\
                 -o clustered.fasta
 
-            seqkit head -n ${params.nocontings_nreads} clustered.fasta > selected.fasta
+            seqkit head -n ${params.nocontigs_nreads} clustered.fasta > selected.fasta
 
             # rename the reads and add header infos
             \$rename_seqs \\
@@ -308,7 +350,7 @@ process reassemble_canu {
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.fastq
 
-    ${seqstatsLine("minlenreads_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
+    ${seqstatsLine("input_reassembly", "filtered.fastq", "reassembly.stats.tsv")}
 
     i=0
     for fn_contig in contigs_*.fasta
@@ -381,15 +423,17 @@ process reassemble_canu {
             --output contigs.\$i.fasta
 
         cat contigs.\$i.fasta >> new.contigs.fasta
-        cp contigs.\$i.fasta last.contigs.fasta
+        mv contigs.\$i.fasta last.contigs.fasta
 
-        ${seqstatsLine("filteredreads_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
+        ${seqstatsLine("raw_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
+        ${seqstatsLine("corrected_reassembly\$i", "\$outdir/asm.correctedReads.fasta.gz", "reassembly.stats.tsv")}
         ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
     done
 
     mv new.contigs.fasta reassembly.contigs.fasta
     """
 }
+
 
 process pop_bubbles {
     label "general"
@@ -457,6 +501,7 @@ process canu_contig_info {
     df.to_csv('contig-info-${meta.mapping_target}.tsv', sep='\\t', index=False)
     """
 }
+
 
 process blast {
     label "general"
@@ -967,30 +1012,35 @@ process sample_report {
         tuple val(samplename), path('stats_contigs.tsv'), emit: contig_stats
         tuple val(samplename), path('stats_consensus.tsv'), emit: consensus_stats
     """
-    mergestats_reads.py \
-        --clean-read-stats clean_stats.tsv \
+    mergestats_reads.py \\
+        --clean-read-stats clean_stats.tsv \\
         --out stats_reads.tsv
 
-    mergestats_contig.py \
-        --blast-hits ${blast_hits.join(" ")} \
-        --contig-info ${contig_infos.join(" ")} \
+    mergestats_contig.py \\
+        --blast-hits ${blast_hits.join(" ")} \\
+        --contig-info ${contig_infos.join(" ")} \\
         --out stats_contigs.tsv
 
-    mergestats_consensus.py \
-        --virus-db-config virus_db_config.yaml \
-        --mapping-stats mapping_stats.tsv \
-        --reference-info reference_info.tsv \
+    mergestats_assembly.py \\
+        --stats ${assembly_stats.join(" ")} \\
+        --out stats_assembly.tsv
+
+    mergestats_consensus.py \\
+        --virus-db-config virus_db_config.yaml \\
+        --mapping-stats mapping_stats.tsv \\
+        --reference-info reference_info.tsv \\
         --out stats_consensus.tsv
 
-    sample_html_report.py \
-        --pipeline-version ${workflow.manifest.version} \
-        --samplename ${samplename} \
-        --virus-db-config virus_db_config.yaml \
-        --reads-stats stats_reads.tsv \
-        --contigs-stats stats_contigs.tsv \
-        --consensus-stats stats_consensus.tsv \
-        --trimmed-read-distribution trimmed_read_stats.tsv \
-        --cleaned-read-distribution cleaned_read_stats.tsv \
+    sample_html_report.py \\
+        --pipeline-version ${workflow.manifest.version} \\
+        --samplename ${samplename} \\
+        --virus-db-config virus_db_config.yaml \\
+        --reads-stats stats_reads.tsv \\
+        --contigs-stats stats_contigs.tsv \\
+        --consensus-stats stats_consensus.tsv \\
+        --assembly-stats stats_assembly.tsv \\
+        --trimmed-read-distribution trimmed_read_stats.tsv \\
+        --cleaned-read-distribution cleaned_read_stats.tsv \\
         --out report.html
     """
 }

@@ -1,0 +1,108 @@
+{
+  "files": {
+    "run-summary-report": {
+      "filepath": "nf-report-*.html",
+      "title": "Run summary report",
+      "description": "Global workflow nextflow performance report for the entire run",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "aggregated"
+    },
+    "sample-html-report": {
+      "filepath": "*/report_*.html",
+      "title": "Sample-specific HTML reports",
+      "description": "Per-sample HTML report",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "consensus-fastas": {
+      "filepath": "*/consensus/*.consensus.fasta",
+      "title": "Consensus FASTA sequences",
+      "description": "Per-sample consensus FASTA sequences",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "reference-fastas": {
+      "filepath": "*/consensus/*.reference.fasta",
+      "title": "Reference FASTA sequences",
+      "description": "Per-sample reference FASTA sequences",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "bam-files": {
+      "filepath": "*/consensus/*.reads.bam",
+      "title": "BAM alignment files",
+      "description": "Per-sample BAM files",
+      "mime-type": "application/bam",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "bam-indexes": {
+      "filepath": "*/consensus/*.reads.bam.bai",
+      "title": "BAM index files",
+      "description": "BAM index files for each sample",
+      "mime-type": "application/bai",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "depth-files": {
+      "filepath": "*/consensus/*.depth.txt",
+      "title": "Depth files",
+      "description": "Per-sample depth coverage text files",
+      "mime-type": "text/plain",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "selected-consensus-fastas": {
+      "filepath": "*/selected_consensus/*.fasta",
+      "title": "Selected consensus FASTA sequences",
+      "description": "Selected consensus FASTA sequences (e.g., LASV L and S segments)",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "assembly-contigs": {
+      "filepath": "*/assembly/*.contigs.fasta",
+      "title": "Assembly contigs",
+      "description": "Assembly contigs FASTA files",
+      "mime-type": "text/fasta",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "classification-html": {
+      "filepath": "*/classification/classification_*.html",
+      "title": "Classification HTML reports",
+      "description": "Classification HTML reports",
+      "mime-type": "text/html",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "classification-tsv": {
+      "filepath": "*/classification/classification_*.tsv",
+      "title": "Classification TSV",
+      "description": "Classification TSV files",
+      "mime-type": "text/tsv",
+      "optional": false,
+      "type": "per-sample"
+    },
+    "filtered-fastq": {
+      "filepath": "*/clean/filtered.fastq",
+      "title": "Filtered FASTQ",
+      "description": "Filtered FASTQ files for each sample",
+      "mime-type": "text/fastq",
+      "optional": true,
+      "type": "per-sample"
+    },
+    "summary-tables": {
+      "filepath": "*/tables/*.tsv",
+      "title": "Summary tables",
+      "description": "Per sample summary TSVs: consensus.tsv, contigs.tsv, reads.tsv",
+      "mime-type": "text/tsv",
+      "optional": false,
+      "type": "per-sample"
+    }
+  }
+}

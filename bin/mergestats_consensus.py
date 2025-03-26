@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+# This file is part of ViMOP and is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for full license details.
+
 import argparse
 import pandas as pd
 import numpy as np
@@ -34,7 +38,7 @@ def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
         merged['ConsensusLength'] == 0,
         0,
         merged['CalledNucleobases'] / merged['ConsensusLength'] * 100
-    ).round(0).astype(int)
+    ).round(2)
 
     # Get the best representative for each curated organism + segment combination
     merged['IsBest'] = False
