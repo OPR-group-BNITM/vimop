@@ -44,6 +44,16 @@ Type `nextflow run OPR-group-BNITM/vimop --set-up-default-db` to install our lat
 Afterwards, run an analysis with `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
 You can get some demo data here: TODO!
 
+### Using EPI2ME desktop
+
+Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
+Once you added the workflow, launch it but check the box Input Options -> Install latest default data base.
+This process will install the data base into your home directory.
+It may take a while, since the database has to be downloaded and it's quite huge.
+Afterwards you can launch the pipeline to analyse data.
+You can also click "run demo analysis".
+
+
 ### Options
 
 The following options can be passed.
