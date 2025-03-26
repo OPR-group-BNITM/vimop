@@ -16,9 +16,11 @@ include {
     empty_tsv;
     empty_fasta;
     trim;
+    read_stats;
     classify_centrifuge;
     classify_contigs;
     extract_contig_classification;
+    filter_with_centrifuge;
     filter_contaminants;
     filter_virus_target;
     assemble_canu;
@@ -53,20 +55,32 @@ workflow pipeline {
 
         // trimming
         trimmed = samples
-        | map{ meta, reads, stats -> [meta, reads] }
+        | map { meta, reads, stats -> [meta, reads] }
         | trim
         | map { meta, reads -> [meta + ["trimmed_reads": reads], reads] }
 
-        // contaminant filtering
-        cleaned = trimmed
-        | map{ meta, reads -> [meta, reads, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
-        | filter_contaminants
+        if (db_config.doClassify) {
+            // metagenomic read classification with centrifuge
+            classification = trimmed
+            | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
+            | classify_centrifuge
+        } else {
+            classification = Channel.empty()
+        }
 
-        // metagenomic read classification with centrifuge
-        classification = trimmed
-        | combine(Channel.of(db_config.classificationDir))
-        | combine(Channel.from(db_config.classificationLibraries))
-        | classify_centrifuge
+        if(db_config.doFilterWithCentrifuge) {
+            to_clean = classification
+            | map { meta, classification, report, kraken, html -> [meta, meta.trimmed_reads, classification, db_config.virusTaxIDFile] }
+            | filter_with_centrifuge
+        } else {
+            to_clean = trimmed
+            | read_stats
+        }
+
+        // contaminant filtering
+        cleaned = to_clean
+        | map { meta, reads, stats -> [meta, reads, stats, db_config.contaminationFilterFiles, db_config.contaminationFilters] }
+        | filter_contaminants
 
         // get readstats
         lenquals_trim = trimmed

@@ -38,7 +38,7 @@ def merge_mapstats_reference_info(mapstats, reference_info, virus_db_config):
         merged['ConsensusLength'] == 0,
         0,
         merged['CalledNucleobases'] / merged['ConsensusLength'] * 100
-    ).round(0).astype(int)
+    ).round(2)
 
     # Get the best representative for each curated organism + segment combination
     merged['IsBest'] = False

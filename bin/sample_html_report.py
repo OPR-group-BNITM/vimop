@@ -73,8 +73,6 @@ class OprBanner(Snippet):
     TAG = 'div'
 
     def __init__(self, report_title: str, pipeline_version: str) -> None:
-        """Create styled banner."""
-
         # TODO: replace the banner styles and classes?
         styles: IBannerStyles = IBannerStyles()
         classes: IBannerClasses = IBannerClasses()
@@ -101,7 +99,6 @@ class OprBanner(Snippet):
 class OprLogo(div):
     """OPR logo element."""
     def __init__(self) -> None:
-        """Create a div containing an image logo."""
         fname_logo = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             'OPR_logo_v01-light.cropped.png'
@@ -130,7 +127,6 @@ class OprNavigation(Snippet):
         header_height: int = 75,
         classes: labs.ILabsNavigationClasses = labs.ILabsNavigationClasses()
     ) -> None:
-        """Create tag."""
         spacer = div(
             className=classes.spacer,
             style=f"margin-top: {header_height}px;"
@@ -186,7 +182,6 @@ class OprReport(Report):
     """A basic OPR-themed report."""
 
     def __init__(self, title, pipeline_version):
-        """Create tag."""
         super().__init__(
             report_title=title,
             head_resources=LAB_head_resources,
