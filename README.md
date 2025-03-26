@@ -3,11 +3,11 @@
 Analysis pipeline for virus metagenomics using nanopore sequencing.
 
 This pipeline is developed by the [Outbreak Preparedness and Response team]() at the Bernhard Nocht Institute for Tropical medicine.
-It is used for untargeted sequencing  (e.g. with the sispa-protocol) of viruses such as Lassa, Ebola or Dengue at various sites.
+It is used to analyse nanopore reads from untargeted sequencing of viruses such as Lassa, Ebola or Dengue at various sites.
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
-## Purpose and limiations
+## Purpose and limitions
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
 We have created a reference data base with our favourite viruses. However, you can also create your own.
@@ -30,11 +30,19 @@ If you are using EPI2ME desktop, nextflow and docker are included in the setup o
 ## Installation and operation
 
 You can install this pipeline by cloning this repository, running nextflow or using the EPI2ME desktop.
-If nextflow and docker are installed, you can run this pipeline by typing `nextflow OPR-group-BNITM/`.
+In any case, you need a reference data base installed.
+The pipeline will automatically install all dependencies during the first run using docker, given that you computer is connected to the internet.
+After the set up of the reference data base and the dependencies, the pipeline does not require an internet connection. 
 
-TODO: with set up DB
+### Using the command line
 
-TODO: how to run the data base
+To run the pipeline from the command line, make sure to have nextflow and docker installed.
+If you cloned this repository, change into its root directory and run `nextflow main.nf` with the additional options.
+Without manually cloning the repository you can simply run `nextflow run OPR-group-BNITM/vimop` plus options.
+We will stick to the latter now.
+Type `nextflow run OPR-group-BNITM/vimop --set-up-default-db` to install our latest data base release.
+Afterwards, run an analysis with `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
+You can get some demo data here: TODO!
 
 ### Options
 
@@ -56,7 +64,7 @@ The following options can be passed.
 | `classification_db`                   | *                | Path to centrifuge classification DB (.cf files)                                              |
 | `trim_length`                         | `30`             | Number of bases trimmed from both ends of each read                                           |
 | `contamination_filters`               | `reagent,human_dna,human_rna` | Contaminant types to filter                                                      |
-| `classification_virus_taxids`         | *(none)*         | TaxID file to remove non-viral reads                                                          |
+| `classification_virus_taxids`         | *                | TaxID file to remove non-viral reads                                                          |
 | `centrifuge_filter_do_it`             | `false`          | Enable filtering based on centrifuge classifications                                          |
 | `centrifuge_filter_min_score`         | `100`            | Minimum classification score to filter non-viral reads                                        |
 | `targets`                             | *(none)*         | Comma-separated target virus list                                                             |
@@ -88,6 +96,7 @@ The following options can be passed.
 | `min_disk_space_work_gb`              | `100`            | Min disk space for working directory                                                          |
 | `min_disk_space_out_gb`               | `10`             | Min disk space for output directory                                                           |
 
+\* All these files have defaults corresponding to the default data base. If one wants to replace them, one can pass a different path here.
 
 ## Database
 
