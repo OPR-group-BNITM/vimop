@@ -341,6 +341,7 @@ new SystemRequirements(true).checkSystemRequirements(
 workflow {
     samples = fastq_ingress([
         "input": params.fastq,
+        "sample_sheet": params.sample_sheet,
         "stats": true
     ])
     pipeline(samples)
