@@ -2,7 +2,7 @@
 
 Analysis pipeline for virus metagenomics using nanopore sequencing.
 
-This pipeline is developed by the [Outbreak Preparedness and Response team]() at the Bernhard Nocht Institute for Tropical medicine.
+This pipeline is developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical medicine.
 It is used to analyse nanopore reads from untargeted sequencing of viruses such as Lassa, Ebola or Dengue at various sites.
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
