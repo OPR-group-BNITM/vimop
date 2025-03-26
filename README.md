@@ -41,6 +41,7 @@ If you cloned this repository, change into its root directory and run `nextflow 
 Without manually cloning the repository you can simply run `nextflow run OPR-group-BNITM/vimop` plus options.
 We will stick to the latter now.
 Type `nextflow run OPR-group-BNITM/vimop --set-up-default-db` to install our latest data base release.
+It may take a while, since the database has to be downloaded and it's quite huge.
 Afterwards, run an analysis with `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
 You can get some demo data here: TODO!
 
@@ -48,11 +49,10 @@ You can get some demo data here: TODO!
 
 Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
 Once you added the workflow, launch it but check the box Input Options -> Install latest default data base.
-This process will install the data base into your home directory.
-It may take a while, since the database has to be downloaded and it's quite huge.
+This process will download and install the data base into your home directory.
+This will probably take a while.
 Afterwards you can launch the pipeline to analyse data.
 You can also click "run demo analysis".
-
 
 ### Options
 
