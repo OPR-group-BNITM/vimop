@@ -1,33 +1,42 @@
 # ViMOP
 
-Analysis pipeline for virus metagenomics using nanopore sequencing (e.g. with the sispa-protocol).
+Analysis pipeline for virus metagenomics using nanopore sequencing.
 
-## 
+This pipeline is developed by the [Outbreak Preparedness and Response team]() at the Bernhard Nocht Institute for Tropical medicine.
+It is used for untargeted sequencing  (e.g. with the sispa-protocol) of viruses such as Lassa, Ebola or Dengue at various sites.
 
-TODO:
-- initial stuff
-- you need to install the software
-- set up the data base
+If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
-## Requirements and Prerequesites/Dependencies
+## Purpose and limiations
+
+The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
+We have created a reference data base with our favourite viruses. However, you can also create your own.
+For information on data bases read further down.
+If you need assistance for setting up a reference data set, please contact us.
+
+The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
+To build a consensus, [medaka](https://github.com/nanoporetech/medaka) or [samtools consensus](https://www.htslib.org/) are used.
+This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
+However, for large DNA viruses with repetetive regions such as mpox, this approach will not correctly generate complete genomes.
+In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
+
+## Prerequisites
 
 This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs.
 
-You can run and install the pipeline from the command line using nextflow or from the EPI2ME desktop application from ONT (https://nanoporetech.com/software/other/epi2me-desktop-application).
-If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software. Else you need to install nextflow and docker.
+You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
+If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software. Else you need to install nextflow and [docker](https://www.docker.com/).
 
-## Installation
+## Installation and operation
 
 You can install this pipeline by cloning this repository, running nextflow or using the EPI2ME desktop.
 If nextflow and docker are installed, you can run this pipeline by typing `nextflow OPR-group-BNITM/`.
 
 TODO: with set up DB
 
-## Run nanoflow 
+TODO: how to run the data base
 
-Todo
-
-## Options
+### Options
 
 The following options can be passed.
 
