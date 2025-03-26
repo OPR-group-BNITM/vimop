@@ -96,6 +96,62 @@ EOF
     """
 }
 
+process classify_contigs {
+    label "centrifuge"
+    cpus 12
+    memory '28 GB'
+    input:
+        tuple val(meta), path("contigs.fasta"), path(db_path), val(target_db)
+    output:
+        tuple val(meta), 
+        path("classification_report.tsv"),
+        path("classification.tsv")
+    """
+    if [[ -s contigs.fasta ]]
+    then
+        centrifuge \
+            -p ${task.cpus} \
+            --mm \
+            -x ${db_path}/${target_db} \
+            -f contigs.fasta \
+            --report-file classification_report.tsv \
+            -S classification.tsv
+        centrifuge-kreport \
+            -x ${db_path}/${target_db} classification.tsv > classification_kraken.tsv
+    else
+        # write a report even if no sequences were available
+        echo -e "taxID\tname\ttaxRank" > classification_report.tsv
+        echo -e "taxID\treadID" > classification.tsv
+    fi
+    """
+}
+
+process extract_contig_classification {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path("classification_report.tsv"), path("classification.tsv")
+    output:
+        tuple val(meta), path("classification_summary_${meta.mapping_target}.csv")
+    """
+    #!/usr/bin/env python
+    import pandas as pd
+    report = pd.read_csv('classification_report.tsv', sep='\t')
+    classification = pd.read_csv('classification.tsv', sep='\t')
+
+    if report.empty or classification.empty:
+        with open('classification_summary_${meta.mapping_target}.csv', 'w') as f:
+            f.write('readID,taxRank,name')
+    
+    else:
+        summary = classification[['taxID', 'readID']].merge(report[['taxID', 'name', 'taxRank']], on='taxID', how='left')
+        summary['taxRank'] = summary['taxRank'].fillna('unclassified')
+        summary['name'] = summary['name'].fillna('no name')
+        summary = summary.drop(columns=['taxID'])
+        summary.to_csv('classification_summary_${meta.mapping_target}.csv', index=False)
+    """
+}
+
 
 def seqstatsHeader(String fnameOut) {
     return """
@@ -999,6 +1055,7 @@ process sample_report {
             path('clean_stats.tsv'),
             val(assembly_modes),
             path(assembly_stats),
+            path(contig_classes),
             path(blast_hits),
             path('mapping_stats.tsv'),
             path(contig_infos),
@@ -1017,6 +1074,7 @@ process sample_report {
         --out stats_reads.tsv
 
     mergestats_contig.py \\
+        --contig-classes ${contig_classes.join(" ")} \\
         --blast-hits ${blast_hits.join(" ")} \\
         --contig-info ${contig_infos.join(" ")} \\
         --out stats_contigs.tsv
