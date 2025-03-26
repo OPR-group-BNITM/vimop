@@ -12,10 +12,13 @@ def df_read_and_merge(fnames, sep='\t'):
     return pd.concat([pd.read_csv(fname, sep=sep) for fname in fnames])
 
 
-def merge_contigs_blasthits(contig_infos, blast_hits):
+def merge_contigs_blasthits(contig_infos, blast_hits, contig_classes):
 
     cols_contigs = ['Contig', 'WorkflowMappingTarget', 'len', 'reads']
     contigs = contig_infos[cols_contigs]
+    
+    contigs= contigs.merge(contig_classes, left_on='Contig', right_on='readID', how='left')
+    contigs = contigs.drop(columns=['readID'])
 
     # Merge the contig info with the blast hits
     merged = pd.merge(
@@ -36,6 +39,8 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
     cols = {
         'WorkflowMappingTarget': 'Filter',
         'Contig': 'Contig',
+        'name': 'Classification',
+        'taxRank': 'Taxonomic Rank',
         'len': 'Length',
         'reads': 'Number of reads',
         'Reference': 'Blast Hit',
@@ -48,7 +53,8 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
     merged.rename(columns=cols, inplace=True)
     # Fill empty values for contigs with no Blast hits
     merged.fillna(
-        {
+        {   
+            'Classification': 'Unclassified',
             'Blast Hit': 'Not found',
             'Organism': '',
             'Hit length': 0,
@@ -66,6 +72,11 @@ def merge_contigs_blasthits(contig_infos, blast_hits):
 def main():
 
     parser = argparse.ArgumentParser('Merge contigs and blast info')
+    parser.add_argument(
+        '--contig-classes',
+        help='csv files with centrifuge classification for each contigs by assembly mode.',
+        nargs='*'
+    )
     parser.add_argument(
         '--blast-hits',
         help='csv files with targets by filtering method (need to match assembly modes).',
@@ -85,10 +96,11 @@ def main():
 
     blast_hits = df_read_and_merge(args.blast_hits, sep=',')
     contigs = df_read_and_merge(args.contig_info)
+    contig_classes = df_read_and_merge(args.contig_classes, sep=',')
 
-    contigs_stats = merge_contigs_blasthits(contigs, blast_hits)
+    contigs_stats = merge_contigs_blasthits(contigs, blast_hits, contig_classes)
+    
     contigs_stats.to_csv(args.out, sep='\t')
-
 
 if __name__ == '__main__':
     main()

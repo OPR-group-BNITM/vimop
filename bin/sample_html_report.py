@@ -456,6 +456,8 @@ def html_report(
             cols = [
                 'Filter',
                 'Contig',
+                'Classification',
+                'Taxonomic Rank',
                 'Length',
                 'Number of reads',
                 'Blast Hit',
@@ -475,6 +477,8 @@ def html_report(
                 {
                     'Filter': 'Filter used on reads before assembly',
                     'Contig': 'Contig identifier',
+                    'Classification': 'Classification according to centrifuge',
+                    'Taxonomic Rank': 'Taxonomic rank of the classification',
                     'Length': 'Length of the contig in base pairs',
                     'Number of reads': 'Number of (corrected) reads used by canu to build this contig',
                     'Blast Hit': 'Virus reference genome found with blast search',

@@ -17,6 +17,8 @@ include {
     empty_fasta;
     trim;
     classify_centrifuge;
+    classify_contigs;
+    extract_contig_classification;
     filter_contaminants;
     filter_virus_target;
     assemble_canu;
@@ -109,6 +111,19 @@ workflow pipeline {
         contigs = first_assemblies.contigs
         | mix(re_assemblies.contigs)
 
+        contig_classification = contigs
+        | map { meta, contigs -> [meta, contigs] }
+        | combine(Channel.of(db_config.classificationDir))
+        | combine(Channel.from(db_config.classificationLibraries))
+        | classify_contigs
+        | extract_contig_classification
+        | view { "contig_classifications: ${it}" }
+
+        collected_contig_class_info = contig_classification
+        | map { meta, contig_classification -> [meta.alias, contig_classification] }
+        | groupTuple(by: 0)
+        | view { "collected_contig_class_info: ${it}" }
+
         assembly_stats = first_assemblies.stats
         | mix(re_assemblies.stats)
         | view { "assembly_stats: ${it}" }
@@ -128,6 +143,7 @@ workflow pipeline {
         | map { meta, contigs -> [meta, contigs, db_config.blastDir, db_config.blastPrefix] }
         | blast
         | extract_blasthits
+        | view { "blast_hits: ${it}" }
 
         // Get mapping targets from BLAST hits stored in CSV files
         sample_ref = blast_hits
@@ -263,6 +279,7 @@ workflow pipeline {
         sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
+        | join(collected_contig_class_info, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
         | join(collected_contigs_infos, by: 0)
@@ -329,6 +346,7 @@ new SystemRequirements(true).checkSystemRequirements(
 workflow {
     samples = fastq_ingress([
         "input": params.fastq,
+        "sample_sheet": params.sample_sheet,
         "stats": true
     ])
     pipeline(samples)
