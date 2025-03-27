@@ -65,17 +65,17 @@ The following options can be passed.
 | `out_dir`                             | `output`         | Output directory where sample output subdirectories are created      |
 | `output_cleaned_reads`                | `false`          | Output cleaned reads after contamination removal                     |
 | `custom_ref_fasta`                    | *(none)*         | Optional custom FASTA file for consensus generation                  |
-| `centrifuge_classification_library`   | `all`            | Centrifuge classification library to use                             |
 | `base_db`                             | *                | Path to base directory containing virus and contaminants DB          |
 | `virus_db`                            | *                | Path to virus database for BLAST and consensus creation              |
 | `virus_db_config`                     | *                | YAML config file for the virus database                              |
 | `contaminants_db`                     | *                | Path to contaminants database                                        |
 | `contaminants_db_config`              | *                | YAML config for contaminants database                                |
 | `classification_db`                   | *                | Path to centrifuge classification DB (.cf files)                     |
+| `classification_db_config`            | *                | YAML config for centrifuge classification database                   |
 | `trim_length`                         | `30`             | Number of bases trimmed from both ends of each read                  |
 | `contamination_filters`               | `reagent,human_dna,human_rna` | Contaminant types to filter                             |
-| `classification_virus_taxids`         | *                | TaxID file to remove non-viral reads                                 |
-| `centrifuge_filter_do_it`             | `false`          | Enable filtering based on centrifuge classifications                 |
+| `centrifuge_do_classify`              | `true`           | Activates the centrifuge read and contig classification              |
+| `centrifuge_do_filter`                | `false`          | Enable filtering based on centrifuge classifications                 |
 | `centrifuge_filter_min_score`         | `100`            | Minimum classification score to filter non-viral reads               |
 | `targets`                             | *(none)*         | Comma-separated target virus list                                    |
 | `assemble_notarget`                   | `true`           | Whether to assemble reads not assigned to specific targets           |
