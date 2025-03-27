@@ -10,7 +10,9 @@ class DatabaseInput {
     String virusDir
     String virusConfigFileName
     String contaminantsDir
+    String contaminationConfigFileName
     String classificationDir
+    String classificationConfigFileName
     String blastDir
     String blastPrefix
     List<String> contaminationFilters
@@ -115,11 +117,11 @@ class DatabaseInput {
         )
 
         // contamination
-        def contaminationConfigFileName = getFile(
+        this.contaminationConfigFileName = getFile(
             dbParams.contaminants_db_config,
             "${this.contaminantsDir}/${dbParams.database_defaults.contaminants_db_config}"
         )
-        def contaminationConfig = upperCaseMap([readYamlConfig(contaminationConfigFileName)])
+        def contaminationConfig = upperCaseMap([readYamlConfig(this.contaminationConfigFileName)['filters']])
         this.contaminationFilters = dbParams.contamination_filters.tokenize(",")
         this.contaminationFilterFiles = this.contaminationFilters.collect {
             contaminant -> getFileFromConfig(contaminationConfig, this.contaminantsDir, contaminant.toUpperCase())
@@ -148,21 +150,18 @@ class DatabaseInput {
         assertFile("${this.blastDir}/${this.blastPrefix}.ndb")
 
         // classification
-        this.classificationLibrary = dbParams.centrifuge_classification_library
-        if(this.classificationLibrary == null || this.classificationLibrary.trim() == "") {
-            this.doClassify = false
-            this.doFilterWithCentrifuge = false
-        } else {
-            this.doClassify = true
-            assertFile("${this.classificationDir}/${this.classificationLibrary}.1.cf")
+        this.classificationConfigFileName = getFile(
+            dbParams.classification_db_config,
+            "${this.classificationDir}/${dbParams.database_defaults.classification_db_config}"
+        )
 
-            this.doFilterWithCentrifuge = dbParams.centrifuge_filter_do_it
-            if(this.doFilterWithCentrifuge) {
-                this.virusTaxIDFile = getFile(
-                    dbParams.classification_virus_taxids,
-                    "${this.classificationDir}/${dbParams.database_defaults.classification_virus_taxids}"
-                )
-            }
-        }
+        this.doClassify = dbParams.centrifuge_do_classify
+        this.doFilterWithCentrifuge = dbParams.centrifuge_do_classify && dbParams.centrifuge_filter_do
+
+        def classificationConfig = readYamlConfig(this.classificationConfigFileName)
+        classificationConfig.files.each { fname -> assertFile("${this.classificationDir}/${fname}") }
+        this.classificationLibrary = classificationConfig.index_name
+        this.virusTaxIDFile = "${this.classificationDir}/${classificationConfig.virus_taxid_file}"
+        assertFile(this.virusTaxIDFile)
     }
 }
