@@ -153,6 +153,20 @@ process extract_contig_classification {
 }
 
 
+process no_contig_classification {
+    label "general"
+    cpus 1
+    input:
+        val(meta)
+    output:
+        tuple val(meta), path("classification_summary_${meta.mapping_target}.csv")
+    """
+    with open('classification_summary_${meta.mapping_target}.csv', 'w') as f:
+        f.write('readID,taxRank,name')
+    """
+}
+
+
 def seqstatsHeader(String fnameOut) {
     return """
     echo "step\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len" > $fnameOut
@@ -1062,6 +1076,8 @@ process sample_report {
             path('trimmed_read_stats.tsv'),
             path('cleaned_read_stats.tsv'),
             path('virus_db_config.yaml'),
+            path('contamination_db_config.yaml'),
+            path('classification_db_config.yaml'),
             path('reference_info.tsv')
     output:
         tuple val(samplename), path('report.html'), emit: report
@@ -1089,6 +1105,12 @@ process sample_report {
         --reference-info reference_info.tsv \\
         --out stats_consensus.tsv
 
+    version_table.py \\
+        --virus-db-config virus_db_config.yaml \\
+        --contamination-db-config contamination_db_config.yaml \\
+        --classification-db-config classification_db_config.yaml \\
+        --out db_versions.tsv
+
     sample_html_report.py \\
         --pipeline-version ${workflow.manifest.version} \\
         --samplename ${samplename} \\
@@ -1099,6 +1121,7 @@ process sample_report {
         --assembly-stats stats_assembly.tsv \\
         --trimmed-read-distribution trimmed_read_stats.tsv \\
         --cleaned-read-distribution cleaned_read_stats.tsv \\
+        --db-versions db_versions.tsv \\
         --out report.html
     """
 }
