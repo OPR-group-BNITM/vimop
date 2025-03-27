@@ -33,23 +33,79 @@
           "format": "path",
           "help_text": "Directory containing FASTQ files, e.g., 'HAM-2025-RUN001/barcode01'",
           "fa_icon": "far fa-folder"
-        }
-      },
-      "required": ["fastq"],
-      "fa_icon": "fas fa-folder-open"
-    },
-    "samples": {
-      "title": "Sample Options",
-      "type": "object",
-      "fa_icon": "fas fa-vials",
-      "description": "Parameters that relate to samples such as sample sheets and sample names.",
-      "properties": {
+        },
         "sample_sheet": {
           "type": "string",
           "title": "Sample sheet",
           "format": "file-path",
           "description": "A CSV file used to map barcodes to sample aliases. The sample sheet can be provided when the input data is a directory containing sub-directories with FASTQ files.",
           "help_text": "The sample sheet is a CSV file with, minimally, columns named `barcode` and `alias`. Extra columns are allowed. A `type` column is required for certain workflows and should have the following values; `test_sample`, `positive_control`, `negative_control`, `no_template_control`."
+        },
+        "custom_ref_fasta": {
+          "type": "string",
+          "description": "Custom reference FASTA",
+          "help_text": "Optional: Provide a custom FASTA file that contains sequences for the consensus generation. These sequences will be used for consensus generation with each sample besides the sequences that are found using the draft assembly. The file can contain multiple sequences. The Entry-ID of each sequence will be used as the file name of for the consensus generation.",
+          "fa_icon": "fas fa-file-alt"
+        }
+      },
+      "required": ["fastq"],
+      "fa_icon": "fas fa-folder-open"
+    },
+    "filters_and_trimming": {
+      "title": "Filters and trimming",
+      "type": "object",
+      "fa_icon": "fas fa-arrow-left",
+      "description": "Parameters for filtering the reads.",
+      "properties": {
+        "targets": {
+          "type": "string",
+          "description": "Comma-separated list of target viruses",
+          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
+          "fa_icon": "fas fa-bullseye"
+        },
+        "assemble_notarget": {
+          "type": "boolean",
+          "default": true,
+          "help_text": "Whether to also assemble reads that were not assigned to any specific target.",
+          "description": "Assemble non-target reads",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "contamination_filters": {
+          "type": "string",
+          "default": "reagent,human_dna,human_rna",
+          "description": "Filters for contamination removal",
+          "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "centrifuge_do_classify": {
+          "type": "boolean",
+          "title": "Run centrifuge classification",
+          "default": true,
+          "description": "Turn centrifuge classification on or off.",
+          "help_text": "Turn off to not classify reads and contigs.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_do_filter": {
+          "type": "boolean",
+          "title": "Use centrifuge filter",
+          "default": false,
+          "description": "Filter based on centrifuge classifications.",
+          "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_filter_min_score": {
+          "type": "integer",
+          "default": 100,
+          "description": "Minimum classification score",
+          "help_text": "Reads that are classified as non-viral with a score higher than or equal to this are removed.",
+          "fa_icon": "fas fa-sort-amount-down-alt"
+        },
+        "trim_length": {
+          "type": "integer",
+          "default": 30,
+          "help_text": "Number of bases that get removed from both sides of each read.",
+          "description": "Trim length for reads",
+          "fa_icon": "fas fa-cut"
         }
       }
     },
@@ -76,24 +132,11 @@
         }
       }
     },
-    "references_for_consensus": {
-      "title": "References for consensus",
-      "type": "object",
-      "fa_icon": "fas fa-file-export",
-      "properties": {
-        "custom_ref_fasta": {
-          "type": "string",
-          "description": "Custom reference FASTA",
-          "help_text": "Optional: Provide a custom FASTA file that contains sequences for the consensus generation. These sequences will be used for consensus generation with each sample besides the sequences that are found using the draft assembly. The file can contain multiple sequences. The Entry-ID of each sequence will be used as the file name of for the consensus generation.",
-          "fa_icon": "fas fa-file-alt"
-        }
-      }
-    },
-    "advanced_parameters": {
-      "title": "Advanced Parameters",
+    "database_options": {
+      "title": "Advanced: Data Base",
       "type": "object",
       "fa_icon": "fas fa-database",
-      "description": "Advanced settings including classification, databases, filtering, assembly, and consensus parameters.",
+      "description": "Advanced settings for reference data base customization.",
       "properties": {
         "base_db": {
           "type": "string",
@@ -139,64 +182,22 @@
           "help_text": "Path to a classification database used by centrifuge, should contain .cf files.",
           "fa_icon": "fas fa-server"
         },
-        "trim_length": {
-          "type": "integer",
-          "default": 30,
-          "help_text": "Number of bases that get removed from both sides of each read.",
-          "description": "Trim length for reads",
-          "fa_icon": "fas fa-cut"
-        },
-        "contamination_filters": {
+        "classification_db_config": {
           "type": "string",
-          "default": "reagent,human_dna,human_rna",
-          "description": "Filters for contamination removal",
-          "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
-          "fa_icon": "fas fa-sort-amount-down"
-        },
-        "classification_virus_taxids": {
-            "type": "string",
-            "title": "Virus TaxID file",
-            "format": "file-path",
-            "mime-type": "txt",
-            "description": "Virus TaxIDs",
-            "help_text": "A simple txt file with one column of all taxids that are viruses. This is used when removing non-viral reads using centrifuge."
-        },
-        "centrifuge_do_classify": {
-          "type": "boolean",
-          "title": "Run centrifuge classification",
-          "default": true,
-          "description": "Turn centrifuge classification on or off.",
-          "help_text": "Turn off to not classify reads and contigs.",
-          "fa_icon": "fas fa-dot-circle"
-        },
-        "centrifuge_do_filter": {
-          "type": "boolean",
-          "title": "Use centrifuge filter",
-          "default": false,
-          "description": "Filter based on centrifuge classifications.",
-          "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
-          "fa_icon": "fas fa-dot-circle"
-        },
-        "centrifuge_filter_min_score": {
-          "type": "integer",
-          "default": 100,
-          "description": "Minimum classification score",
-          "help_text": "Reads that are classified as non-viral with a score higher than or equal to this are removed.",
-          "fa_icon": "fas fa-sort-amount-down-alt"
-        },
-        "targets": {
-          "type": "string",
-          "description": "Comma-separated list of target viruses",
-          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
-          "fa_icon": "fas fa-bullseye"
-        },
-        "assemble_notarget": {
-          "type": "boolean",
-          "default": true,
-          "help_text": "Whether to also assemble reads that were not assigned to any specific target.",
-          "description": "Assemble non-target reads",
-          "fa_icon": "fas fa-dot-circle"
-        },
+          "description": "Configuration file for the classification database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for classification database.",
+          "fa_icon": "far fa-file-alt"
+        }
+      }
+    },
+    "denovo_assembly_options": {
+      "title": "Advanced: De-novo assembly",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "description": "Advanced settings for mapping and consensus creation.",
+      "properties": {
         "canu_min_read_length": {
           "type": "integer",
           "default": 200,
@@ -283,13 +284,6 @@
           "description": "CD-HIT word length for no-contigs mode.",
           "fa_icon": "fas fa-font"
         },
-        "consensus_method": {
-          "type": "string",
-          "default": "medaka_variant",
-          "description": "Consensus method to use",
-          "help_text": "Method used for consensus generation.",
-          "fa_icon": "fas fa-signal"
-        },
         "reassemble_cdhit_thresh": {
           "type": "number",
           "default": 0.98,
@@ -307,6 +301,21 @@
           "default": 2,
           "description": "Maximum number of reassembly iterations.",
           "fa_icon": "fas fa-redo"
+        }
+      }
+    },
+    "consensus_options": {
+      "title": "Advanced: Reference based assembly",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "description": "Advanced settings for mapping and consensus creation.",
+      "properties": {
+        "consensus_method": {
+          "type": "string",
+          "default": "medaka_variant",
+          "description": "Consensus method to use",
+          "help_text": "Method used for consensus generation.",
+          "fa_icon": "fas fa-signal"
         },
         "map_to_target_minimap_window_size": {
           "type": "integer",
@@ -419,10 +428,11 @@
   },
   "allOf": [
     { "$ref": "#/definitions/input" },
-    { "$ref": "#/definitions/samples" },
+    { "$ref": "#/definitions/filters_and_trimming" },
     { "$ref": "#/definitions/output" },
-    { "$ref": "#/definitions/references_for_consensus" },
-    { "$ref": "#/definitions/advanced_parameters" },
+    { "$ref": "#/definitions/consensus_options" },
+    { "$ref": "#/definitions/denovo_assembly_options" },
+    { "$ref": "#/definitions/database_options" },
     { "$ref": "#/definitions/misc" }
   ]
 }
