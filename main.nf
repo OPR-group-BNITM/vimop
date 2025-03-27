@@ -18,6 +18,8 @@ include {
     trim;
     read_stats;
     classify_centrifuge;
+    classify_contigs;
+    extract_contig_classification;
     filter_with_centrifuge;
     filter_contaminants;
     filter_virus_target;
@@ -122,6 +124,17 @@ workflow pipeline {
 
         contigs = first_assemblies.contigs
         | mix(re_assemblies.contigs)
+
+        contig_classification = contigs
+        | map { meta, contigs -> [meta, contigs] }
+        | combine(Channel.of(db_config.classificationDir))
+        | combine(Channel.from(db_config.classificationLibrary))
+        | classify_contigs
+        | extract_contig_classification
+
+        collected_contig_class_info = contig_classification
+        | map { meta, contig_classification -> [meta.alias, contig_classification] }
+        | groupTuple(by: 0)
 
         assembly_stats = first_assemblies.stats
         | mix(re_assemblies.stats)
@@ -275,6 +288,7 @@ workflow pipeline {
         sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
+        | join(collected_contig_class_info, by: 0)
         | join(collected_blast_hits, by: 0)
         | join(collected_mapping_stats, by: 0)
         | join(collected_contigs_infos, by: 0)
@@ -341,6 +355,7 @@ new SystemRequirements(true).checkSystemRequirements(
 workflow {
     samples = fastq_ingress([
         "input": params.fastq,
+        "sample_sheet": params.sample_sheet,
         "stats": true
     ])
     pipeline(samples)
