@@ -161,6 +161,7 @@ process no_contig_classification {
     output:
         tuple val(meta), path("classification_summary_${meta.mapping_target}.csv")
     """
+    #!/usr/bin/env python
     with open('classification_summary_${meta.mapping_target}.csv', 'w') as f:
         f.write('readID,taxRank,name')
     """

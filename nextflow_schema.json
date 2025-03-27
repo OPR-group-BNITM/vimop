@@ -169,7 +169,7 @@
           "help_text": "Turn off to not classify reads and contigs.",
           "fa_icon": "fas fa-dot-circle"
         },
-        "centrifuge_filter_do_it": {
+        "centrifuge_do_filter": {
           "type": "boolean",
           "title": "Use centrifuge filter",
           "default": false,
