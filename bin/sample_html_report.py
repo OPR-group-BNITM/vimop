@@ -269,6 +269,7 @@ def html_report(
         df_assembly_stats,
         df_lenqual_trim,
         df_lenqual_clean,
+        df_db_versions,
         virus_db_config,
         fname_out 
 ):
@@ -502,6 +503,11 @@ def html_report(
                 'Read and contig numbers in the different assembly runs'
             ).legend(cols)
 
+    section_name = "Versions"
+    with report.add_section(section_name, section_name):
+        cols = ['Data Base', 'Version', 'Description']
+        DataTable.from_pandas(df_db_versions[cols], use_index=False, export=True)
+
     report.write(fname_out)
 
 
@@ -557,6 +563,11 @@ def main():
         required=True,
     )
     parser.add_argument(
+        '--db-versions',
+        help='.tsv with data base version information.',
+        required=True,
+    )
+    parser.add_argument(
         '--out',
         help='Output filename',
         default='report.html'
@@ -574,6 +585,8 @@ def main():
     lenqual_trim = read_tsv(args.trimmed_read_distribution)
     lenqual_clean = read_tsv(args.cleaned_read_distribution)
 
+    db_version_info = read_tsv(args.db_versions)
+
     html_report(
         args.pipeline_version,
         args.samplename,
@@ -583,6 +596,7 @@ def main():
         assembly_stats,
         lenqual_trim,
         lenqual_clean,
+        db_version_info,
         virus_db_config,
         args.out,
     )

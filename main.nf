@@ -20,6 +20,7 @@ include {
     classify_centrifuge;
     classify_contigs;
     extract_contig_classification;
+    no_contig_classification;
     filter_with_centrifuge;
     filter_contaminants;
     filter_virus_target;
@@ -125,12 +126,16 @@ workflow pipeline {
         contigs = first_assemblies.contigs
         | mix(re_assemblies.contigs)
 
-        contig_classification = contigs
-        | map { meta, contigs -> [meta, contigs] }
-        | combine(Channel.of(db_config.classificationDir))
-        | combine(Channel.from(db_config.classificationLibrary))
-        | classify_contigs
-        | extract_contig_classification
+        if (db_config.doClassify) {
+            contig_classification = contigs
+            | map { meta, contigs -> [meta, contigs, db_config.classificationDir, db_config.classificationLibrary] }
+            | classify_contigs
+            | extract_contig_classification
+        } else {
+            contig_classification = contigs
+            | map {meta, contigs -> meta}
+            | no_contig_classification
+        }
 
         collected_contig_class_info = contig_classification
         | map { meta, contig_classification -> [meta.alias, contig_classification] }
@@ -295,6 +300,8 @@ workflow pipeline {
         | join(lenquals_trim, by: 0)
         | join(lenquals_clean, by: 0)
         | combine(Channel.of(db_config.virusConfigFileName))
+        | combine(Channel.of(db_config.contaminationConfigFileName))
+        | combine(Channel.of(db_config.classificationConfigFileName))
         | combine(reference_info)
         | sample_report
 
