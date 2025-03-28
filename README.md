@@ -122,11 +122,63 @@ The highest scoring hit is then used as a reference genome.
 
 ### Consensus generation
 
-Reads are mapped against the reference genome. The mapping parameters can be changed (see Options)
+Reads are mapped against the reference genome.
+The mapping parameters can be changed (see Options).
+There are three options to generate the consensus.
+The default is medaka_variant which uses medaka to call variants and then introduce them to the reference to build the consensus.
+The second option is called medaka and uses the medaka consensus functionality.
+In this case you don't get a vcf file with variants.
+The same is true for the third option called simple using samtools consensus and a correction script for masked areas.
+
+For medaka you can pass a model name for the option `medaka_consensus_model`.
+Chosing auto will let medaka chose the model, which is the default.
 
 ## Output and report
 
-TODO
+The output is structured like this:
+
+output
+├── nf-report.html
+├── params.json
+└── barcode01
+    ├── report_barcode01.html
+    ├── classification
+    │   ├── classification.html
+    │   ├── classification.tsv
+    │   ├── classification_kraken.tsv
+    │   └── classification_report.tsv
+    ├── consensus
+    │   ├── AB627954.consensus.fasta
+    │   ├── AB627954.depth.txt
+    │   ├── AB627954.reads.bam
+    │   ├── AB627954.reads.bam.bai
+    │   ├── AB627954.reference.fasta
+    │   ├── AB627954.variants.vcf.gz
+    │   ├── CS272305.consensus.fasta
+    │   ├── CS272305.depth.txt
+    │   ├── CS272305.reads.bam
+    │   ├── CS272305.reads.bam.bai
+    │   ├── CS272305.reference.fasta
+    │   └── CS272305.variants.vcf.gz
+    ├── tables
+    │   ├── consensus.tsv
+    │   ├── contigs.tsv
+    │   └── reads.tsv
+    ├── assembly
+    │   ├── no-target.contigs.fasta
+    │   └── re-assembly.contigs.fasta
+    └── selected_consensus
+        ├── LCMV_L.fasta
+        └── LCMV_S.fasta
+
+nf-report.html contains technical information about the run and ressource usage.
+For each sample there is a directory with results (here barcode01).
+The summary of the results is found in report_samplename.html.
+Tables contains the information from the htmml report in .tsv files.
+The classification directory contains all files for the centrifuge read classification.
+The directory consensus contains consensus genome sequences, alignment files and variants as well as the chosen reference.
+The chosen selected genomes for curated virus species are listed in selected_consensus with a separate file for each segment.
+Contigs can be found in the fasta files in the assembly directory.
 
 ## Options
 
@@ -184,7 +236,8 @@ The following options can be passed.
 
 ## Database
 
-ViMOP relies on a reference data base structure. It is usually placed in your home directory in a folder called `ViMOP_DB`.
+ViMOP relies on a reference data base structure.
+It is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
 
 ViMOP_DB/
@@ -200,19 +253,49 @@ The three data base parts are briefly described in the following.
 
 ### centrifuge
 
-pass
+The centrifuge config looks like this
+
+```yaml
+version: 1.0
+description: "Refseq reference genomes plus genbank virus sequences"
+index_name: all
+files:
+- all.1.cf
+- all.2.cf
+- all.3.cf
+- all.4.cf
+virus_taxid_file: virus_taxids.txt
+```
+
+The index name has to be the prefix of the centrifuge index which are the files under files.
+These files need to be in the centrifuge DB directory.
+The virus_taxid_file contains all virus taxids.
+This information is important for the centrifuge based filtering.
+In addition to unclassified reads, reads classified to these Tax-IDs will be kept since they are considered to be virus reads.
+Version and description are for display in the report.
 
 ### contaminants
 
-pass
+This directory holds files with sequences of host or reagents.
+The respective config file looks like this
+
+```yaml
+filters:
+  reagent: "reagent-db.fasta.gz"
+  human_rna: "GCF_000001405.39_GRCh38.p13_rna.fna.gz"
+  human_dna: "GCF_000001405.39_GRCh38.p13_genomic.fna.gz"
+  mouse: "GCA_000001635.8_GRCm38.p6_genomic.fna.gz"
+  mastomys: "GCF_008632895.1_UCSF_Mcou_1_genomic.fna.gz"
+version: 1.0
+description: "Human (GRCh38), mouse (8_GRCm38), mastomys and contaminant filter set"
+```
+
+The keys are used to chose the filters using the command `--contamination_filters`.
 
 ### virus
 
-pass
+The virus data base contains virus reference sequences.
 
-### Data base installation and custom data base setup
-
-TODO
 
 ## Acknowledgements
 
