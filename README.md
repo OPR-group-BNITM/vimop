@@ -137,6 +137,7 @@ Chosing auto will let medaka chose the model, which is the default.
 
 The output is structured like this:
 
+```
 output
 ├── nf-report.html
 ├── params.json
@@ -170,6 +171,7 @@ output
     └── selected_consensus
         ├── LCMV_L.fasta
         └── LCMV_S.fasta
+```
 
 nf-report.html contains technical information about the run and ressource usage.
 For each sample there is a directory with results (here barcode01).
@@ -240,10 +242,12 @@ ViMOP relies on a reference data base structure.
 It is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
 
+```
 ViMOP_DB/
 ├── centrifuge/
 ├── contaminants/
 └── virus/
+```
 
 The three subdirectories contain files for centrifuge classification, contaminants/host read removal and the virus reference sequences.
 Each directory contains a file with a yaml file with the same name prefix (e.g. centrifuge.yaml, contaminants.yaml, virus.yaml).
