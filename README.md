@@ -54,7 +54,81 @@ This will probably take a while.
 Afterwards you can launch the pipeline to analyse data.
 You can also click "run demo analysis".
 
-### Options
+## Workflow
+
+In the following, the most important steps of the pipelines are explained with the respective options to set.
+
+### Input
+
+A directory with fastq files is passed to `--fastq`.
+The directory can contain subdirectories called barcode01, barcode02, ... 
+In this case, the different barcodes are treated as different samples with separate output produced for each.
+
+### Read trimming
+
+At the beginning the pipeline trims the ends of the reads to remove adapter sequences and primers.
+`--trim_length` sets the number of bases trimmed from both ends.
+
+### Read classification and optional removal of non-viral reads
+
+Centrifuge is used to classify the reads.
+This helps to get an overview of how your metagenomics sample is composed.
+Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match anything in the reference data base or only partially. 
+Use `--centrifuge_do_classify false` to deactivate all centrifuge classifications and save time.
+
+Additionally, you can use the centrifuge classifications to remove reads (not contigs) that are non-viral to a given degree of confidence.
+Activate this with `--centrifuge_do_filter true` and use `--centrifuge_filter_min_score 150` to set the minimum level of confidence (e.g. 150 in our example).
+The pipeline will remove all reads that are classified to anything that is not viral with at least this score.
+Use this if you have a lot of different contaminations that you want to remove such as bacterial reads from a fecal sample.
+But beware that centrifuge is limited in it's accuracy and you may also remove some false positives.
+
+### Host and contaminant removal
+
+Host and contaminant reads are removed by mapping them against reference sequences and extracting those that map.
+In our reference data base human DNA and RNA, a mouse genome, a mastomy genome and a set of common lab reagent sequences are included.
+The data base config file (contamination.yaml) defines the reference sets and the key values assigned to them.
+Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is humand reads).
+
+### Virus filters
+
+One can also filter for specific species or groups of viruses.
+Only reads that map to the given targets are then used in the following assembly step.
+An arbitrary number of filters can be used.
+The filters themselves are part of the reference data base and the respective names defined in the data base configs.
+This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg virus, Ebola and the Filo-virus family. 
+
+### Assembly
+
+An assembly is run for each of the filtered read sets (explained in the previous section) and for the read set with no target filter.
+To disable running the no target filter set `--assemble_notarget false`.
+
+After the initial assembly, an iterative re-assembly procedure is run (unless deactivate with `--reassemble_max_iter 0`).
+The purpose is to also find virus segments, that are present in very low concentration.
+The reads are then mapped to the contigs and those that map are removed.
+The rest is once more assembled.
+This procedure is repeated until a maximum number of cycles is reached, no reads are left after filtering or no contigs are produced by the canu assembly.
+
+For read sets that were filtered to a target (see previous section), there is a special procedure if no contigs were assembled.
+In this case, the longest X reads (set with `--nocontigs_max_reads_precluster`) are passed to a clustering by cd-hit-est.
+Of these clusters, the longest Y reads (set with `--nocontigs_nreads`) are chosen instead of contigs for the following target search.
+Canu corrected reads are used if available, else the raw reads.
+
+A number of parameters for the canu assembler can be set. See options.
+
+### Target search
+
+Each contig is used to for a blast search in the virus reference data base.
+The highest scoring hit is then used as a reference genome.
+
+### Consensus generation
+
+Reads are mapped against the reference genome. The mapping parameters can be changed (see Options)
+
+## Output and report
+
+TODO
+
+## Options
 
 The following options can be passed.
 
