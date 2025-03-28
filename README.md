@@ -184,6 +184,34 @@ The following options can be passed.
 
 ## Database
 
+ViMOP relies on a reference data base structure. It is usually placed in your home directory in a folder called `ViMOP_DB`.
+I has the following structure:
+
+ViMOP_DB/
+├── centrifuge/
+├── contaminants/
+└── virus/
+
+The three subdirectories contain files for centrifuge classification, contaminants/host read removal and the virus reference sequences.
+Each directory contains a file with a yaml file with the same name prefix (e.g. centrifuge.yaml, contaminants.yaml, virus.yaml).
+The configs hold the relefant information about the data base parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
+
+The three data base parts are briefly described in the following.
+
+### centrifuge
+
+pass
+
+### contaminants
+
+pass
+
+### virus
+
+pass
+
+### Data base installation and custom data base setup
+
 TODO
 
 ## Acknowledgements
