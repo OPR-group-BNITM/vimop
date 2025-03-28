@@ -368,6 +368,7 @@ ALL.fasta contains all sequences.
 EBOV.fasta contains ebola virus sequences, LASV Lassa virus and FILO filo virus seqeunces.
 These are the files that are used as mapping filters.
 The file ALL.fasta is also used to create the blast data base.
+Our blast data base is build with the blast version used in the pipeline (see `images/general/general.yaml` in this repository).
 The curated viruses will be shown in their own sections in the report and have segment wise one fasta file, where the consensus sequence with the highest recovery is chosen.
 All other virus targets are added in ALL and 
 
@@ -385,11 +386,6 @@ Separated with a "|" we have
 - species name
 - orientation of the sequence with respect to the original data base entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unkown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
-
-
-### Build your own data base
-
-TODO
 
 ## Acknowledgements
 
