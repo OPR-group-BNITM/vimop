@@ -120,7 +120,7 @@ A number of parameters for the canu assembler can be set. See options.
 Each contig is used to for a blast search in the virus reference data base.
 The highest scoring hit is then used as a reference genome.
 
-### Consensus generation
+### Consensus creation
 
 Reads are mapped against the reference genome.
 The mapping parameters can be changed (see Options).
@@ -299,7 +299,97 @@ The keys are used to chose the filters using the command `--contamination_filter
 ### virus
 
 The virus data base contains virus reference sequences.
+It consists of a config file, a set of sequence files and a blast data base.
+Let's have a look at a small example.
+Our directory content could look like this
 
+```
+ViMOP_BUCKET/
+├── db.yaml
+├── ALL.fasta
+├── EBOV.fasta
+├── LASV.fasta
+├── FILO.fasta
+└── blast_db/
+    ├── ALL.nhr
+    ├── ALL.ndb
+    ├── ALL.nin
+    ├── ALL.njs
+    ├── ALL.nog
+    ├── ALL.not
+    ├── ALL.nos
+    ├── ALL.nsq
+    ├── ALL.ntf
+    └── ALL.nto
+```
+
+And the corresponding config could look like this:
+
+```
+all:
+  blast_db: blast_db
+  blast_prefix: ALL
+  fasta: ALL.fasta
+curated:
+  LASV:
+    fasta: LASV.fasta
+    name: Mammarenavirus lassense
+    organisms:
+    - Lassa virus GA391
+    - Lassa virus Josiah
+    - Mammarenavirus lassaense
+    segments:
+    - S
+    - L
+  EBOV:
+    fasta: EBOV.fasta
+    name: Orthoebolavirus
+    organisms:
+    - Orthoebolavirus bombaliense
+    - Orthoebolavirus bundibugyoense
+    - Orthoebolavirus restonense
+    - Orthoebolavirus sudanense
+    - Orthoebolavirus taiense
+    - Orthoebolavirus zairense
+    segments:
+    - Unsegmented
+filters:
+  FILO: FILO.fasta
+version: 1.0
+description: "A database that has Lassa and Ebolavirus curated."
+params.fasta_sequences: /data/home/nils.petersen/dev/VirusDatasetCuration/workflow/testset/testset.fasta
+params.taxa_config: /data/home/nils.petersen/dev/VirusDatasetCuration/workflow/testset/test_groups_refs_and_organisms.yaml
+params.filter_max_n_share: 0.01
+params.filter_min_relative_length: 0.8
+params.cdhit_threshold: 0.98
+```
+
+ALL.fasta contains all sequences.
+EBOV.fasta contains ebola virus sequences, LASV Lassa virus and FILO filo virus seqeunces.
+These are the files that are used as mapping filters.
+The file ALL.fasta is also used to create the blast data base.
+The curated viruses will be shown in their own sections in the report and have segment wise one fasta file, where the consensus sequence with the highest recovery is chosen.
+All other virus targets are added in ALL and 
+
+The headers in the fasta files have to be formatted like in this example
+
+```
+>OQ791477.1 |MAG: Lassa mammarenavirus isolate c0212 segment L genomic sequence|Arenaviridae|Mammarenavirus lassaense|forward|L
+CAAAATGGGCAACAAGCAAGCCAAGTCAACCAAAGTCGATGAACAACATAGAGCTCAT...
+```
+
+Separated with a "|" we have
+- genbank ID
+- description
+- family
+- species name
+- orientation of the sequence with respect to the original data base entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unkown".
+- the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
+
+
+### Build your own data base
+
+TODO
 
 ## Acknowledgements
 
