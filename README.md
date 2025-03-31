@@ -2,7 +2,7 @@
 
 Analysis pipeline for virus metagenomics using nanopore sequencing.
 
-This pipeline is developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical medicine.
+This pipeline is developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical Medicine.
 It is used to analyse nanopore reads from untargeted sequencing of viruses such as Lassa, Ebola or Dengue at various sites.
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
@@ -102,28 +102,28 @@ This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg vir
 An assembly is run for each of the filtered read sets (explained in the previous section) and for the read set with no target filter.
 To disable running the no target filter set `--assemble_notarget false`.
 
-After the initial assembly, an iterative re-assembly procedure is run (unless deactivate with `--reassemble_max_iter 0`).
+After the initial assembly, an iterative re-assembly procedure is run (unless deactivated with `--reassemble_max_iter 0`).
 The purpose is to also find virus segments, that are present in very low concentration.
-The reads are then mapped to the contigs and those that map are removed.
-The rest is once more assembled.
+All reads are mapped to the contigs and those that map are removed.
+The remaining reads get assembled once more.
 This procedure is repeated until a maximum number of cycles is reached, no reads are left after filtering or no contigs are produced by the canu assembly.
 
 For read sets that were filtered to a target (see previous section), there is a special procedure if no contigs were assembled.
 In this case, the longest X reads (set with `--nocontigs_max_reads_precluster`) are passed to a clustering by cd-hit-est.
 Of these clusters, the longest Y reads (set with `--nocontigs_nreads`) are chosen instead of contigs for the following target search.
-Canu corrected reads are used if available, else the raw reads.
+Canu-corrected reads are used for this if available, else the raw reads.
 
-A number of parameters for the canu assembler can be set. See options.
+A number of parameters for the canu assembler can be set, that determine how many reads are used and corrected for assembly. See options.
 
 ### Target search
 
-Each contig is used to for a blast search in the virus reference data base.
+Each contig is used to for a BLAST search in the virus reference data base.
 The highest scoring hit is then used as a reference genome.
 
 ### Consensus creation
 
 Reads are mapped against the reference genome.
-The mapping parameters can be changed (see Options).
+The mapping parameters can be changed (see options).
 There are three options to generate the consensus.
 The default is medaka_variant which uses medaka to call variants and then introduce them to the reference to build the consensus.
 The second option is called medaka and uses the medaka consensus functionality.
@@ -271,7 +271,7 @@ files:
 virus_taxid_file: virus_taxids.txt
 ```
 
-The index name has to be the prefix of the centrifuge index which are the files under files.
+The index name has to be the prefix of the centrifuge index which are the files listed under files.
 These files need to be in the centrifuge DB directory.
 The virus_taxid_file contains all virus taxids.
 This information is important for the centrifuge based filtering.
@@ -294,7 +294,7 @@ version: 1.0
 description: "Human (GRCh38), mouse (8_GRCm38), mastomys and contaminant filter set"
 ```
 
-The keys are used to chose the filters using the command `--contamination_filters`.
+The keys are used to choose the filters using the command `--contamination_filters`.
 
 ### virus
 
