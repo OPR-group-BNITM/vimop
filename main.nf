@@ -353,7 +353,7 @@ workflow update_data_base {
         donwload_config = db_update_get_config
 
         donwload_config
-        | map {yaml -> [yaml, 'db_config.yaml', null]}
+        | map {yaml -> [yaml, '', 'latest.yaml']}
         | toList
         | flatMap
         | output

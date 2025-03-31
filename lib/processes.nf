@@ -17,6 +17,24 @@ process db_update_get_config {
 }
 
 
+process db_download_updates {
+    label "general"
+    cpus 1
+    input:
+        tuple path("db.yaml"), 
+    output:
+        path(params.database_defaults.virus) optional true
+        path(params.database_defaults.classification) optional true
+        path(params.database_defaults.contaminants) optional true
+    """
+    update_database.py \\
+        --db-basedir  \\
+        --db-update-config db.yaml \\
+        --to-update ${params.update_db_data_bases}
+    """
+}
+
+
 process lengths_and_qualities {
     label "general"
     cpus 1
