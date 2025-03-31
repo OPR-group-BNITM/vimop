@@ -6,6 +6,17 @@
 nextflow.enable.dsl = 2
 
 
+process db_update_get_config {
+    label "general"
+    cpus 1
+    output:
+        path("db.yaml")
+    """
+    wget -o download_config.log -O db.yaml ${params.update_db_config_url}
+    """
+}
+
+
 process lengths_and_qualities {
     label "general"
     cpus 1

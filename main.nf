@@ -11,6 +11,7 @@ nextflow.enable.dsl = 2
 
 include { fastq_ingress } from './lib/ingress'
 include {
+    db_update_get_config;
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
     empty_tsv;
@@ -346,6 +347,18 @@ workflow pipeline {
 }
 
 
+workflow update_data_base {
+    main:
+        db_config = new DatabaseInput(params)
+        donwload_config = db_update_get_config
+
+        donwload_config
+        | map {yaml -> [yaml, 'db_config.yaml', null]}
+        | toList
+        | flatMap
+        | output
+}
+
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
 
@@ -359,17 +372,26 @@ new SystemRequirements(true).checkSystemRequirements(
     session.workDir.toString()
 )
 
+if (params.update_data_base == false && !params.fastq) {
+    System.err.println("No fastqs provided! Exit.")
+    System.exit(1)
+}
+
 workflow {
-    samples = fastq_ingress([
-        "input": params.fastq,
-        "sample_sheet": params.sample_sheet,
-        "stats": true
-    ])
-    pipeline(samples)
-    pipeline.out.results
-    | toList
-    | flatMap
-    | output
+    if(params.update_data_base) {
+        update_data_base()
+    } else {
+        samples = fastq_ingress([
+            "input": params.fastq,
+            "sample_sheet": params.sample_sheet,
+            "stats": true
+        ])
+        pipeline(samples)
+        pipeline.out.results
+        | toList
+        | flatMap
+        | output
+    }
 }
 
 

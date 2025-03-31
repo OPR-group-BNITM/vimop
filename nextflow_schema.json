@@ -48,8 +48,39 @@
           "fa_icon": "fas fa-file-alt"
         }
       },
-      "required": ["fastq"],
-      "fa_icon": "fas fa-folder-open"
+      "fa_icon": "fas fa-folder-open",
+    },
+    "setup": {
+      "title": "Setup",
+      "type": "object",
+      "description": "Options for data base installation and update",
+      "default": "",
+      "properties": {
+        "update_data_base": {
+          "type": "boolean",
+          "title": "Update data base",
+          "default": false,
+          "description": "Download reference data base",
+          "help_text": "Activate to download our latest reference data base.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "update_db_data_bases": {
+          "title": "Include data bases",
+          "type": "string",
+          "default": "classification,contaminants,virus",
+          "description": "Which data base parts to update.",
+          "help_text": "Choose from classification, contaminants and virus (use multiple separated by commas)",
+          "fa_icon": "fas fa-bullseye"
+        },
+        "update_db_config_url": {
+          "title": "URL",
+          "type": "string",
+          "default": "https://www.bnitm.de/owncloud/s/LNRAcTPi9eNygsK/download",
+          "description": "Url to config file with data base versions.",
+          "help_text": "",
+          "fa_icon": "fas fa-bullseye"
+        }
+      }
     },
     "filters_and_trimming": {
       "title": "Filters and trimming",
@@ -425,6 +456,22 @@
         }
       }
     }
+  },
+  "nextflow_schema": {
+    "dependencies": [
+      {
+        "conditions": {
+          "setup.update_data_base": false
+        },
+        "required": ["input.fastq"]
+      },
+      {
+        "conditions": {
+          "setup.update_data_base": true
+        },
+        "required": []
+      }
+    ]
   },
   "allOf": [
     { "$ref": "#/definitions/input" },
