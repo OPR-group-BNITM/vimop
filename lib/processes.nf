@@ -820,7 +820,7 @@ process medaka_variant_consensus {
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
 
-    awk -v ref="\$refid" -v thresh=${min_depth} '{if (\$3<thresh) print \$1"\\t"\$2+1}' depth.txt  > mask.regions
+    awk -v ref="\$refid" -v thresh=${min_depth} '{if (\$3<thresh) print \$1"\\t"\$2}' depth.txt  > mask.regions
 
     bgzip filtered.vcf
     tabix filtered.vcf.gz
