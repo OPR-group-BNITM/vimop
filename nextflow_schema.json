@@ -457,22 +457,6 @@
       }
     }
   },
-  "nextflow_schema": {
-    "dependencies": [
-      {
-        "conditions": {
-          "setup.update_data_base": false
-        },
-        "required": ["input.fastq"]
-      },
-      {
-        "conditions": {
-          "setup.update_data_base": true
-        },
-        "required": []
-      }
-    ]
-  },
   "allOf": [
     { "$ref": "#/definitions/input" },
     { "$ref": "#/definitions/filters_and_trimming" },
