@@ -52,7 +52,7 @@ process download_db {
             checksum_tar_xz=\$(sha256sum ${db_name}.tar.xz | awk '{print \$1}')
             checksum_expected_tar_xz=\$(get_yaml_entry.py --yaml db.yaml --keys sub_databases ${db_name} checksum_zipped)
 
-            if [[ checksum_tar_xz != checksum_expected_tar_xz ]]
+            if [[ \$checksum_tar_xz != \$checksum_expected_tar_xz ]]
             then
                 echo "Checksum mismatch for ${db_name}.tar.xz!" >&2
                 echo "Expected: \$checksum_expected_tar_xz" >&2
@@ -73,7 +73,7 @@ process extract_db {
     label "report"
     cpus 1
     publishDir (
-        params.out_dir,
+        params.database_defaults.base,
         mode: "copy"
     )
     input:
