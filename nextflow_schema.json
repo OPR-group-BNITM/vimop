@@ -67,9 +67,9 @@
         "update_db_data_bases": {
           "title": "Include data bases",
           "type": "string",
-          "default": "classification,contaminants,virus",
+          "default": "centrifuge,contaminants,virus",
           "description": "Which data base parts to update.",
-          "help_text": "Choose from classification, contaminants and virus (use multiple separated by commas)",
+          "help_text": "Choose from centrifuge, contaminants and virus (use multiple separated by commas)",
           "fa_icon": "fas fa-bullseye"
         },
         "update_db_config_url": {

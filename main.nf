@@ -11,7 +11,13 @@ nextflow.enable.dsl = 2
 
 include { fastq_ingress } from './lib/ingress'
 include {
+    // database update
     db_update_get_config;
+    download_db as download_contaminant_db;
+    download_db as download_virus_db;
+    download_db as download_centrifuge_db;
+    extract_db;
+    // analysis workflow
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
     empty_tsv;
@@ -349,11 +355,43 @@ workflow pipeline {
 
 workflow update_data_base {
     main:
-        db_config = new DatabaseInput(params)
-        donwload_config = db_update_get_config
+        def possibleDataBases = ['contaminants', 'virus', 'centrifuge']
+        def dataBasesToUpdate = params.update_db_data_bases ? params.update_db_data_bases.tokenize(',')*.trim() : []
+        if (dataBasesToUpdate && !dataBasesToUpdate.every { it in possibleDataBases }) {
+            error "Invalid update_db_data_bases parameter: found unexpected values in ${dataBasesToUpdate}"
+        }
 
-        donwload_config
-        | map {yaml -> [yaml, '', 'latest.yaml']}
+        def doUpdateContaminants = dataBasesToUpdate.contains('contaminants')
+        def doUpdateVirus = dataBasesToUpdate.contains('virus')
+        def doUpdateCentrifuge = dataBasesToUpdate.contains('centrifuge')
+
+        //db_config = new DatabaseInput(params)
+        download_config = db_update_get_config()
+
+        // we make it a chain of events, even though the processes are unrelated
+        // in order to make the downloading sequential
+        contaminants_dl = download_config
+        | map { yaml -> [yaml, 'contaminants', doUpdateContaminants, params.database_defaults.base] }
+        | download_contaminant_db
+
+        virus_dl = contaminants_dl.config
+        | map { yaml -> [yaml, 'virus', doUpdateVirus, params.database_defaults.base] }
+        | download_virus_db
+
+        centrifuge_dl = virus_dl.config
+        | map { yaml -> [yaml, 'centrifuge', doUpdateCentrifuge, params.database_defaults.base] }
+        | download_centrifuge_db
+
+        extracted_dbs = contaminants_dl.downloaded_tar_xz
+        | mix(
+            virus_dl.downloaded_tar_xz,
+            centrifuge_dl.downloaded_tar_xz
+        )
+        | combine(download_config)
+        | extract_db
+
+        download_config
+        | map { yaml -> [yaml, '', 'latest.yaml'] }
         | toList
         | flatMap
         | output

@@ -17,20 +17,80 @@ process db_update_get_config {
 }
 
 
-process db_download_updates {
-    label "general"
+def checksumDir(String directory) {
+    return "find ${directory} -type f -exec sha256sum {} \\; | sort | awk '{print \$1}' | sha256sum | awk '{print \$1}'"
+}
+
+
+process download_db {
+    label "report"
     cpus 1
     input:
-        tuple path("db.yaml"), 
+        tuple path("db.yaml"), val(db_name), val(do_update), path("db_basedir")
     output:
-        path(params.database_defaults.virus) optional true
-        path(params.database_defaults.classification) optional true
-        path(params.database_defaults.contaminants) optional true
+        path("db.yaml"), emit: config
+        tuple path("${db_name}.tar.xz"), val(db_name), optional: true, emit: downloaded_tar_xz
     """
-    update_database.py \\
-        --db-basedir  \\
-        --db-update-config db.yaml \\
-        --to-update ${params.update_db_data_bases}
+    if [ "${do_update}" == "true" ]
+    then
+        update_required="true"
+        if [[ -d db_basedir/${db_name} ]]
+        then
+            checksum_old_data=\$(${checksumDir("db_basedir/" + db_name)})
+            checksum_expected=\$(get_yaml_entry.py --yaml db.yaml --keys sub_databases ${db_name} checksum_directory)
+            if [ \$checksum_old_data == \$checksum_expected ]
+            then
+                update_required="false"
+            fi
+        fi
+
+        if [[ \$update_required == "true" ]]
+        then
+            url=\$(get_yaml_entry.py --yaml db.yaml --keys sub_databases ${db_name} url)
+            wget \$url -o download_db_${db_name}.log -O ${db_name}.tar.xz
+
+            checksum_tar_xz=\$(sha256sum ${db_name}.tar.xz | awk '{print \$1}')
+            checksum_expected_tar_xz=\$(get_yaml_entry.py --yaml db.yaml --keys sub_databases ${db_name} checksum_zipped)
+
+            if [[ checksum_tar_xz != checksum_expected_tar_xz ]]
+            then
+                echo "Checksum mismatch for ${db_name}.tar.xz!" >&2
+                echo "Expected: \$checksum_expected_tar_xz" >&2
+                echo "Computed: \$checksum_tar_xz" >&2
+                exit 1
+            fi
+        else
+            echo "no update necessary"
+        fi
+    else
+        echo "Skipping download for ${db_name}"
+    fi
+    """
+}
+
+
+process extract_db {
+    label "report"
+    cpus 1
+    publishDir (
+        params.out_dir,
+        mode: "copy"
+    )
+    input:
+        tuple path(tar_xz_file), val(db_name), path("db.yaml")
+    output:
+        path("${db_name}")
+    """
+    tar -xf ${tar_xz_file}
+    computed_checksum=\$(${checksumDir(db_name)})
+    expected_checksum=\$(get_yaml_entry.py --yaml db.yaml --keys sub_databases ${db_name} checksum_directory)
+    if [ "\$computed_checksum" != "\$expected_checksum" ]
+    then
+        echo "Checksum mismatch for ${db_name}!" >&2
+        echo "Expected: \$expected_checksum" >&2
+        echo "Computed: \$computed_checksum" >&2
+        exit 1
+    fi
     """
 }
 
@@ -125,6 +185,7 @@ EOF
     """
 }
 
+
 process classify_contigs {
     label "centrifuge"
     cpus 12
@@ -154,6 +215,7 @@ process classify_contigs {
     fi
     """
 }
+
 
 process extract_contig_classification {
     label "general"
@@ -326,6 +388,7 @@ process filter_virus_target {
         -F 4 > filtered.fastq
     """
 }
+
 
 process assemble_canu {
     label "canu"

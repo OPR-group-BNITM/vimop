@@ -80,7 +80,7 @@ def extract_db(fname, expected_checksum):
         )
 
 
-def main():
+def main_OLD():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--db-basedir',
@@ -122,6 +122,27 @@ def main():
         fname_tarxz = f'{case}.tar.xz'
         download_db(conf['url'], fname_tarxz, conf['checksum_zipped'])
         extract_db(fname_tarxz, conf['checksum_directory'])
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--db-basedir',
+        help='',
+        required=True,
+    )
+    parser.add_argument(
+        '--db-update-config',
+        help='',
+        required=True,
+    )
+    parser.add_argument(
+        '--to-update',
+        help='',
+        required=True,
+    )
+    args = parser.parse_args()
+    
 
 
 if __name__ == '__main__':
