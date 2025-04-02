@@ -13,10 +13,12 @@ include { fastq_ingress } from './lib/ingress'
 include {
     // database update
     db_update_get_config;
-    download_db as download_contaminant_db;
-    download_db as download_virus_db;
-    download_db as download_centrifuge_db;
-    extract_db;
+    check_download_necessary;
+    download_parts;
+    merge_parts_and_extract;
+    data_base_transfer;
+} from './lib/data_base_update.nf'
+include {
     // analysis workflow
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
@@ -353,6 +355,14 @@ workflow pipeline {
 }
 
 
+def parseYamlToMap(Path yamlPath) {
+    File yamlFile = yamlPath.toFile()
+    def yaml = new org.yaml.snakeyaml.Yaml()
+    def config = yaml.load(yamlFile.text)
+    return config
+}
+
+
 workflow update_data_base {
     main:
         def possibleDataBases = ['contaminants', 'virus', 'centrifuge']
@@ -365,30 +375,36 @@ workflow update_data_base {
         def doUpdateVirus = dataBasesToUpdate.contains('virus')
         def doUpdateCentrifuge = dataBasesToUpdate.contains('centrifuge')
 
-        //db_config = new DatabaseInput(params)
         download_config = db_update_get_config()
 
-        // we make it a chain of events, even though the processes are unrelated
-        // in order to make the downloading sequential
-        contaminants_dl = download_config
-        | map { yaml -> [yaml, 'contaminants', doUpdateContaminants, params.database_defaults.base] }
-        | download_contaminant_db
+        config_dict = download_config
+        | map { yaml -> parseYamlToMap(yaml) }
 
-        virus_dl = contaminants_dl.config
-        | map { yaml -> [yaml, 'virus', doUpdateVirus, params.database_defaults.base] }
-        | download_virus_db
+        virus_config = config_dict
+        | map { config -> config.sub_databases.virus }
 
-        centrifuge_dl = virus_dl.config
-        | map { yaml -> [yaml, 'centrifuge', doUpdateCentrifuge, params.database_defaults.base] }
-        | download_centrifuge_db
+        // db specific
+        virus_db_parts = virus_config
+        | map { db_config -> [doUpdateVirus, db_config.checksum_directory, "${params.database_defaults.base}/${params.database_defaults.virus}"] }
+        | check_download_necessary
+        | combine(virus_config)
+        | map { dummy, db_config -> db_config.files }
+        | flatten
+        | download_parts
 
-        extracted_dbs = contaminants_dl.downloaded_tar_xz
-        | mix(
-            virus_dl.downloaded_tar_xz,
-            centrifuge_dl.downloaded_tar_xz
-        )
-        | combine(download_config)
-        | extract_db
+        collected_parts = virus_db_parts
+        | collect
+        | map { parts -> [parts] }
+
+        virus_db = virus_config
+        | combine(collected_parts)
+        | map { db_config, parts -> [db_config, parts, "virus"] }
+        | merge_parts_and_extract
+
+        virus_db
+        | toList
+        | flatMap
+        | data_base_transfer
 
         download_config
         | map { yaml -> [yaml, '', 'latest.yaml'] }
