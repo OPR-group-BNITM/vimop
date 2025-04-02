@@ -112,6 +112,36 @@ process merge_parts_and_extract {
 }
 
 
+workflow update_data_base {
+    take:
+        config_dict
+        database_name
+        do_update
+    main:
+        db_config = config_dict
+        | map { config -> config.sub_databases[database_name] }
+
+        db_parts = db_config
+        | map { db_config -> [do_update, db_config.checksum_directory, "${params.database_defaults.base}/${params.database_defaults[database_name]}"] }
+        | check_download_necessary
+        | combine(db_config)
+        | map { dummy, db_config -> db_config.files }
+        | flatten
+        | download_parts
+
+        collected_parts = db_parts
+        | collect
+        | map { parts -> [parts] }
+
+        database = db_config
+        | combine(collected_parts)
+        | map { db_config, parts -> [db_config, parts, database_name] }
+        | merge_parts_and_extract
+    emit:
+        database = database
+}
+
+
 process data_base_transfer {
     label "general"
     cpus 1

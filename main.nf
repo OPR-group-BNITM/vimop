@@ -11,15 +11,13 @@ nextflow.enable.dsl = 2
 
 include { fastq_ingress } from './lib/ingress'
 include {
-    // database update
     db_update_get_config;
-    check_download_necessary;
-    download_parts;
-    merge_parts_and_extract;
+    update_data_base as update_data_base_virus;
+    update_data_base as update_data_base_centrifuge;
+    update_data_base as update_data_base_contaminants;
     data_base_transfer;
 } from './lib/data_base_update.nf'
 include {
-    // analysis workflow
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
     empty_tsv;
@@ -380,28 +378,16 @@ workflow update_data_base {
         config_dict = download_config
         | map { yaml -> parseYamlToMap(yaml) }
 
-        virus_config = config_dict
-        | map { config -> config.sub_databases.virus }
+        db_virus = update_data_base_virus(config_dict, 'virus', doUpdateVirus)
+        db_centrifuge = update_data_base_centrifuge(config_dict, 'centrifuge', doUpdateCentrifuge)
+        db_contaminants = update_data_base_contaminants(config_dict, 'contaminants', doUpdateContaminants)
 
-        // db specific
-        virus_db_parts = virus_config
-        | map { db_config -> [doUpdateVirus, db_config.checksum_directory, "${params.database_defaults.base}/${params.database_defaults.virus}"] }
-        | check_download_necessary
-        | combine(virus_config)
-        | map { dummy, db_config -> db_config.files }
-        | flatten
-        | download_parts
-
-        collected_parts = virus_db_parts
-        | collect
-        | map { parts -> [parts] }
-
-        virus_db = virus_config
-        | combine(collected_parts)
-        | map { db_config, parts -> [db_config, parts, "virus"] }
-        | merge_parts_and_extract
-
-        virus_db
+        Channel.empty()
+        | mix(
+            db_virus.database,
+            db_centrifuge.database,
+            db_contaminants.database
+        )
         | toList
         | flatMap
         | data_base_transfer
