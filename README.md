@@ -40,17 +40,27 @@ To run the pipeline from the command line, make sure to have nextflow and docker
 If you cloned this repository, change into its root directory and run `nextflow main.nf` with the additional options.
 Without manually cloning the repository you can simply run `nextflow run OPR-group-BNITM/vimop` plus options.
 We will stick to the latter now.
-Type `nextflow run OPR-group-BNITM/vimop --set-up-default-db` to install our latest data base release.
-It may take a while, since the database has to be downloaded and it's quite huge.
-Afterwards, run an analysis with `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
+Type `nextflow run OPR-group-BNITM/vimop --download_db_all` to install our latest data base release.
+There is a lot to download, so please be patient.
+If the pipeline fails during the process (which may happen due to instable network access), use the `-resume` option to
+continue your download.
+You can also separate the download of the reference data into three parts by running the pipeline three times using the options `--download_db_virus`, `--download_db_contamination` and `--download_db_centrifuge` in separate runs. We would recommend this.
+If you want to replace an existing data base with our latest version, add the option `--download_db_update_existing`.
+
+To finally run an analysis type `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
 You can get some demo data here: TODO!
 
 ### Using EPI2ME desktop
 
 Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
-Once you added the workflow, launch it but check the box Input Options -> Install latest default data base.
-This process will download and install the data base into your home directory.
+Once you added the workflow, launch it and go to the `Setup` options section.
+You can chose to either download all three parts of the data base or donwload contaminants, virus references and centrifuge index separately by ticking the respective boxes.
+Launching the process will download and install the data base into your home directory.
 This will probably take a while.
+
+If you want to update your existing data base to our latest version, check the respective box to overwrite your existing files.
+This will only be done, if something in the respective data base has changed.
+
 Afterwards you can launch the pipeline to analyse data.
 You can also click "run demo analysis".
 

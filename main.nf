@@ -13,9 +13,9 @@ include { fastq_ingress } from './lib/ingress'
 
 include {
     db_update_get_config;
-    update_data_base as update_data_base_virus;
-    update_data_base as update_data_base_centrifuge;
-    update_data_base as update_data_base_contaminants;
+    update_data_base as update_virus;
+    update_data_base as update_centrifuge;
+    update_data_base as update_contaminants;
     data_base_transfer;
 } from './lib/data_base_update.nf'
 
@@ -375,7 +375,7 @@ params.download_db_centrifuge = checkFlag(params.download_db_centrifuge)
 params.download_db_update_existing = checkFlag(params.download_db_update_existing)
 
 
-workflow update_data_base {
+workflow db_update {
     main:
         def doUpdateContaminants = params.download_db_all || params.download_db_contamination
         def doUpdateVirus = params.download_db_all || params.download_db_virus
@@ -439,7 +439,7 @@ if (!doUpdate && !params.fastq) {
 
 workflow {
     if(doUpdate) {
-        update_data_base()
+        db_update()
     } else {
         samples = fastq_ingress([
             "input": params.fastq,
