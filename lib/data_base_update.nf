@@ -12,7 +12,7 @@ process db_update_get_config {
     output:
         path("db.yaml")
     """
-    wget -o download_config.log -O db.yaml ${params.update_db_config_url}
+    wget -o download_config.log -O db.yaml ${params.download_db_config_url}
     """
 }
 
@@ -34,10 +34,13 @@ process check_download_necessary {
     then
         if [[ -d "db_path" ]]
         then
-            checksum_old_data=\$(${checksumDir("db_path")})
-            if [ \$checksum_old_data != ${expected_checksum} ]
+            if [[ "${params.download_db_update_existing}" == "true" ]]
             then
-                echo "update required because of different checksums (got \$checksum_old_data but expected ${expected_checksum})" > dummy.txt
+                checksum_old_data=\$(${checksumDir("db_path")})
+                if [ \$checksum_old_data != ${expected_checksum} ]
+                then
+                    echo "update required because of different checksums (got \$checksum_old_data but expected ${expected_checksum})" > dummy.txt
+                fi
             fi
         else
             echo "update required because the directory is missing" > dummy.txt

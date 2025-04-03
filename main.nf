@@ -10,6 +10,7 @@ nextflow.enable.dsl = 2
 
 
 include { fastq_ingress } from './lib/ingress'
+
 include {
     db_update_get_config;
     update_data_base as update_data_base_virus;
@@ -17,6 +18,7 @@ include {
     update_data_base as update_data_base_contaminants;
     data_base_transfer;
 } from './lib/data_base_update.nf'
+
 include {
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
@@ -361,17 +363,23 @@ def parseYamlToMap(Path yamlPath) {
 }
 
 
+def checkFlag(value) {
+    return (value != null && value != 'false' && value != false)
+}
+
+
+params.download_db_all = checkFlag(params.download_db_all)
+params.download_db_contamination = checkFlag(params.download_db_contamination)
+params.download_db_virus = checkFlag(params.download_db_virus)
+params.download_db_centrifuge = checkFlag(params.download_db_centrifuge)
+params.download_db_update_existing = checkFlag(params.download_db_update_existing)
+
+
 workflow update_data_base {
     main:
-        def possibleDataBases = ['contaminants', 'virus', 'centrifuge']
-        def dataBasesToUpdate = params.update_db_data_bases ? params.update_db_data_bases.tokenize(',')*.trim() : []
-        if (dataBasesToUpdate && !dataBasesToUpdate.every { it in possibleDataBases }) {
-            error "Invalid update_db_data_bases parameter: found unexpected values in ${dataBasesToUpdate}"
-        }
-
-        def doUpdateContaminants = dataBasesToUpdate.contains('contaminants')
-        def doUpdateVirus = dataBasesToUpdate.contains('virus')
-        def doUpdateCentrifuge = dataBasesToUpdate.contains('centrifuge')
+        def doUpdateContaminants = params.download_db_all || params.download_db_contamination
+        def doUpdateVirus = params.download_db_all || params.download_db_virus
+        def doUpdateCentrifuge = params.download_db_all || params.download_db_centrifuge
 
         download_config = db_update_get_config()
 
@@ -399,6 +407,7 @@ workflow update_data_base {
         | output
 }
 
+
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
 
@@ -412,13 +421,24 @@ new SystemRequirements(true).checkSystemRequirements(
     session.workDir.toString()
 )
 
-if (params.update_data_base == false && !params.fastq) {
+def doUpdate = (
+    params.download_db_all
+    || params.download_db_contamination
+    || params.download_db_virus
+    || params.download_db_centrifuge
+)
+
+if (!doUpdate && !params.fastq) {
     System.err.println("No fastqs provided! Exit.")
+    System.exit(1)
+} else if (doUpdate && params.fastq) {
+    System.err.println("Either donwload or analyse.")
     System.exit(1)
 }
 
+
 workflow {
-    if(params.update_data_base) {
+    if(doUpdate) {
         update_data_base()
     } else {
         samples = fastq_ingress([

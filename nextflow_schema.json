@@ -56,23 +56,47 @@
       "description": "Options for data base installation and update",
       "default": "",
       "properties": {
-        "update_data_base": {
+        "download_db_all": {
           "type": "boolean",
-          "title": "Update data base",
+          "title": "Download all databases",
           "default": false,
-          "description": "Download reference data base",
-          "help_text": "Activate to download our latest reference data base.",
+          "description": "Update all three data bases (contamination, centrifuge and virus)",
+          "help_text": "",
           "fa_icon": "fas fa-dot-circle"
         },
-        "update_db_data_bases": {
-          "title": "Include data bases",
-          "type": "string",
-          "default": "centrifuge,contaminants,virus",
-          "description": "Which data base parts to update.",
-          "help_text": "Choose from centrifuge, contaminants and virus (use multiple separated by commas)",
-          "fa_icon": "fas fa-bullseye"
+        "download_db_centrifuge": {
+          "type": "boolean",
+          "title": "Download centrifuge classification indices",
+          "default": false,
+          "description": "Update the centrifuge indices used for read and contig classification and non-viral read removal.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
         },
-        "update_db_config_url": {
+        "download_db_contamination": {
+          "type": "boolean",
+          "title": "Download host and contaminants data base",
+          "default": false,
+          "description": "Update genomes and sequences for removal of host reads and other contaminants.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_virus": {
+          "type": "boolean",
+          "title": "Download virus reference genome data base",
+          "default": false,
+          "description": "Download the virus reference genomes.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_update_existing": {
+          "type": "boolean",
+          "title": "Overwrite existing data bases when updating.",
+          "default": false,
+          "description": "Update the data bases if a newer version exists. This will overwrite your existing files.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_config_url": {
           "title": "URL",
           "type": "string",
           "default": "https://www.bnitm.de/owncloud/s/LNRAcTPi9eNygsK/download",
