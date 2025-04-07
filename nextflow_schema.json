@@ -440,6 +440,26 @@
           "default": 10,
           "description": "Minimum disk space for the output directory of the workflow"
         },
+        "download_db_min_ram_gb": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum RAM required during data base setup"
+        },
+        "download_db_min_cpus": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum number of CPUs required for data base setup"
+        },
+        "download_db_min_disk_space_work_gb": {
+          "type": "number",
+          "default": 150,
+          "description": "Minimum disk space for the work directory during data base setup to keep intermediate files"
+        },
+        "download_db_min_disk_space_home_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space available in the default data base directory for storing the data base"
+        },
         "database_defaults": {
           "type": "object",
           "description": "Config files for the databases",

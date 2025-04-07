@@ -386,9 +386,9 @@ workflow db_update {
         config_dict = download_config
         | map { yaml -> parseYamlToMap(yaml) }
 
-        db_virus = update_data_base_virus(config_dict, 'virus', doUpdateVirus)
-        db_centrifuge = update_data_base_centrifuge(config_dict, 'centrifuge', doUpdateCentrifuge)
-        db_contaminants = update_data_base_contaminants(config_dict, 'contaminants', doUpdateContaminants)
+        db_virus = update_virus(config_dict, 'virus', doUpdateVirus)
+        db_centrifuge = update_centrifuge(config_dict, 'centrifuge', doUpdateCentrifuge)
+        db_contaminants = update_contaminants(config_dict, 'contaminants', doUpdateContaminants)
 
         Channel.empty()
         | mix(
@@ -411,22 +411,33 @@ workflow db_update {
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
 
-// check the system requirements before starting the workflow
-new SystemRequirements(true).checkSystemRequirements(
-    params.min_disk_space_work_gb,
-    params.min_disk_space_out_gb,
-    params.min_ram_gb,
-    params.min_cpus,
-    params.out_dir,
-    session.workDir.toString()
-)
-
 def doUpdate = (
     params.download_db_all
     || params.download_db_contamination
     || params.download_db_virus
     || params.download_db_centrifuge
 )
+
+// check the system requirements before starting the workflow
+if (doUpdate) {
+    new SystemRequirements(true).checkSystemRequirements(
+        params.download_db_min_disk_space_work_gb,
+        params.download_db_min_disk_space_home_gb,
+        params.download_db_min_ram_gb,
+        params.download_db_min_cpus,
+        params.database_defaults.base,
+        session.workDir.toString()
+    )
+} else {
+    new SystemRequirements(true).checkSystemRequirements(
+        params.min_disk_space_work_gb,
+        params.min_disk_space_out_gb,
+        params.min_ram_gb,
+        params.min_cpus,
+        params.out_dir,
+        session.workDir.toString()
+    )
+}
 
 if (!doUpdate && !params.fastq) {
     System.err.println("No fastqs provided! Exit.")
