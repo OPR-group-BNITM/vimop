@@ -10,6 +10,15 @@ nextflow.enable.dsl = 2
 
 
 include { fastq_ingress } from './lib/ingress'
+
+include {
+    db_update_get_config;
+    update_data_base as update_virus;
+    update_data_base as update_centrifuge;
+    update_data_base as update_contaminants;
+    data_base_transfer;
+} from './lib/data_base_update.nf'
+
 include {
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
@@ -346,30 +355,114 @@ workflow pipeline {
 }
 
 
+def parseYamlToMap(Path yamlPath) {
+    File yamlFile = yamlPath.toFile()
+    def yaml = new org.yaml.snakeyaml.Yaml()
+    def config = yaml.load(yamlFile.text)
+    return config
+}
+
+
+def checkFlag(value) {
+    return (value != null && value != 'false' && value != false)
+}
+
+
+params.download_db_all = checkFlag(params.download_db_all)
+params.download_db_contamination = checkFlag(params.download_db_contamination)
+params.download_db_virus = checkFlag(params.download_db_virus)
+params.download_db_centrifuge = checkFlag(params.download_db_centrifuge)
+params.download_db_update_existing = checkFlag(params.download_db_update_existing)
+
+
+workflow db_update {
+    main:
+        def doUpdateContaminants = params.download_db_all || params.download_db_contamination
+        def doUpdateVirus = params.download_db_all || params.download_db_virus
+        def doUpdateCentrifuge = params.download_db_all || params.download_db_centrifuge
+
+        download_config = db_update_get_config()
+
+        config_dict = download_config
+        | map { yaml -> parseYamlToMap(yaml) }
+
+        db_virus = update_virus(config_dict, 'virus', doUpdateVirus)
+        db_centrifuge = update_centrifuge(config_dict, 'centrifuge', doUpdateCentrifuge)
+        db_contaminants = update_contaminants(config_dict, 'contaminants', doUpdateContaminants)
+
+        Channel.empty()
+        | mix(
+            db_virus.database,
+            db_centrifuge.database,
+            db_contaminants.database
+        )
+        | toList
+        | flatMap
+        | data_base_transfer
+
+        download_config
+        | map { yaml -> [yaml, '', 'latest.yaml'] }
+        | toList
+        | flatMap
+        | output
+}
+
+
 // entrypoint workflow
 WorkflowMain.initialise(workflow, params, log)
 
-// check the system requirements before starting the workflow
-new SystemRequirements(true).checkSystemRequirements(
-    params.min_disk_space_work_gb,
-    params.min_disk_space_out_gb,
-    params.min_ram_gb,
-    params.min_cpus,
-    params.out_dir,
-    session.workDir.toString()
+def doUpdate = (
+    params.download_db_all
+    || params.download_db_contamination
+    || params.download_db_virus
+    || params.download_db_centrifuge
 )
 
+// check the system requirements before starting the workflow
+if (doUpdate) {
+    new SystemRequirements(true).checkSystemRequirements(
+        params.download_db_min_disk_space_work_gb,
+        params.download_db_min_disk_space_home_gb,
+        params.download_db_min_ram_gb,
+        params.download_db_min_cpus,
+        params.database_defaults.base,
+        session.workDir.toString()
+    )
+} else {
+    new SystemRequirements(true).checkSystemRequirements(
+        params.min_disk_space_work_gb,
+        params.min_disk_space_out_gb,
+        params.min_ram_gb,
+        params.min_cpus,
+        params.out_dir,
+        session.workDir.toString()
+    )
+}
+
+if (!doUpdate && !params.fastq) {
+    System.err.println("No fastqs provided! Exit.")
+    System.exit(1)
+} else if (doUpdate && params.fastq) {
+    System.err.println("Either donwload or analyse.")
+    System.exit(1)
+}
+
+
 workflow {
-    samples = fastq_ingress([
-        "input": params.fastq,
-        "sample_sheet": params.sample_sheet,
-        "stats": true
-    ])
-    pipeline(samples)
-    pipeline.out.results
-    | toList
-    | flatMap
-    | output
+    if(doUpdate) {
+        db_update()
+    } else {
+        samples = fastq_ingress([
+            "input": params.fastq,
+            "sample_sheet": params.sample_sheet,
+            "stats": true
+        ])
+        pipeline(samples)
+        pipeline.out.results
+        | toList
+        | flatMap
+        | output
+    }
 }
 
 

@@ -96,6 +96,7 @@ EOF
     """
 }
 
+
 process classify_contigs {
     label "centrifuge"
     cpus 12
@@ -125,6 +126,7 @@ process classify_contigs {
     fi
     """
 }
+
 
 process extract_contig_classification {
     label "general"
@@ -297,6 +299,7 @@ process filter_virus_target {
         -F 4 > filtered.fastq
     """
 }
+
 
 process assemble_canu {
     label "canu"

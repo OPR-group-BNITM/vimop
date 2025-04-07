@@ -48,8 +48,63 @@
           "fa_icon": "fas fa-file-alt"
         }
       },
-      "required": ["fastq"],
       "fa_icon": "fas fa-folder-open"
+    },
+    "setup": {
+      "title": "Setup",
+      "type": "object",
+      "description": "Options for data base installation and update",
+      "default": "",
+      "properties": {
+        "download_db_all": {
+          "type": "boolean",
+          "title": "Download all databases",
+          "default": false,
+          "description": "Update all three data bases (contamination, centrifuge and virus)",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_centrifuge": {
+          "type": "boolean",
+          "title": "Download centrifuge classification indices",
+          "default": false,
+          "description": "Update the centrifuge indices used for read and contig classification and non-viral read removal.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_contamination": {
+          "type": "boolean",
+          "title": "Download host and contaminants data base",
+          "default": false,
+          "description": "Update genomes and sequences for removal of host reads and other contaminants.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_virus": {
+          "type": "boolean",
+          "title": "Download virus reference genome data base",
+          "default": false,
+          "description": "Download the virus reference genomes.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_update_existing": {
+          "type": "boolean",
+          "title": "Overwrite existing data bases when updating.",
+          "default": false,
+          "description": "Update the data bases if a newer version exists. This will overwrite your existing files.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_config_url": {
+          "title": "URL",
+          "type": "string",
+          "default": "https://www.bnitm.de/owncloud/s/LNRAcTPi9eNygsK/download",
+          "description": "Url to config file with data base versions.",
+          "help_text": "",
+          "fa_icon": "fas fa-bullseye"
+        }
+      }
     },
     "filters_and_trimming": {
       "title": "Filters and trimming",
@@ -384,6 +439,26 @@
           "type": "number",
           "default": 10,
           "description": "Minimum disk space for the output directory of the workflow"
+        },
+        "download_db_min_ram_gb": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum RAM required during data base setup"
+        },
+        "download_db_min_cpus": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum number of CPUs required for data base setup"
+        },
+        "download_db_min_disk_space_work_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space for the work directory during data base setup to keep intermediate files"
+        },
+        "download_db_min_disk_space_home_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space available in the default data base directory for storing the data base"
         },
         "database_defaults": {
           "type": "object",

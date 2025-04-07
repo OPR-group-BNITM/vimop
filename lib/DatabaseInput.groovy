@@ -156,7 +156,7 @@ class DatabaseInput {
         )
 
         this.doClassify = dbParams.centrifuge_do_classify
-        this.doFilterWithCentrifuge = dbParams.centrifuge_do_classify && dbParams.centrifuge_filter_do
+        this.doFilterWithCentrifuge = dbParams.centrifuge_do_classify && dbParams.centrifuge_do_filter
 
         def classificationConfig = readYamlConfig(this.classificationConfigFileName)
         classificationConfig.files.each { fname -> assertFile("${this.classificationDir}/${fname}") }
