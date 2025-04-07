@@ -452,7 +452,7 @@
         },
         "download_db_min_disk_space_work_gb": {
           "type": "number",
-          "default": 150,
+          "default": 100,
           "description": "Minimum disk space for the work directory during data base setup to keep intermediate files"
         },
         "download_db_min_disk_space_home_gb": {
