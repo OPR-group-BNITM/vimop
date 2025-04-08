@@ -370,6 +370,20 @@ def html_report(
             except ValueError:
                 nseqs = len(df_lenqual_clean['Length'])
                 p(f'Failed to create histograms for {nseqs} sequences')
+
+        with tabs_readstats.add_tab("Read classification"):
+            centrifuge_plot = ezc.sunburst(
+                classifications,
+                label_rotate="tangential",
+                label_minAngle=25
+            )
+            EZChart(centrifuge_plot, height="1500px")
+            p(
+                """
+                Read classifications by centrifuge. Click to zoom.
+                """
+            )
+
     mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {
         label: feats['segments'] 
@@ -552,20 +566,6 @@ def html_report(
                 },
                 'Read and contig numbers in the different assembly runs'
             ).legend(cols)
-
-    section_name = "Read classification"
-    with report.add_section(section_name, section_name):
-        centrifuge_plot = ezc.sunburst(
-            classifications,
-            label_rotate="tangential",
-            label_minAngle=25
-        )
-        EZChart(centrifuge_plot, height="1500px")
-        p(
-            """
-            Read classifications by centrifuge. Click to zoom.
-            """
-        )
 
     section_name = "Versions"
     with report.add_section(section_name, section_name):
