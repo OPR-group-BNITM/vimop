@@ -65,6 +65,7 @@ def merge_contigs_blasthits(contig_infos, blast_hits, contig_classes):
         inplace=True
     )
     filtered = merged[cols.values()]
+    filtered = filtered.drop_duplicates()
 
     return filtered.astype({'Hit length': int})
 
