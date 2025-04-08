@@ -326,10 +326,10 @@ workflow pipeline {
         ch_to_publish = Channel.empty()
         | mix(
             // centrifuge classification
-            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", null] },
-            classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", null] },
+            classification | map { meta, classification, report, kraken, html -> [classification, "$meta.alias/classification", "classification_${meta.alias}.tsv"] },
+            classification | map { meta, classification, report, kraken, html -> [report, "$meta.alias/classification", "classification_report_${meta.alias}.tsv"] },
+            classification | map { meta, classification, report, kraken, html -> [kraken, "$meta.alias/classification", "classification_kraken_${meta.alias}.tsv"] },
+            classification | map { meta, classification, report, kraken, html -> [html, "$meta.alias/classification", "classification_${meta.alias}.html"] },
             // contigs
             contigs | map { meta, contigs -> [contigs, "$meta.alias/assembly", "${meta.mapping_target}.contigs.fasta"] },
             // consensus
