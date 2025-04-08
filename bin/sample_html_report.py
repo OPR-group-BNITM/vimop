@@ -260,9 +260,59 @@ class Legends:
                         span(self.descriptions[col])
 
 
+def read_classifications(fname):
+    """Read centrifuge output in kraken format and store it in a
+    dictionary that ezcharts sunburst likes
+    """
+    def count_indent(name_field):
+        return (len(name_field) - len(name_field.lstrip(' '))) // 2
+
+    records = []
+    with open(fname) as f_in:
+        for line in f_in:
+            parts = line.strip().split('\t')
+            if len(parts) < 6:
+                continue
+            _, reads, _, _, _, name = parts
+            depth = count_indent(name)
+            records.append({
+                'name': name.strip(),
+                'value': int(reads),
+                'depth': depth,
+                'children': []
+            })
+
+    # Now build tree from flat list using a stack
+    stack = []
+    root_nodes = []
+    for rec in records:
+        while stack and stack[-1]['depth'] >= rec['depth']:
+            stack.pop()
+        if stack:
+            stack[-1]['children'].append(rec)
+        else:
+            root_nodes.append(rec)
+        stack.append(rec)
+
+    def collapse_tree(node):
+        children = [collapse_tree(child) for child in node.get('children', [])]
+        # Collapse this node if it has only one child with the same value
+        if len(children) == 1 and node['value'] == children[0]['value']:
+            return children[0]
+        # return node without depth
+        return {
+            'name': node['name'],
+            'value': node['value'],
+            'children': children
+        }
+
+    return [collapse_tree(n) for n in root_nodes]
+
+
 def html_report(
         pipeline_version,
         samplename,
+        classifications,
         df_mapping_stats,
         df_clean_read_stats,
         df_contig_stats,
@@ -503,10 +553,29 @@ def html_report(
                 'Read and contig numbers in the different assembly runs'
             ).legend(cols)
 
+    section_name = "Read classification"
+    with report.add_section(section_name, section_name):
+        centrifuge_plot = ezc.sunburst(
+            classifications,
+            label_rotate="tangential",
+            label_minAngle=25
+        )
+        EZChart(centrifuge_plot, height="1500px")
+        p(
+            """
+            Read classifications by centrifuge. Click to zoom.
+            """
+        )
+
     section_name = "Versions"
     with report.add_section(section_name, section_name):
         cols = ['Data Base', 'Version', 'Description']
         DataTable.from_pandas(df_db_versions[cols], use_index=False, export=True)
+        p(
+            """
+            Local data base versions used in this run.
+            """
+        )
 
     report.write(fname_out)
 
@@ -563,6 +632,11 @@ def main():
         required=True,
     )
     parser.add_argument(
+        '--read-classifications',
+        help='.tsv file with read classifications in kraken format.',
+        required=True,
+    )
+    parser.add_argument(
         '--db-versions',
         help='.tsv with data base version information.',
         required=True,
@@ -573,6 +647,8 @@ def main():
         default='report.html'
     )
     args = parser.parse_args()
+
+    classifications = read_classifications(args.read_classifications)
 
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
@@ -590,6 +666,7 @@ def main():
     html_report(
         args.pipeline_version,
         args.samplename,
+        classifications,
         consensus_stats,
         clean_read_stats,
         contigs_stats,

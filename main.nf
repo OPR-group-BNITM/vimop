@@ -299,6 +299,9 @@ workflow pipeline {
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
 
+        kraken_style_reports = classification
+        | map { meta, classification, report, kraken, html -> [meta.alias, kraken] }
+
         sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
@@ -308,6 +311,7 @@ workflow pipeline {
         | join(collected_contigs_infos, by: 0)
         | join(lenquals_trim, by: 0)
         | join(lenquals_clean, by: 0)
+        | join(kraken_style_reports, by:0)
         | combine(Channel.of(db_config.virusConfigFileName))
         | combine(Channel.of(db_config.contaminationConfigFileName))
         | combine(Channel.of(db_config.classificationConfigFileName))
