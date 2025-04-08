@@ -99,13 +99,37 @@ In our reference data base human DNA and RNA, a mouse genome, a mastomy genome a
 The data base config file (contamination.yaml) defines the reference sets and the key values assigned to them.
 Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is humand reads).
 
-### Virus filters
+### Virus read enrichment
 
 One can also filter for specific species or groups of viruses.
 Only reads that map to the given targets are then used in the following assembly step.
 An arbitrary number of filters can be used.
 The filters themselves are part of the reference data base and the respective names defined in the data base configs.
-This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg virus, Ebola and the Filo-virus family. 
+This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg virus, Ebola and the Filo-virus family.
+
+In our default data base there are filters for individual virus species and for virus families.
+They are listed in the following:
+
+| Virus                              | Abbreviation | TaxId     |
+| ---------------------------------- | ------------ | --------- |
+| Mammarenavirus lassense            | LASV         | 3052310   |
+| Mammarenavirus choriomeningitidis  | LCMV         | 305230    |
+| Mammarenavirus juninense           | JUNV         | 2169991   |
+| Orthoebolavirus                    | EBOV         | 3044781   |
+| Orthomarburgvirus                  | EBOV         | 3044783   |
+| Orthoflavivirus denguei            | DENV         | 3052464   |
+| Orthoflavivirus zikaense           | ZIKA         | 3048459   |
+| Emesvirus zinderi                  | MS2          | 329852    |
+| Yellow fever virus                 | YFV          | 3046277   |
+| West nile virus                    | WNV          | 3048448   |
+| Orthonairovirus hazaraense         | HAZV         | 3052519   |
+
+| Virus family            | Abbreviation | TaxId     |
+| ----------------------- | ------------ | --------- |
+| Arenaviridae            | ARENA        | 11617     |
+| Filoviridae             | FILO         | 11266     |
+| Hantaviridae            | HANTA        | 1980413   |
+| Nairoviridae            | NAIRO        | 1980415   |
 
 ### Assembly
 
