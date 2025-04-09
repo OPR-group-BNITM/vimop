@@ -1079,6 +1079,7 @@ process sample_report {
             path(contig_infos),
             path('trimmed_read_stats.tsv'),
             path('cleaned_read_stats.tsv'),
+            path('kraken_style_classifications.tsv'),
             path('virus_db_config.yaml'),
             path('contamination_db_config.yaml'),
             path('classification_db_config.yaml'),
@@ -1126,6 +1127,7 @@ process sample_report {
         --trimmed-read-distribution trimmed_read_stats.tsv \\
         --cleaned-read-distribution cleaned_read_stats.tsv \\
         --db-versions db_versions.tsv \\
+        --read-classifications kraken_style_classifications.tsv \\
         --out report.html
     """
 }
