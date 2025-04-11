@@ -311,9 +311,6 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
-    # remember where rename_seqs.py is, because sourcing the conda stuff seems to overwrite the path 
-    rename_seqs=\$(which rename_seqs.py)
-
     source /opt/conda/etc/profile.d/conda.sh
     export PATH="/opt/conda/bin:\$PATH"
     conda activate env
@@ -385,7 +382,7 @@ process assemble_canu {
             seqkit head -n ${params.nocontigs_nreads} clustered.fasta > selected.fasta
 
             # rename the reads and add header infos
-            \$rename_seqs \\
+            rename_seqs.py \\
                 --prefix \${read_type}_read_ \\
                 --input selected.fasta \\
                 --output renamed.fasta
@@ -412,11 +409,8 @@ process reassemble_canu {
         tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
         tuple val(meta), path("reassembly.stats.tsv"), emit: stats
     """
-    # remember where rename_seqs.py is, because sourcing the conda stuff seems to overwrite the path 
-    rename_seqs=\$(which rename_seqs.py)
-
     source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:$PATH"
+    export PATH="/opt/conda/bin:\$PATH"
     conda activate env
 
     ${seqstatsHeader("reassembly.stats.tsv")}
@@ -429,7 +423,7 @@ process reassemble_canu {
     i=0
     for fn_contig in contigs_*.fasta
     do
-        \$rename_seqs \\
+        rename_seqs.py \\
             --prefix inputcontigs\${i}_ \\
             --input \$fn_contig \\
             --output contigs_renamed\$i.fasta
@@ -491,7 +485,7 @@ process reassemble_canu {
             -i \$outdir/asm.contigs.fasta \\
             -o clustered.contigs.\$i.fasta
 
-        \$rename_seqs \\
+        rename_seqs.py \\
             --prefix newcontigs\${i}_ \\
             --input clustered.contigs.\$i.fasta \\
             --output contigs.\$i.fasta
