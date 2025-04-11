@@ -315,7 +315,7 @@ process assemble_canu {
     rename_seqs=\$(which rename_seqs.py)
 
     source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:$PATH"
+    export PATH="/opt/conda/bin:\$PATH"
     conda activate env
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
