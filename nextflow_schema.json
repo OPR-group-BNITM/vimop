@@ -368,7 +368,7 @@
         "consensus_method": {
           "type": "string",
           "default": "medaka_variant",
-          "description": "Consensus method to use",
+          "description": "Consensus method to use. Choose from simple, medaka and medaka_variant.",
           "help_text": "Method used for consensus generation.",
           "fa_icon": "fas fa-signal"
         },
