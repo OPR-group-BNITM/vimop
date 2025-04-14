@@ -405,17 +405,24 @@ def html_report(
                 p(f'Failed to create histograms for {nseqs} sequences')
 
         with tabs_readstats.add_tab("Read classification"):
-            centrifuge_plot = ezc.sunburst(
-                classifications,
-                label_rotate="tangential",
-                label_minAngle=25
-            )
-            EZChart(centrifuge_plot, height="1500px")
-            p(
-                """
-                Read classifications by centrifuge. Click to zoom.
-                """
-            )
+            if classifications:
+                centrifuge_plot = ezc.sunburst(
+                    classifications,
+                    label_rotate="tangential",
+                    label_minAngle=25
+                )
+                EZChart(centrifuge_plot, height="1500px")
+                p(
+                    """
+                    Read classifications by centrifuge. Click to zoom.
+                    """
+                )
+            else:
+                p(
+                    """
+                    No reads classified.
+                    """
+                )
 
     mapstats_curated = df_mapping_stats[df_mapping_stats['IsBest'] == True]
     segments = {

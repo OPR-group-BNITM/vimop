@@ -23,6 +23,7 @@ include {
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
     empty_tsv;
+    empty_tsv as empty_kraken_style_report;
     empty_fasta;
     trim;
     read_stats;
@@ -63,6 +64,9 @@ workflow pipeline {
     main:
         db_config = new DatabaseInput(params)
 
+        samplenames = samples
+        | map { meta, reads, stats -> meta.alias }
+
         // trimming
         trimmed = samples
         | map { meta, reads, stats -> [meta, reads] }
@@ -74,8 +78,14 @@ workflow pipeline {
             classification = trimmed
             | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
             | classify_centrifuge
+
+            kraken_style_reports = classification
+            | map { meta, classification, report, kraken, html -> [meta.alias, kraken] }
         } else {
             classification = Channel.empty()
+
+            kraken_style_reports = samplenames
+            | empty_kraken_style_report
         }
 
         if(db_config.doFilterWithCentrifuge) {
@@ -279,9 +289,6 @@ workflow pipeline {
 
         // mix in empty files for cases, where no target was detected 
         // in order to still create a report
-        samplenames = samples
-        | map{ meta, reads, stats -> meta.alias }
-
         collected_mapping_stats = samplenames
         | empty_tsv
         | mix(mapping_stats)
@@ -298,9 +305,6 @@ workflow pipeline {
         collected_blast_hits = blast_hits
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
-
-        kraken_style_reports = classification
-        | map { meta, classification, report, kraken, html -> [meta.alias, kraken] }
 
         sample_results = cleaned.stats
         | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
