@@ -140,6 +140,14 @@
           "help_text": "Turn off to not classify reads and contigs.",
           "fa_icon": "fas fa-dot-circle"
         },
+        "centrifuge_plot_min_frac": {
+          "type": "number",
+          "title": "Minimum fraction for display.",
+          "default": 0.0001,
+          "description": "Minimum classification fraction for display in report sunburst plot.",
+          "help_text": "Only relevant for visualization in the report. 0.0001 for example means that at least 1 in 10,000 reads are needed for a group to be shown in the sunburst plot in the report.",
+          "fa_icon": "fas fa-dot-circle"
+        },
         "centrifuge_do_filter": {
           "type": "boolean",
           "title": "Use centrifuge filter",

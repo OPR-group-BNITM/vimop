@@ -1084,6 +1084,9 @@ process sample_report {
         tuple val(samplename), path('stats_contigs.tsv'), emit: contig_stats
         tuple val(samplename), path('stats_consensus.tsv'), emit: consensus_stats
     """
+    export MPLCONFIGDIR=\$(pwd)/.matplotlib
+    mkdir -p \$MPLCONFIGDIR
+
     mergestats_reads.py \\
         --clean-read-stats clean_stats.tsv \\
         --out stats_reads.tsv
@@ -1122,6 +1125,7 @@ process sample_report {
         --cleaned-read-distribution cleaned_read_stats.tsv \\
         --db-versions db_versions.tsv \\
         --read-classifications kraken_style_classifications.tsv \\
+        --min-classification-frac ${params.centrifuge_plot_min_frac} \\
         --out report.html
     """
 }
