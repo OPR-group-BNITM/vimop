@@ -260,7 +260,7 @@ class Legends:
                         span(self.descriptions[col])
 
 
-def read_classifications(fname):
+def read_classifications(fname, min_frac):
     """Read centrifuge output in kraken format and store it in a
     dictionary that ezcharts sunburst likes
     """
@@ -294,10 +294,23 @@ def read_classifications(fname):
             root_nodes.append(rec)
         stack.append(rec)
 
-    def collapse_tree(node):
-        children = [collapse_tree(child) for child in node.get('children', [])]
-        # Collapse this node if it has only one child with the same value
-        if len(children) == 1 and node['value'] == children[0]['value']:
+    # put all kingdoms (eukaria, bacteria, archea, virus) at root
+    for to_remove in ['root', 'cellular organisms']:
+        flattened = []
+        for node in root_nodes:
+            if node['name'] == to_remove:
+                flattened.extend(node['children'])
+            else:
+                flattened.append(node)
+        root_nodes = flattened
+
+    def collapse_tree(node, depth=0):
+        children = [
+            collapse_tree(child, depth + 1)
+            for child in node.get('children', [])
+        ]
+        # Collapse this node if it has only one child with the same value and is not top level
+        if len(children) == 1 and node['value'] == children[0]['value'] and depth > 0:
             return children[0]
         # return node without depth
         return {
@@ -306,7 +319,27 @@ def read_classifications(fname):
             'children': children
         }
 
-    return [collapse_tree(n) for n in root_nodes]
+    collapsed = [collapse_tree(n) for n in root_nodes]
+
+    # remove smaller than minimum branches
+    def contract_tiny(nodes, minval):
+        contracted = []
+        for node in nodes:
+            val_other = sum(c['value'] for c in node['children'] if c['value'] < minval)
+            big_children = [c for c in node['children'] if c['value'] >= minval]
+            children = contract_tiny(big_children, minval) + [{'name': 'other', 'value': val_other}]
+            contracted.append({
+                'name': node['name'],
+                'value': node['value'],
+                'children': children,
+            })
+        return contracted
+
+    total_reads = sum(node['value'] for node in collapsed)
+    minimum_count = int(min_frac * total_reads)
+    tiny_removed = contract_tiny(collapsed, minimum_count)
+
+    return tiny_removed
 
 
 def html_report(
@@ -637,6 +670,12 @@ def main():
         required=True,
     )
     parser.add_argument(
+        '--min-classification-frac',
+        help='Minimum fraction for groups to be shown in sunburst plot. Everything else will be summarized in "other"',
+        required=True,
+        type=float,
+    )
+    parser.add_argument(
         '--db-versions',
         help='.tsv with data base version information.',
         required=True,
@@ -648,7 +687,10 @@ def main():
     )
     args = parser.parse_args()
 
-    classifications = read_classifications(args.read_classifications)
+    classifications = read_classifications(
+        args.read_classifications,
+        args.min_classification_frac
+    )
 
     with open(args.virus_db_config) as f_config:
         virus_db_config = yaml.safe_load(f_config)
