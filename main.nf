@@ -296,8 +296,6 @@ workflow pipeline {
         | concat_mapping_stats
 
         // Create the report
-        assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
-
         collected_assembly_stats = assembly_stats
         | map {meta, stats -> [meta.alias, stats]}
         | groupTuple(by: 0)
@@ -307,7 +305,6 @@ workflow pipeline {
         | groupTuple(by: 0)
 
         sample_results = cleaned.stats
-        | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
         | join(collected_contig_class_info, by: 0)
         | join(collected_blast_hits, by: 0)

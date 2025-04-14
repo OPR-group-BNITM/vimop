@@ -1065,7 +1065,6 @@ process sample_report {
     input:
         tuple val(samplename),
             path('clean_stats.tsv'),
-            val(assembly_modes),
             path(assembly_stats),
             path(contig_classes),
             path(blast_hits),
