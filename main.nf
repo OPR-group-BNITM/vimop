@@ -36,6 +36,7 @@ include {
     filter_virus_target;
     assemble_canu;
     reassemble_canu;
+    no_assembly;
     pop_bubbles;
     prepare_blast_search;
     canu_contig_info;
@@ -126,9 +127,16 @@ workflow pipeline {
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        first_assemblies = to_assemble_notarget
-        | mix(to_assemble_targeted)
-        | assemble_canu
+
+        if (params.assemble_notarget || db_config.virusTargets.size() > 0) {
+            first_assemblies = to_assemble_notarget
+            | mix(to_assemble_targeted)
+            | assemble_canu
+        } else {
+            first_assemblies = samples
+            | map { meta, reads, stats -> meta + ["mapping_target": "no-assembly"] }
+            | no_assembly
+        }
 
         // Re-assemble
         // try to assemble reads, that do not map to any previously created contig

@@ -503,6 +503,21 @@ process reassemble_canu {
 }
 
 
+process no_assembly {
+    label "general"
+    cpus 1
+    input:
+        val(meta)
+    output:
+        tuple val(meta), path("noassembly.contigs.fasta"), emit: contigs
+        tuple val(meta), path("noassembly.stats.tsv"), emit: stats
+    """
+    touch noassembly.contigs.fasta
+    ${seqstatsHeader("noassembly.stats.tsv")}
+    """
+}
+
+
 process pop_bubbles {
     label "general"
     cpus 1
