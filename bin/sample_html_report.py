@@ -304,6 +304,25 @@ def read_classifications(fname, min_frac):
                 flattened.append(node)
         root_nodes = flattened
 
+    # create a classified group and put everything that is not
+    # unclassified inside
+    classified_nodes = [
+        node
+        for node in root_nodes
+        if node['name'] != 'unclassified'
+    ]
+    classified_root_node = {
+        'name': 'classified',
+        'value': sum(node['value'] for node in classified_nodes),
+        'children': classified_nodes
+    }
+    unclassified_nodes = [
+        node
+        for node in root_nodes
+        if node['name'] == 'unclassified'
+    ]
+    root_nodes = unclassified_nodes + [classified_root_node]
+
     def collapse_tree(node, depth=0):
         children = [
             collapse_tree(child, depth + 1)
