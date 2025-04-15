@@ -311,17 +311,21 @@ def read_classifications(fname, min_frac):
         for node in root_nodes
         if node['name'] != 'unclassified'
     ]
-    classified_root_node = {
-        'name': 'classified',
-        'value': sum(node['value'] for node in classified_nodes),
-        'children': classified_nodes
-    }
-    unclassified_nodes = [
+    classified_root = (
+        [{
+            'name': 'classified',
+            'value': sum(node['value'] for node in classified_nodes),
+            'children': classified_nodes
+        }]
+        if classified_nodes
+        else []
+    )
+    unclassified_root = [
         node
         for node in root_nodes
         if node['name'] == 'unclassified'
     ]
-    root_nodes = unclassified_nodes + [classified_root_node]
+    root_nodes = unclassified_root + classified_root
 
     def collapse_tree(node, depth=0):
         children = [
