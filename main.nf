@@ -23,6 +23,7 @@ include {
     lengths_and_qualities as lengths_and_qualities_trimmed;
     lengths_and_qualities as lengths_and_qualities_cleaned;
     empty_tsv;
+    empty_tsv as empty_kraken_style_report;
     empty_fasta;
     trim;
     read_stats;
@@ -35,6 +36,7 @@ include {
     filter_virus_target;
     assemble_canu;
     reassemble_canu;
+    no_assembly;
     pop_bubbles;
     prepare_blast_search;
     canu_contig_info;
@@ -63,6 +65,9 @@ workflow pipeline {
     main:
         db_config = new DatabaseInput(params)
 
+        samplenames = samples
+        | map { meta, reads, stats -> meta.alias }
+
         // trimming
         trimmed = samples
         | map { meta, reads, stats -> [meta, reads] }
@@ -74,8 +79,14 @@ workflow pipeline {
             classification = trimmed
             | map { meta, reads -> [meta, reads, db_config.classificationDir, db_config.classificationLibrary] }
             | classify_centrifuge
+
+            kraken_style_reports = classification
+            | map { meta, classification, report, kraken, html -> [meta.alias, kraken] }
         } else {
             classification = Channel.empty()
+
+            kraken_style_reports = samplenames
+            | empty_kraken_style_report
         }
 
         if(db_config.doFilterWithCentrifuge) {
@@ -116,9 +127,16 @@ workflow pipeline {
         } else {
             to_assemble_notarget = Channel.empty()
         }
-        first_assemblies = to_assemble_notarget
-        | mix(to_assemble_targeted)
-        | assemble_canu
+
+        if (params.assemble_notarget || db_config.virusTargets.size() > 0) {
+            first_assemblies = to_assemble_notarget
+            | mix(to_assemble_targeted)
+            | assemble_canu
+        } else {
+            first_assemblies = samples
+            | map { meta, reads, stats -> meta + ["mapping_target": "no-assembly"] }
+            | no_assembly
+        }
 
         // Re-assemble
         // try to assemble reads, that do not map to any previously created contig
@@ -279,9 +297,6 @@ workflow pipeline {
 
         // mix in empty files for cases, where no target was detected 
         // in order to still create a report
-        samplenames = samples
-        | map{ meta, reads, stats -> meta.alias }
-
         collected_mapping_stats = samplenames
         | empty_tsv
         | mix(mapping_stats)
@@ -289,8 +304,6 @@ workflow pipeline {
         | concat_mapping_stats
 
         // Create the report
-        assembly_modes = params.assemble_notarget ? params.targets + ['no-target'] : params.targets
-
         collected_assembly_stats = assembly_stats
         | map {meta, stats -> [meta.alias, stats]}
         | groupTuple(by: 0)
@@ -299,11 +312,7 @@ workflow pipeline {
         | map {meta, hits -> [meta.alias, hits]}
         | groupTuple(by: 0)
 
-        kraken_style_reports = classification
-        | map { meta, classification, report, kraken, html -> [meta.alias, kraken] }
-
         sample_results = cleaned.stats
-        | map {samplename, clean_stats -> [samplename, clean_stats, assembly_modes]}
         | join(collected_assembly_stats, by: 0)
         | join(collected_contig_class_info, by: 0)
         | join(collected_blast_hits, by: 0)
