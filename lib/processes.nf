@@ -243,7 +243,7 @@ process filter_contaminants {
     cpus 8
     memory '20 GB'
     input:
-        tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path('db_*.fna.gz'), val(contaminants)
+        tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path(db_paths), val(contaminants)
     output:
         tuple val(meta), path('filtered.fastq'), emit: reads
         tuple val(meta.alias), path("clean_stats.tsv"), emit: stats
@@ -251,12 +251,13 @@ process filter_contaminants {
     cp read_stats.tsv stats_tmp.tsv
 
     contaminants=(${contaminants.join(" ")})
+    db_paths=(${db_paths.join(" ")})
     fn_input=seqs.fastq
 
     for i in "\${!contaminants[@]}"
     do
         c=\${contaminants[\$i]}
-        db=db_\$((i+1)).fna.gz
+        db=\${db_paths[\$i]}
         fn_out=filtered_no_\${c}.fastq
 
         fn_sam=filter_\${c}.sam
