@@ -122,9 +122,16 @@ class DatabaseInput {
             "${this.contaminantsDir}/${dbParams.database_defaults.contaminants_db_config}"
         )
         def contaminationConfig = upperCaseMap([readYamlConfig(this.contaminationConfigFileName)['filters']])
-        this.contaminationFilters = dbParams.contamination_filters.tokenize(",")
-        this.contaminationFilterFiles = this.contaminationFilters.collect {
-            contaminant -> getFileFromConfig(contaminationConfig, this.contaminantsDir, contaminant.toUpperCase())
+
+        def cf = dbParams.contamination_filters?.toLowerCase()
+        if (cf in [null, 'null', 'none', 'false']) {
+            this.contaminationFilters = []
+            this.contaminationFilterFiles = []
+        } else {
+            this.contaminationFilters = dbParams.contamination_filters.tokenize(",")
+            this.contaminationFilterFiles = this.contaminationFilters.collect {
+                contaminant -> getFileFromConfig(contaminationConfig, this.contaminantsDir, contaminant.toUpperCase())
+            }
         }
 
         // virus
