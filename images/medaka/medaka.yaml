@@ -7,3 +7,5 @@ dependencies:
   - medaka=2.0.1
   - seqkit=2.7.0
   - bbmap=38.79
+  - sniffles=2.3.2
+  - ragtag=2.1.0

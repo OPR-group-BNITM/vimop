@@ -45,7 +45,9 @@ include {
     get_ref_fasta;
     split_custom_ref;
     map_to_ref;
+    map_to_ref as map_to_sv_consensus;
     calc_coverage;
+    sniffles;
     medaka_variant_consensus;
     medaka_consensus;
     simple_consensus;
@@ -250,8 +252,25 @@ workflow pipeline {
         mapped_to_ref = reads_and_ref
         | map_to_ref
 
+        coverage = mapped_to_ref
+        | map { meta, ref, bam, bai -> [meta, bam, bai]}
+        | calc_coverage
+
+        if(params.sniffles_do_call_structural_varaints) {
+            structural_variants = mapped_to_ref
+            | sniffles
+
+            mapped_to_sv_consensus = structural_variants
+            | map {meta, variants, sv_consensus -> [meta, meta.trimmed_reads, sv_consensus]}
+            | map_to_sv_consensus
+        } else {
+            structural_variants = Channel.empty()
+
+            mapped_to_sv_consensus = mapped_to_ref
+        }
+
         if (params.consensus_method == 'medaka_variant') {
-            medaka_out = mapped_to_ref
+            medaka_out = mapped_to_sv_consensus
             | map { meta, ref, bam, bai -> [
                 meta, ref, bam, bai,
                 meta.trimmed_reads,
@@ -260,14 +279,13 @@ workflow pipeline {
             | medaka_variant_consensus
             consensi = medaka_out.consensus
             variants = medaka_out.variants
-            coverage = medaka_out.depth
         } else {
             if (params.consensus_method == 'simple') {
-                consensi = mapped_to_ref
+                consensi = mapped_to_sv_consensus
                 | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
                 | simple_consensus
             } else if (params.consensus_method == 'medaka') {
-                consensi = mapped_to_ref
+                consensi = mapped_to_sv_consensus
                 | map { meta, ref, bam, bai -> [
                     meta, ref, bam, bai,
                     meta.trimmed_reads,
@@ -275,9 +293,6 @@ workflow pipeline {
                     params.consensus_min_depth] }
                 | medaka_consensus
             }
-            coverage = mapped_to_ref
-            | map { meta, ref, bam, bai -> [meta, bam, bai]}
-            | calc_coverage
             variants = Channel.empty()
         }
 
@@ -349,6 +364,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
+            structural_variants | map { meta, variants, sv_consensus -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.reads.vcf.gz"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
             variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },

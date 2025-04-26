@@ -782,6 +782,36 @@ process simplify_reference_fasta {
 }
 
 
+process sniffles {
+    label "medaka"
+    cpus 2
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai")
+    output:
+        tuple val(meta), path("structural_variants.vcf.gz"), path("sv_consensus.fasta")
+    """
+    sniffles \\
+        -t ${task.cpus} \\
+        --input sorted.bam \\
+        --reference ref.fasta \\
+        --vcf sv.vcf \\
+        --minsupport ${params.sniffles_min_support} \\
+        --minsvlen ${params.sniffles_min_sv_len}
+
+    bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
+    bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
+    tabix structural_variants.vcf.gz
+
+    bcftools consensus \\
+        --fasta-ref ref.fasta \\
+        -o sv_consensus.fasta structural_variants.vcf.gz
+    """
+}
+
+
 process medaka_variant_consensus {
     label "medaka"
     cpus 2

@@ -394,6 +394,27 @@
           "help_text": "K-mer size used by Minimap2 for seed generation.",
           "fa_icon": "fas fa-arrows-alt-h"
         },
+        "sniffles_min_support": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum support for structural variants by variant caller sniffles.",
+          "help_text": "Minimum support for structural variants by variant caller sniffles.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_sv_len": {
+          "type": "integer",
+          "default": 30,
+          "description": "Minimum length of structural variants in sniffles.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_variant_allele_fraction": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele fraction for structural variants.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
         "medaka_consensus_model": {
           "type": "string",
           "default": "auto",
