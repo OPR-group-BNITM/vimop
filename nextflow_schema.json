@@ -375,8 +375,8 @@
       "properties": {
         "consensus_method": {
           "type": "string",
-          "default": "simple",
-          "description": "Consensus method to use. Choose from simple, medaka and medaka_variant.",
+          "default": "iterative_medaka",
+          "description": "Consensus method to use. Choose from iterative_medaka, simple, medaka and medaka_variant.",
           "help_text": "Method used for consensus generation.",
           "fa_icon": "fas fa-signal"
         },

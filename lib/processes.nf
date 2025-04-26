@@ -812,6 +812,117 @@ process sniffles {
 }
 
 
+process iterative_medaka_variant_consensus {
+    label "medaka"
+    cpus 2
+    memory '24 GB'
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path("trimmed.fastq"),
+            val(model)
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
+    """
+    medaka_cmd="medaka inference --threads ${task.cpus}"
+
+    model_choice="default"
+
+    if [[ ${model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            medaka_cmd="\$medaka_cmd --model \$model_path"
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        medaka_cmd="\$medaka_cmd --model ${model}:variant"
+        model_choice=${model}:variant
+    fi
+
+    cp ref.fasta ref_0.fasta
+    cp sorted.bam sorted_0.bam
+    cp sorted.bam.bai sorted_0.bam.bai
+
+    samtools fastq sorted.bam > reads.fastq
+
+    j=0
+    for (( i=1; i<=${params.consensus_max_variant_calling_iterations}; i++ ))
+    do
+        \$medaka_cmd sorted_\${j}.bam consensus_\${i}.hdf 
+
+        medaka vcf consensus_\${i}.hdf ref_\${j}.fasta variants_\${i}.vcf
+
+        bcftools sort variants_\${i}.vcf -o sorted_\${i}.vcf
+        medaka tools annotate sorted_\${i}.vcf ref_\${j}.fasta sorted_\${j}.bam annotated_\${i}.vcf
+
+        bcftools filter -e "ALT='.'" annotated_\${i}.vcf \\
+        | bcftools filter -o filtered_\${i}.vcf -O v -e "INFO/DP<${params.consensus_min_depth}" -
+
+        if [[ \$i -eq ${params.consensus_max_variant_calling_iterations} ]]
+        then
+            remove_homopolymer_dels="no"
+        else
+            remove_homopolymer_dels="yes"
+        fi
+
+        replace_homopolymeric_deletions.py \\
+            --max-deletion-length ${params.consensus_homopolymer_masking_max_del} \\
+            --min-homopolymer-length ${params.consensus_homopolymer_masking_min_length} \\
+            --vcf filtered_\${i}.vcf \\
+            --reference ref_\${j}.fasta \\
+            --remove \$remove_homopolymer_dels \\
+            --out edited_\${i}.vcf
+
+        set +e
+        variant_count=\$(grep -c -v '^#' edited_\${i}.vcf)
+        set -e
+
+        if [[ "\$variant_count" -eq 0 ]]
+        then
+            echo "break at \$i"
+            break
+        fi
+
+        bgzip edited_\${i}.vcf
+        tabix edited_\${i}.vcf.gz
+
+        bcftools consensus \\
+            --fasta-ref ref_\${j}.fasta \\
+            -o consensus_draft.fasta edited_\${i}.vcf.gz
+
+        mv consensus_draft.fasta ref_\${i}.fasta
+
+        minimap2 -ax map-ont ref_\${i}.fasta reads.fastq \\
+            -t ${task.cpus} --secondary=no \\
+            -w ${params.map_to_target_minimap_window_size} \\
+            -k ${params.map_to_target_minimap_kmer_size} \\
+        | samtools view -F 4 -b -o mapped_\${i}.bam
+
+        samtools sort --threads ${task.cpus} -o sorted_\${i}.bam mapped_\${i}.bam
+        samtools index sorted_\${i}.bam
+
+        j=\$i
+    done
+
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+    mask_and_correct.py \\
+        --ref ref_\${j}.fasta \\
+        --bam sorted_\${j}.bam \\
+        --min-cov ${params.consensus_min_depth} \\
+        --min-frac ${params.consensus_min_share} \\
+        --header "method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" \\
+        --out consensus.${meta.consensus_target}.fasta
+    """
+}
+
+
 process medaka_variant_consensus {
     label "medaka"
     cpus 2

@@ -8,4 +8,5 @@ dependencies:
   - seqkit=2.7.0
   - bbmap=38.79
   - sniffles=2.3.2
-  - ragtag=2.1.0
+  - biopython=1.84
+  - pysamstats=1.1

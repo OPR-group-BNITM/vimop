@@ -50,6 +50,7 @@ include {
     sniffles;
     medaka_variant_consensus;
     medaka_consensus;
+    iterative_medaka_variant_consensus;
     simple_consensus;
     compute_mapping_stats;
     concat_mapping_stats;
@@ -280,7 +281,14 @@ workflow pipeline {
             consensi = medaka_out.consensus
             variants = medaka_out.variants
         } else {
-            if (params.consensus_method == 'simple') {
+            if (params.consensus_method == 'iterative_medaka') {
+                consensi = mapped_to_sv_consensus
+                | map { meta, ref, bam, bai -> [
+                    meta, ref, bam, bai,
+                    meta.trimmed_reads,
+                    params.medaka_consensus_model] }
+                | iterative_medaka_variant_consensus
+            } else if (params.consensus_method == 'simple') {
                 consensi = mapped_to_sv_consensus
                 | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
                 | simple_consensus
@@ -364,7 +372,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
-            structural_variants | map { meta, variants, sv_consensus -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.reads.vcf.gz"] },
+            structural_variants | map { meta, variants, sv_consensus -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf.gz"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
             variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },
