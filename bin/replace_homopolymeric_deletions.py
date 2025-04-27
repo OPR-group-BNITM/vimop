@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 Outbreak Preparedness and Response Group at BNITM
+# This file is part of ViMOP and is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for full license details.
+
 import argparse
 from Bio import SeqIO
 import pysam
@@ -12,12 +16,13 @@ def get_homopolymeric_regions(seq, minlen):
         if nt == seq[i-1]:
             counter += 1
         else:
-            counter = 0
+            counter = 1
         if counter == minlen:
             homopolymeric_positions.extend(range(i - minlen + 1, i + 1))
         elif counter > minlen:
             homopolymeric_positions.append(i)
     return set(homopolymeric_positions)
+
 
 
 def is_homopolymeric_deletion(record, alt, max_del_len, homopolymeric_indices):
