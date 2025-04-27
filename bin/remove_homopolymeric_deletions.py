@@ -4,6 +4,7 @@
 # This file is part of ViMOP and is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for full license details.
 
+
 import argparse
 from Bio import SeqIO
 import pysam
@@ -57,12 +58,11 @@ def is_homopolymeric_deletion(record, alt, max_del_len, homopolymeric_indices):
     return start in homopolymeric_indices
 
 
-def process_vcf_set_to_N(
+def remmove_homopolymeric_dels(
         in_vcf_path,
         out_vcf_path,
         max_del_len,
         homopolymeric_indices,
-        remove
 ):
     '''
     Read variants from in_vcf_path, replace qualifying deletions in homopolymers
@@ -71,21 +71,10 @@ def process_vcf_set_to_N(
     with pysam.VariantFile(in_vcf_path, 'r') as vcf_in:
         with pysam.VariantFile(out_vcf_path, 'w', header=vcf_in.header) as vcf_out:
             for record in vcf_in:
-                new_alts = []
-                if record.alts:
-                    for alt in record.alts:
-                        if is_homopolymeric_deletion(record, alt, max_del_len, homopolymeric_indices):
-                            if not remove:
-                                # Build a substitution: keep the first (anchor) base, then Ns
-                                anchor = record.ref[0]
-                                del_len = len(record.ref) - len(alt)
-                                new_alt = anchor + ('N' * del_len)
-                                new_alts.append(new_alt)
-                        else:
-                            new_alts.append(alt)
-                if new_alts:
-                    # Replace the ALT alleles in the record
-                    record.alts = tuple(new_alts)
+                is_homopolymeric_del = (
+                    bool(record.alts) and is_homopolymeric_deletion(record, record.alts[0], max_del_len, homopolymeric_indices)
+                )
+                if not is_homopolymeric_del:
                     vcf_out.write(record)
 
 
@@ -120,11 +109,6 @@ def main():
         default=10,
         help='Maximum deletion length to process'
     )
-    parser.add_argument(
-        '--remove',
-        required=True,
-        help='Whether to remove the deletions from the homopolymeric set or replace them with and N (yes for removal)'
-    )
     args = parser.parse_args()
 
     ref = SeqIO.read(args.reference, 'fasta')
@@ -132,12 +116,11 @@ def main():
         ref.seq, args.min_homopolymer_length
     )
 
-    process_vcf_set_to_N(
+    remmove_homopolymeric_dels(
         in_vcf_path=args.vcf,
         out_vcf_path=args.out,
         max_del_len=args.max_deletion_length,
         homopolymeric_indices=homopolymeric_regions,
-        remove=(args.remove=='yes')
     )
 
 

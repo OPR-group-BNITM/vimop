@@ -751,6 +751,45 @@ process map_to_ref {
     """
 }
 
+process map_to_sv_consensus {
+    label "general"
+    cpus 8
+    memory '10 GB'
+    input:
+        tuple val(meta),
+            path("trimmed.fastq"),
+            path("structural_variants.vcf.gz"),
+            path("sv_consensus.fasta"),
+            path("mapped_to_ref.bam"),
+            path("mapped_to_ref.bam.bai")
+    output:
+        tuple val(meta),
+            path("sv_consensus.fasta"),
+            path("mapped_to_sv_consensus.bam"),
+            path("mapped_to_sv_consensus.bam.bai")
+    """
+    set +e
+    variant_count=\$(gunzip -c structural_variants.vcf.gz | grep -c -v '^#')
+    set -e
+
+    if [[ "\$variant_count" -eq 0 ]]
+    then
+        # no need to map again
+        mv mapped_to_ref.bam mapped_to_sv_consensus.bam
+        mv mapped_to_ref.bam.bai mapped_to_sv_consensus.bam.bai
+    else
+        minimap2 -ax map-ont sv_consensus.fasta trimmed.fastq \\
+            -t ${task.cpus} --secondary=no \\
+            -w ${params.map_to_target_minimap_window_size} \\
+            -k ${params.map_to_target_minimap_kmer_size} \\
+        | samtools view -F 4 -b -o mapped.bam
+
+        samtools sort --threads ${task.cpus} -o mapped_to_sv_consensus.bam mapped.bam
+        samtools index mapped_to_sv_consensus.bam
+    fi
+    """
+}
+
 
 process calc_coverage {
     label "general"
@@ -788,14 +827,18 @@ process sniffles {
     input:
         tuple val(meta),
             path("ref.fasta"),
-            path("sorted.bam"),
-            path("sorted.bam.bai")
+            path("mapped_to_ref.bam"),
+            path("mapped_to_ref.bam.bai")
     output:
-        tuple val(meta), path("structural_variants.vcf.gz"), path("sv_consensus.fasta")
+        tuple val(meta),
+            path("mapped_to_ref.bam"),
+            path("mapped_to_ref.bam.bai"),
+            path("structural_variants.vcf.gz"),
+            path("sv_consensus.fasta")
     """
     sniffles \\
         -t ${task.cpus} \\
-        --input sorted.bam \\
+        --input mapped_to_ref.bam \\
         --reference ref.fasta \\
         --vcf sv.vcf \\
         --minsupport ${params.sniffles_min_support} \\
@@ -865,19 +908,11 @@ process iterative_medaka_variant_consensus {
         bcftools filter -e "ALT='.'" annotated_\${i}.vcf \\
         | bcftools filter -o filtered_\${i}.vcf -O v -e "INFO/DP<${params.consensus_min_depth}" -
 
-        if [[ \$i -eq ${params.consensus_max_variant_calling_iterations} ]]
-        then
-            remove_homopolymer_dels="no"
-        else
-            remove_homopolymer_dels="yes"
-        fi
-
-        replace_homopolymeric_deletions.py \\
+        remove_homopolymeric_deletions.py \\
             --max-deletion-length ${params.consensus_homopolymer_masking_max_del} \\
             --min-homopolymer-length ${params.consensus_homopolymer_masking_min_length} \\
             --vcf filtered_\${i}.vcf \\
             --reference ref_\${j}.fasta \\
-            --remove \$remove_homopolymer_dels \\
             --out edited_\${i}.vcf
 
         set +e

@@ -18,11 +18,12 @@ def call(record, min_cov, min_frac):
 
     if n_reads_all < min_cov:
         return 'N'
-    
+
     if n_deletions / n_reads_all >= min_frac:
         return ''
 
-    nt, count = Counter({nt: record[nt] for nt in 'ACGT'}).most_common(1)[0]
+    acgt_counter = Counter({nt: record[nt] for nt in 'ACGT'})
+    nt, count = acgt_counter.most_common(1)[0]
     if count / n_reads_all >= min_frac:
         return nt
 
@@ -39,9 +40,14 @@ def main():
     parser.add_argument('--out', required=True, help='Fasta filename for output consensus')
     args = parser.parse_args()
 
-    consensus = ''.join(
-        call(record, args.min_cov, args.min_frac)
+    ref = SeqIO.read(args.ref, 'fasta')
+    stats = {
+        record['pos']: record
         for record in pysamstats.stat_variation(args.bam, fafile=args.ref)
+    }
+    consensus = ''.join(
+        (call(stats[i], args.min_cov, args.min_frac) if i in stats else 'N')
+        for i in range(len(ref.seq))
     )
     consensus_record = SeqRecord(
         id='consensus',

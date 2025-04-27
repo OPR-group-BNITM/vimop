@@ -45,7 +45,7 @@ include {
     get_ref_fasta;
     split_custom_ref;
     map_to_ref;
-    map_to_ref as map_to_sv_consensus;
+    map_to_sv_consensus;
     calc_coverage;
     sniffles;
     medaka_variant_consensus;
@@ -258,11 +258,14 @@ workflow pipeline {
         | calc_coverage
 
         if(params.sniffles_do_call_structural_varaints) {
-            structural_variants = mapped_to_ref
+            siffles_out = mapped_to_ref
             | sniffles
 
-            mapped_to_sv_consensus = structural_variants
-            | map {meta, variants, sv_consensus -> [meta, meta.trimmed_reads, sv_consensus]}
+            structural_variants = siffles_out
+            | map { meta, bam, bai, sv, sv_consensus -> [meta, sv] }
+
+            mapped_to_sv_consensus = siffles_out
+            | map { meta, bam, bai, sv, sv_consensus -> [meta, meta.trimmed_reads, sv, sv_consensus, bam, bai] }
             | map_to_sv_consensus
         } else {
             structural_variants = Channel.empty()
@@ -372,7 +375,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
-            structural_variants | map { meta, variants, sv_consensus -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf.gz"] },
+            structural_variants | map { meta, variants -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf.gz"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
             variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },
