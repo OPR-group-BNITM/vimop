@@ -151,7 +151,7 @@
         "centrifuge_do_filter": {
           "type": "boolean",
           "title": "Use centrifuge filter",
-          "default": false,
+          "default": true,
           "description": "Filter based on centrifuge classifications.",
           "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
           "fa_icon": "fas fa-dot-circle"
