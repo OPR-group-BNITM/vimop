@@ -579,8 +579,6 @@ def html_report(
             cols = [
                 'Filter',
                 'Contig',
-                'Classification',
-                'Taxonomic Rank',
                 'Length',
                 'Number of reads',
                 'Blast Hit',
@@ -589,6 +587,8 @@ def html_report(
                 'Contig alignment coverage',
                 'Reference alignment coverage',
                 'Sequence Identity',
+                'Classification',
+                'Taxonomic Rank',
             ]
             digits = {
                 'Contig alignment coverage': 2,
@@ -600,8 +600,6 @@ def html_report(
                 {
                     'Filter': 'Filter used on reads before assembly',
                     'Contig': 'Contig identifier',
-                    'Classification': 'Classification according to centrifuge',
-                    'Taxonomic Rank': 'Taxonomic rank of the classification',
                     'Length': 'Length of the contig in base pairs',
                     'Number of reads': 'Number of (corrected) reads used by canu to build this contig',
                     'Blast Hit': 'Virus reference genome found with blast search',
@@ -610,6 +608,8 @@ def html_report(
                     'Contig alignment coverage': 'Share of the contig aligned by blast',
                     'Reference alignment coverage': 'Share of the reference aligned by blast',
                     'Sequence Identity': 'Sequence similarity of the aligned parts',
+                    'Classification': 'Classification according to centrifuge',
+                    'Taxonomic Rank': 'Taxonomic rank of the classification',
                 },
                 'Contigs and targets found'
             ).legend(cols)

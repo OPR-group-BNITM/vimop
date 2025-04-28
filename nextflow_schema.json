@@ -143,7 +143,7 @@
         "centrifuge_plot_min_frac": {
           "type": "number",
           "title": "Minimum fraction for display.",
-          "default": 0.0001,
+          "default": 0.0002,
           "description": "Minimum classification fraction for display in report sunburst plot.",
           "help_text": "Only relevant for visualization in the report. 0.0001 for example means that at least 1 in 10,000 reads are needed for a group to be shown in the sunburst plot in the report.",
           "fa_icon": "fas fa-dot-circle"
@@ -151,7 +151,7 @@
         "centrifuge_do_filter": {
           "type": "boolean",
           "title": "Use centrifuge filter",
-          "default": false,
+          "default": true,
           "description": "Filter based on centrifuge classifications.",
           "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
           "fa_icon": "fas fa-dot-circle"
@@ -375,8 +375,8 @@
       "properties": {
         "consensus_method": {
           "type": "string",
-          "default": "simple",
-          "description": "Consensus method to use. Choose from simple, medaka and medaka_variant.",
+          "default": "auto",
+          "description": "Consensus method to use. Choose from auto (recommended), simple, medaka and medaka_variant.",
           "help_text": "Method used for consensus generation.",
           "fa_icon": "fas fa-signal"
         },
@@ -393,6 +393,27 @@
           "description": "Minimap2 k-mer size",
           "help_text": "K-mer size used by Minimap2 for seed generation.",
           "fa_icon": "fas fa-arrows-alt-h"
+        },
+        "sniffles_min_support": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum support for structural variants by variant caller sniffles.",
+          "help_text": "Minimum support for structural variants by variant caller sniffles.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_sv_len": {
+          "type": "integer",
+          "default": 30,
+          "description": "Minimum length of structural variants in sniffles.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_variant_allele_fraction": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele fraction for structural variants.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
         },
         "medaka_consensus_model": {
           "type": "string",
@@ -413,6 +434,30 @@
           "default": 0.7,
           "description": "Minimum allele share for consensus base",
           "help_text": "Fraction of reads supporting a base required for it to be called.",
+          "fa_icon": "fas fa-align-right"
+        },
+        "consensus_max_variant_calling_iterations": {
+          "type": "integer",
+          "hidden": true,
+          "default": 3,
+          "description": "Maximum iterations in iterative variant calling.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
+        "consensus_homopolymer_masking_max_del": {
+          "type": "integer",
+          "hidden": true,
+          "default": 2,
+          "description": "Maximum length of a homopolymeric deletion to be removed from iterative variant calling.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
+        "consensus_homopolymer_masking_min_length": {
+          "type": "integer",
+          "hidden": true,
+          "default": 5,
+          "description": "Minimum length for a homopolymer region to be considered to be homopolymeric in interative variant calling.",
+          "help_text": "",
           "fa_icon": "fas fa-align-right"
         }
       }
