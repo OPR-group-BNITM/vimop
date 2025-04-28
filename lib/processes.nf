@@ -6,6 +6,17 @@
 nextflow.enable.dsl = 2
 
 
+def minCpus(int requestedCpus) {
+    return Math.min(requestedCpus, params.min_cpus as int)
+}
+
+
+def minRAM(int requestesRAM) {
+    ram = Math.min(requestesRAM, params.min_ram_gb as int)
+    return "${ram} GB"
+}
+
+
 process lengths_and_qualities {
     label "general"
     cpus 1
@@ -42,8 +53,8 @@ process trim {
 
 process classify_centrifuge {
     label "centrifuge"
-    cpus 12
-    memory '28 GB'
+    cpus minCpus(12)
+    memory minRAM(28)
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
@@ -99,8 +110,8 @@ EOF
 
 process classify_contigs {
     label "centrifuge"
-    cpus 12
-    memory '28 GB'
+    cpus minCpus(12)
+    memory minRAM(28)
     input:
         tuple val(meta), path("contigs.fasta"), path(db_path), val(target_db)
     output:
@@ -203,7 +214,7 @@ def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
 process filter_with_centrifuge {
     label "general"
     cpus 1
-    memory '3 GB'
+    memory minRAM(3)
     input:
         tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
     output:
@@ -240,8 +251,8 @@ process read_stats {
 
 process filter_contaminants {
     label "general"
-    cpus 8
-    memory '20 GB'
+    cpus minCpus(8)
+    memory minRAM(20)
     input:
         tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path(db_paths), val(contaminants)
     output:
@@ -284,8 +295,8 @@ process filter_contaminants {
 
 process filter_virus_target {
     label "general"
-    cpus 4
-    memory '10 GB'
+    cpus minCpus(4)
+    memory minRAM(10)
     input:
         tuple val(meta), path('seqs.fastq'), path(target)
     output:
@@ -304,8 +315,8 @@ process filter_virus_target {
 
 process assemble_canu {
     label "canu"
-    cpus 16
-    memory '24 GB'
+    cpus minCpus(16)
+    memory minRAM(24)
     input:
         tuple val(meta), path("seqs.fastq"), val(get_reads_if_no_contigs)
     output:
@@ -402,8 +413,8 @@ process assemble_canu {
 
 process reassemble_canu {
     label "canu"
-    cpus 16
-    memory '24 GB'
+    cpus minCpus(16)
+    memory minRAM(24)
     input:
         tuple val(meta), path("contigs_*.fasta"), path("seqs.fastq")
     output:
@@ -589,7 +600,7 @@ process canu_contig_info {
 
 process blast {
     label "general"
-    cpus 4
+    cpus minCpus(4)
     input:
         tuple val(meta), path("sorted-contigs.fasta"), path(db_path), val(target)
     output:
@@ -733,8 +744,8 @@ process split_custom_ref {
 
 process map_to_ref {
     label "general"
-    cpus 8
-    memory '10 GB'
+    cpus minCpus(8)
+    memory minRAM(10)
     input:
         tuple val(meta), path("trimmed.fastq"), path("ref.fasta")
     output:
@@ -753,8 +764,8 @@ process map_to_ref {
 
 process map_to_sv_consensus {
     label "general"
-    cpus 8
-    memory '10 GB'
+    cpus minCpus(8)
+    memory minRAM(10)
     input:
         tuple val(meta),
             path("trimmed.fastq"),
@@ -823,7 +834,7 @@ process simplify_reference_fasta {
 
 process sniffles {
     label "medaka"
-    cpus 2
+    cpus minCpus(2)
     input:
         tuple val(meta),
             path("ref.fasta"),
@@ -857,15 +868,14 @@ process sniffles {
 
 process iterative_medaka_variant_consensus {
     label "medaka"
-    cpus 2
-    memory '24 GB'
+    cpus minCpus(2)
+    memory minRAM(24)
     input:
         tuple val(meta),
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path("trimmed.fastq"),
-            val(model)
+            path("trimmed.fastq")
     output:
         tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
@@ -873,7 +883,7 @@ process iterative_medaka_variant_consensus {
 
     model_choice="default"
 
-    if [[ ${model} == "auto" ]]
+    if [[ ${params.medaka_consensus_model} == "auto" ]]
     then
         set +e
         model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
@@ -885,8 +895,8 @@ process iterative_medaka_variant_consensus {
         fi
         set -e
     else
-        medaka_cmd="\$medaka_cmd --model ${model}:variant"
-        model_choice=${model}:variant
+        medaka_cmd="\$medaka_cmd --model ${params.medaka_consensus_model}:variant"
+        model_choice=${params.medaka_consensus_model}:variant
     fi
 
     cp ref.fasta ref_0.fasta
@@ -958,98 +968,16 @@ process iterative_medaka_variant_consensus {
 }
 
 
-process medaka_variant_consensus {
-    label "medaka"
-    cpus 2
-    memory '24 GB'
-    input:
-        tuple val(meta),
-            path("ref.fasta"),
-            path("sorted.bam"),
-            path("sorted.bam.bai"),
-            path("trimmed.fastq"),
-            val(model),
-            val(min_depth)
-    output:
-        tuple val(meta), path("consensus.${meta.consensus_target}.fasta"), emit: consensus
-        tuple val(meta), path("variants.${meta.consensus_target}.vcf.gz"), emit: variants
-        tuple val(meta), path("depth.${meta.consensus_target}.txt"), emit: depth
-    """
-    samtools depth -aa -J sorted.bam > depth.txt
-
-    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
-
-    model_choice="default"
-
-    if [[ ${model} == "auto" ]]
-    then
-        set +e
-        model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
-        exit_code=\$?
-        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
-        then
-            medaka_cmd="\$medaka_cmd --model \$model_path"
-            model_choice=\$model_path
-        fi
-        set -e
-    else
-        medaka_cmd="\$medaka_cmd --model ${model}:variant"
-        model_choice=${model}:variant
-    fi
-
-    \$medaka_cmd
-
-    medaka vcf consensus.hdf ref.fasta variants.vcf
-
-    bcftools sort variants.vcf -o sorted.vcf
-    medaka tools annotate sorted.vcf ref.fasta sorted.bam annotated.vcf
-
-    bcftools filter -e "ALT='.'" annotated.vcf \\
-    | bcftools filter -o filtered.vcf -O v -e "INFO/DP<${min_depth}" -
-
-    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-
-    awk -v ref="\$refid" -v thresh=${min_depth} '{if (\$3<thresh) print \$1"\\t"\$2}' depth.txt  > mask.regions
-
-    bgzip filtered.vcf
-    tabix filtered.vcf.gz
-
-    bcftools consensus \\
-        --mask mask.regions \\
-        --fasta-ref ref.fasta \\
-        -o consensus_draft.fasta filtered.vcf.gz
-
-    echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
-
-    # write a consensus of Ns in case there was nothing mapped at all.
-    if [ ! -s consensus_draft.fasta ]
-    then
-        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
-        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
-        echo "\$sequence" >> consensus.fasta
-    else
-        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
-    fi
-
-    mv depth.txt depth.${meta.consensus_target}.txt
-    mv consensus.fasta consensus.${meta.consensus_target}.fasta
-    mv filtered.vcf.gz variants.${meta.consensus_target}.vcf.gz
-    """
-}
-
-
 process medaka_consensus {
     label "medaka"
-    cpus 2
-    memory '24 GB'
+    cpus minCpus(2)
+    memory minRAM(24)
     input:
         tuple val(meta),
             path("ref.fasta"),
             path("sorted.bam"),
             path("sorted.bam.bai"),
-            path("trimmed.fastq"),
-            val(model),
-            val(min_depth)
+            path("trimmed.fastq")
     output:
         tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
     """
@@ -1057,7 +985,7 @@ process medaka_consensus {
 
     model_choice="default"
 
-    if [[ ${model} == "auto" ]]
+    if [[ ${params.medaka_consensus_model} == "auto" ]]
     then
         set +e
         model_path=\$(medaka tools resolve_model --auto_model consensus trimmed.fastq 2>/dev/null)
@@ -1069,13 +997,13 @@ process medaka_consensus {
         fi
         set -e
     else
-        medaka_cmd="\$medaka_cmd --model ${model}:consensus"
-        model_choice=${model}:consensus
+        medaka_cmd="\$medaka_cmd --model ${params.medaka_consensus_model}:consensus"
+        model_choice=${params.medaka_consensus_model}:consensus
     fi
 
     \$medaka_cmd
 
-    medaka sequence consensus.hdf ref.fasta consensus_draft.fasta --fill_char N --min_depth ${min_depth}
+    medaka sequence consensus.hdf ref.fasta consensus_draft.fasta --fill_char N --min_depth ${params.consensus_min_depth}
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
     echo ">consensus method=medaka reference=\$refid sample=${meta.alias} medaka_model=\$model_choice" > consensus.fasta
@@ -1095,29 +1023,53 @@ process medaka_consensus {
 }
 
 
-process simple_consensus {
-    label "general"
-    cpus 1
-    input:
-        tuple val(meta),
-            path("ref.fasta"),
-            path("sorted.bam"),
-            path("sorted.bam.bai"),
-            val(min_depth),
-            val(min_share)
-    output:
-        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
+def medakaGetModel() {
+    return """
+    model_choice="default"
+
+    if [[ ${params.medaka_consensus_model} == "auto" ]]
+    then
+        set +e
+        model_path=\$(medaka tools resolve_model --auto_model variant trimmed.fastq 2>/dev/null)
+        exit_code=\$?
+        if [[ \$exit_code -eq 0 && -n "\$model_path" ]]
+        then
+            model_choice=\$model_path
+        fi
+        set -e
+    else
+        model_choice=${params.medaka_consensus_model}:variant
+    fi
     """
-    samtools consensus \
-    -a --mark-ins --show-del yes --show-ins yes \
-    --mode simple \
-    --min-depth $min_depth \
-    --call-fract $min_share \
-    -f fasta sorted.bam \
-    > consensus_draft.fasta
+}
+
+
+def medakaVariantConsensus(String alias) {
+    return """
+    \$medaka_cmd
+
+    medaka vcf consensus.hdf ref.fasta variants.vcf
+
+    bcftools sort variants.vcf -o sorted.vcf
+    medaka tools annotate sorted.vcf ref.fasta sorted.bam annotated.vcf
+
+    bcftools filter -e "ALT='.'" annotated.vcf \\
+    | bcftools filter -o filtered.vcf -O v -e "INFO/DP<${params.consensus_min_depth}" -
 
     refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-    echo ">consensus method=samtools_simple reference=\$refid sample=${meta.alias}" > consensus.fasta
+
+    samtools depth -aa -J sorted.bam > depth.txt
+    awk -v ref="\$refid" -v thresh=${params.consensus_min_depth} '{if (\$3<thresh) print \$1"\\t"\$2}' depth.txt  > mask.regions
+
+    bgzip filtered.vcf
+    tabix filtered.vcf.gz
+
+    bcftools consensus \\
+        --mask mask.regions \\
+        --fasta-ref ref.fasta \\
+        -o consensus_draft.fasta filtered.vcf.gz
+
+    echo ">consensus method=medaka reference=\$refid sample=${alias} medaka_model=\$model_choice" > consensus.fasta
 
     # write a consensus of Ns in case there was nothing mapped at all.
     if [ ! -s consensus_draft.fasta ]
@@ -1128,11 +1080,115 @@ process simple_consensus {
     else
         seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
     fi
+    """
+}
 
-    correct_samtools_consensus.py ref.fasta consensus.fasta sorted.bam \
-    --call-fract $min_share \
-    --min-depth $min_depth \
-    --output consensus.${meta.consensus_target}.fasta
+
+process medaka_variant_consensus {
+    label "medaka"
+    cpus minCpus(2)
+    memory minRAM(24)
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path("trimmed.fastq")
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
+    """
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    ${medakaGetModel()}
+
+    if [[ \$model_choice != "default" ]]
+    then
+        medaka_cmd="\$medaka_cmd --model \${model_choice}"
+    fi
+
+    ${medakaVariantConsensus(meta.alias)}
+
+    mv depth.txt depth.${meta.consensus_target}.txt
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
+    mv filtered.vcf.gz variants.${meta.consensus_target}.vcf.gz
+    """
+}
+
+
+def simpleConsensus(String alias) {
+    return """
+    samtools consensus \\
+        -a --mark-ins --show-del yes --show-ins yes \\
+        --mode simple \\
+        --min-depth ${params.consensus_min_depth} \\
+        --call-fract ${params.consensus_min_share} \\
+        -f fasta sorted.bam \\
+        > consensus_draft.fasta
+
+    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
+    echo ">consensus method=samtools_simple reference=\$refid sample=${alias}" > consensus_draft_2.fasta
+
+    # write a consensus of Ns in case there was nothing mapped at all.
+    if [ ! -s consensus_draft.fasta ]
+    then
+        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
+        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
+        echo "\$sequence" >> consensus_draft_2.fasta
+    else
+        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus_draft_2.fasta
+    fi
+
+    correct_samtools_consensus.py ref.fasta consensus_draft_2.fasta sorted.bam \\
+        --call-fract ${params.consensus_min_share} \\
+        --min-depth ${params.consensus_min_depth} \\
+        --output consensus.fasta
+    """
+}
+
+
+process simple_consensus {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai")
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
+    """
+    ${simpleConsensus(meta.alias)}
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
+    """
+}
+
+
+process auto_consensus {
+    label "medaka"
+    cpus minCpus(2)
+    memory minRAM(24)
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("sorted.bam"),
+            path("sorted.bam.bai"),
+            path("trimmed.fastq")
+    output:
+        tuple val(meta), path("consensus.${meta.consensus_target}.fasta")
+    """
+    medaka_cmd="medaka inference sorted.bam consensus.hdf --threads ${task.cpus}"
+
+    ${medakaGetModel()}
+
+    if [[ \$model_choice == "default" ]]
+    then
+        ${simpleConsensus(meta.alias)}
+    else
+        medaka_cmd="\$medaka_cmd --model \${model_choice}"
+        ${medakaVariantConsensus(meta.alias)}
+    fi
+
+    mv consensus.fasta consensus.${meta.consensus_target}.fasta
     """
 }
 

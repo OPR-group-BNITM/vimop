@@ -52,6 +52,7 @@ include {
     medaka_consensus;
     iterative_medaka_variant_consensus;
     simple_consensus;
+    auto_consensus;
     compute_mapping_stats;
     concat_mapping_stats;
     collect_reference_info;
@@ -257,7 +258,7 @@ workflow pipeline {
         | map { meta, ref, bam, bai -> [meta, bam, bai]}
         | calc_coverage
 
-        if(params.sniffles_do_call_structural_varaints) {
+        if(params.sniffles_do_call_structural_variants) {
             siffles_out = mapped_to_ref
             | sniffles
 
@@ -274,37 +275,32 @@ workflow pipeline {
         }
 
         if (params.consensus_method == 'medaka_variant') {
-            medaka_out = mapped_to_sv_consensus
+            consensi = mapped_to_sv_consensus
             | map { meta, ref, bam, bai -> [
                 meta, ref, bam, bai,
-                meta.trimmed_reads,
-                params.medaka_consensus_model,
-                params.consensus_min_depth] }
+                meta.trimmed_reads] }
             | medaka_variant_consensus
-            consensi = medaka_out.consensus
-            variants = medaka_out.variants
-        } else {
-            if (params.consensus_method == 'iterative_medaka') {
-                consensi = mapped_to_sv_consensus
-                | map { meta, ref, bam, bai -> [
-                    meta, ref, bam, bai,
-                    meta.trimmed_reads,
-                    params.medaka_consensus_model] }
-                | iterative_medaka_variant_consensus
-            } else if (params.consensus_method == 'simple') {
-                consensi = mapped_to_sv_consensus
-                | map { meta, ref, bam, bai -> [meta, ref, bam, bai, params.consensus_min_depth, params.consensus_min_share] }
-                | simple_consensus
-            } else if (params.consensus_method == 'medaka') {
-                consensi = mapped_to_sv_consensus
-                | map { meta, ref, bam, bai -> [
-                    meta, ref, bam, bai,
-                    meta.trimmed_reads,
-                    params.medaka_consensus_model,
-                    params.consensus_min_depth] }
-                | medaka_consensus
-            }
-            variants = Channel.empty()
+        } else if (params.consensus_method == 'iterative_medaka') {
+            consensi = mapped_to_sv_consensus
+            | map { meta, ref, bam, bai -> [
+                meta, ref, bam, bai,
+                meta.trimmed_reads] }
+            | iterative_medaka_variant_consensus
+        } else if (params.consensus_method == 'simple') {
+            consensi = mapped_to_sv_consensus
+            | simple_consensus
+        } else if (params.consensus_method == 'auto') {
+            consensi = mapped_to_sv_consensus
+            | map { meta, ref, bam, bai -> [
+                meta, ref, bam, bai,
+                meta.trimmed_reads] }
+            | auto_consensus
+        } else if (params.consensus_method == 'medaka') {
+            consensi = mapped_to_sv_consensus
+            | map { meta, ref, bam, bai -> [
+                meta, ref, bam, bai,
+                meta.trimmed_reads] }
+            | medaka_consensus
         }
 
         reference_info = empty_fasta
@@ -378,7 +374,6 @@ workflow pipeline {
             structural_variants | map { meta, variants -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf.gz"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
-            variants | map { meta, vcf -> [vcf, "$meta.alias/consensus", "${meta.consensus_target}.variants.vcf.gz"] },
             // selected consensi
             best_consensi | map { alias, consensus_dir -> [consensus_dir, "$alias", "selected_consensus"] },
             // report and tables
