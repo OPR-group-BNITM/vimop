@@ -15,9 +15,9 @@ For information on data bases read further down.
 If you need assistance for setting up a reference data set, please contact us.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
-To build a consensus, [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
+To build a consensus, [sniffles](https://github.com/fritzsedlazeck/Sniffles) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
 This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
-However, for large DNA viruses with repetetive regions such as mpox, this approach will not correctly generate complete genomes.
+However, for large DNA viruses with repetetive regions, such as mpox, this approach may not correctly generate complete genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
 
 ## Prerequisites
@@ -158,17 +158,16 @@ The highest scoring hit is then used as a reference genome.
 
 Reads are mapped against the reference genome.
 The mapping parameters can be changed (see options).
-There are three options to generate the consensus.
-The default option is samtools consensus.
-This simple consensus strategy takes the most abundant base and masks all positions with too little coverage or unclear signals below the given threshold.
-The second option is called medaka and uses the medaka consensus functionality.
-The third option is medaka_variant which uses medaka to call variants and then introduce them to the reference to build the consensus.
-In this case you don't get a vcf file with variants.
-The same is true for the third option called simple using samtools consensus and a correction script for masked areas.
+There are multiple options to generate the consensus.
+The default option is to choose automatically from samtools consensus and medaka.
+If medaka finds a model for you data, medaka is used, else samtools.
+Samtools consensus takes the most abundant base and masks all positions with too little coverage or unclear signals below the given threshold.
+Medaka 
+You can also directly choose medaka (medaka_variant) or samtools (simple).
 
 For medaka you can pass a model name for the option `medaka_consensus_model`.
 Chosing auto will let medaka chose the model, which is the default.
-However, if medaka does not find a model fitting your data, it will use the medaka default model, which may not be optiomal.
+However, if medaka does not find a model fitting your data, medaka (if explicitely chosen) will use the medaka default model, which may not be optiomal.
 
 ## Options
 
