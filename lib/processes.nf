@@ -50,7 +50,6 @@ process trim {
     """
 }
 
-
 process classify_centrifuge {
     label "centrifuge"
     cpus minCpus(12)
@@ -848,6 +847,7 @@ process sniffles {
             path("structural_variants.vcf.gz"),
             path("sv_consensus.fasta")
     """
+    set +e
     sniffles \\
         -t ${task.cpus} \\
         --input mapped_to_ref.bam \\
@@ -855,14 +855,20 @@ process sniffles {
         --vcf sv.vcf \\
         --minsupport ${params.sniffles_min_support} \\
         --minsvlen ${params.sniffles_min_sv_len}
+    set -e
 
-    bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
-    bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
-    tabix structural_variants.vcf.gz
-
-    bcftools consensus \\
+    if bcftools view -H sv.vcf | grep -q .; then
+      bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
+      bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
+      tabix structural_variants.vcf.gz
+      bcftools consensus \\
         --fasta-ref ref.fasta \\
         -o sv_consensus.fasta structural_variants.vcf.gz
+    else
+      cp ref.fasta sv_consensus.fasta
+      bgzip -c sv.vcf > structural_variants.vcf.gz
+      tabix -p vcf structural_variants.vcf.gz
+    fi    
     """
 }
 
