@@ -1,2 +1,4 @@
 # vimop
-A nanopore field sequencing pipeline for virus metagenomic sequencing
+stay tuned!
+
+![vimop](ViMOP_graphical.png)
