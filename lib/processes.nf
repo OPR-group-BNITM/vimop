@@ -331,7 +331,7 @@ process assemble_canu {
     conda deactivate
 
     outdir=.
-    ca
+    set +e
     canu \\
         -nanopore-raw filtered.minlen.fastq \\
         -fast \\
@@ -856,7 +856,7 @@ process sniffles {
         --minsupport ${params.sniffles_min_support} \\
         --minsvlen ${params.sniffles_min_sv_len}
     set -e
-    
+
     if bcftools view -H sv.vcf | grep -q .; then
       bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
       bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
