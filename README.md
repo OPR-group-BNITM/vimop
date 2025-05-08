@@ -1,5 +1,5 @@
 # ViMOP
-<img align="left" src="ViMOP_logo.png" width="150"/>
+[<img align="left" src="ViMOP_logo.png" width="150"/>](ViMOP_logo.png)
 Analysis pipeline for virus metagenomics using nanopore sequencing.
 
 This pipeline is developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical Medicine.
