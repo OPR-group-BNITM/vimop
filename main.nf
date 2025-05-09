@@ -27,6 +27,8 @@ include {
     empty_fasta;
     trim;
     read_stats;
+    minCpus;
+    minRAM;
     classify_centrifuge;
     classify_contigs;
     extract_contig_classification;
