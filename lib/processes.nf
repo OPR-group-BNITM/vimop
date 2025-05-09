@@ -52,8 +52,8 @@ process trim {
 
 process classify_centrifuge {
     label "centrifuge"
-    cpus minCpus(12)
-    memory minRAM(28)
+    cpus { minCpus(12) }
+    memory { minRAM(28) }
     input:
         tuple val(meta), path("seqs.fastq"), path(db_path), val(target_db)
     output:
@@ -109,8 +109,8 @@ EOF
 
 process classify_contigs {
     label "centrifuge"
-    cpus minCpus(12)
-    memory minRAM(28)
+    cpus { minCpus(12) }
+    memory = { minRAM(28) }
     input:
         tuple val(meta), path("contigs.fasta"), path(db_path), val(target_db)
     output:
@@ -213,7 +213,7 @@ def seqstatsLine(String rowIdentifier, String fnameIn, String fnameOut) {
 process filter_with_centrifuge {
     label "general"
     cpus 1
-    memory minRAM(3)
+    memory { minRAM(3) }    
     input:
         tuple val(meta), path('seqs.fastq'), path('classification.tsv'), path('virus_taxids.txt')
     output:
@@ -250,8 +250,8 @@ process read_stats {
 
 process filter_contaminants {
     label "general"
-    cpus minCpus(8)
-    memory minRAM(20)
+    cpus { minCpus(8) }
+    memory { minRAM(20) }
     input:
         tuple val(meta), path('seqs.fastq'), path('read_stats.tsv'), path(db_paths), val(contaminants)
     output:
@@ -294,8 +294,8 @@ process filter_contaminants {
 
 process filter_virus_target {
     label "general"
-    cpus minCpus(4)
-    memory minRAM(10)
+    cpus { minCpus(4) }
+    memory { minRAM(10) }
     input:
         tuple val(meta), path('seqs.fastq'), path(target)
     output:
@@ -314,8 +314,8 @@ process filter_virus_target {
 
 process assemble_canu {
     label "canu"
-    cpus minCpus(16)
-    memory minRAM(24)
+    cpus { minCpus(16) }
+    memory { minRAM(24) }
     input:
         tuple val(meta), path("seqs.fastq"), val(get_reads_if_no_contigs)
     output:
@@ -412,8 +412,8 @@ process assemble_canu {
 
 process reassemble_canu {
     label "canu"
-    cpus minCpus(16)
-    memory minRAM(24)
+    cpus { minCpus(16) }
+    memory { minRAM(24) }
     input:
         tuple val(meta), path("contigs_*.fasta"), path("seqs.fastq")
     output:
@@ -599,7 +599,7 @@ process canu_contig_info {
 
 process blast {
     label "general"
-    cpus minCpus(4)
+    cpus { minCpus(4) }
     input:
         tuple val(meta), path("sorted-contigs.fasta"), path(db_path), val(target)
     output:
@@ -743,8 +743,8 @@ process split_custom_ref {
 
 process map_to_ref {
     label "general"
-    cpus minCpus(8)
-    memory minRAM(10)
+    cpus { minCpus(8) }
+    memory { minRAM(10) }
     input:
         tuple val(meta), path("trimmed.fastq"), path("ref.fasta")
     output:
@@ -763,8 +763,8 @@ process map_to_ref {
 
 process map_to_sv_consensus {
     label "general"
-    cpus minCpus(8)
-    memory minRAM(10)
+    cpus { minCpus(8) }
+    memory { minRAM(10) }
     input:
         tuple val(meta),
             path("trimmed.fastq"),
@@ -833,8 +833,8 @@ process simplify_reference_fasta {
 
 process sniffles {
     label "medaka"
-    cpus minCpus(2)
-    memory minRAM(5)
+    cpus { minCpus(2) }
+    memory { minRAM(5) } 
     input:
         tuple val(meta),
             path("ref.fasta"),
@@ -875,8 +875,8 @@ process sniffles {
 
 process iterative_medaka_variant_consensus {
     label "medaka"
-    cpus minCpus(2)
-    memory minRAM(24)
+    cpus { minCpus(2) }
+    memory { minRAM(24) }
     input:
         tuple val(meta),
             path("ref.fasta"),
@@ -977,8 +977,8 @@ process iterative_medaka_variant_consensus {
 
 process medaka_consensus {
     label "medaka"
-    cpus minCpus(2)
-    memory minRAM(24)
+    cpus { minCpus(2) }
+    memory { minRAM(24) }
     input:
         tuple val(meta),
             path("ref.fasta"),
@@ -1093,8 +1093,8 @@ def medakaVariantConsensus(String alias) {
 
 process medaka_variant_consensus {
     label "medaka"
-    cpus minCpus(2)
-    memory minRAM(24)
+    cpus { minCpus(2) }
+    memory { minRAM(24) }
     input:
         tuple val(meta),
             path("ref.fasta"),
@@ -1172,8 +1172,8 @@ process simple_consensus {
 
 process auto_consensus {
     label "medaka"
-    cpus minCpus(2)
-    memory minRAM(24)
+    cpus { minCpus(2) }
+    memory { minRAM(24) }
     input:
         tuple val(meta),
             path("ref.fasta"),
