@@ -373,6 +373,14 @@
       "fa_icon": "fas fa-database",
       "description": "Advanced settings for mapping and consensus creation.",
       "properties": {
+        "sniffles_do_call_structural_variants": {
+          "type": "boolean",
+          "title": "Call structual variants with sniffles",
+          "default": true,
+          "description": "Before consensus is created update the references with structural variants called with sniffles",
+          "help_text": "If true structural variants are called with sniffles and used for consensus creation",
+          "fa_icon": "fas fa-dot-circle"
+        },
         "consensus_method": {
           "type": "string",
           "default": "auto",
