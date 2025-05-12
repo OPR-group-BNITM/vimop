@@ -857,7 +857,8 @@ process sniffles {
         --minsvlen ${params.sniffles_min_sv_len}
     set -e
 
-    if bcftools view -H sv.vcf | grep -q .; then
+    if [[ \$(bcftools view -H sv.vcf | wc -l) -ne 0 ]]
+    then
       bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
       bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
       tabix structural_variants.vcf.gz
