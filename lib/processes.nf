@@ -847,7 +847,6 @@ process sniffles {
             path("structural_variants.vcf.gz"),
             path("sv_consensus.fasta")
     """
-    set -x
     set +e
     sniffles \\
         -t ${task.cpus} \\
