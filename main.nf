@@ -50,6 +50,8 @@ include {
     map_to_sv_consensus;
     calc_coverage;
     sniffles;
+    cutesv;
+    structural_variant_consensus;
     medaka_variant_consensus;
     medaka_consensus;
     iterative_medaka_variant_consensus;
@@ -255,20 +257,29 @@ workflow pipeline {
         // Map reads against references for final consensus generation
         mapped_to_ref = reads_and_ref
         | map_to_ref
+        | map { meta, ref, bam, bai -> [meta + ["ref": ref, "bam_to_ref": bam, "bai_to_ref": bai], ref, bam, bai]}
 
         coverage = mapped_to_ref
         | map { meta, ref, bam, bai -> [meta, bam, bai]}
         | calc_coverage
 
-        if(params.sniffles_do_call_structural_variants) {
-            siffles_out = mapped_to_ref
-            | sniffles
+        if(params.sv_do_call_structural_variants) {
+            if(params.sv_method == "cutesv"){
+                structural_variants = mapped_to_ref
+                | cutesv
+            } else if (params.sv_method == "siffles") {
+                structural_variants = mapped_to_ref
+                | sniffles
+            } else {
+                error "${params.sv_method} is not a valid choice for params.sv_method"
+            }
 
-            structural_variants = siffles_out
-            | map { meta, bam, bai, sv, sv_consensus -> [meta, sv] }
+            sv_consensus = structural_variants
+            | map { meta, sv -> [meta + ["structural_variants": sv], meta.ref, sv] }
+            | structural_variant_consensus
 
-            mapped_to_sv_consensus = siffles_out
-            | map { meta, bam, bai, sv, sv_consensus -> [meta, meta.trimmed_reads, sv, sv_consensus, bam, bai] }
+            mapped_to_sv_consensus = sv_consensus
+            | map { meta, sv_consensus -> [meta, meta.trimmed_reads, meta.structural_variants, sv_consensus, meta.bam_to_ref, meta.bai_to_ref] }
             | map_to_sv_consensus
         } else {
             structural_variants = Channel.empty()

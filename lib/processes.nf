@@ -842,10 +842,7 @@ process sniffles {
             path("mapped_to_ref.bam.bai")
     output:
         tuple val(meta),
-            path("mapped_to_ref.bam"),
-            path("mapped_to_ref.bam.bai"),
-            path("structural_variants.vcf.gz"),
-            path("sv_consensus.fasta")
+            path("sv.filtered.vcf")
     """
     set +e
     sniffles \\
@@ -857,19 +854,64 @@ process sniffles {
         --minsvlen ${params.sniffles_min_sv_len}
     set -e
 
-    if [[ \$(bcftools view -H sv.vcf | wc -l) -ne 0 ]]
+    bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o sv.filtered.vcf
+    """
+}
+
+
+process cutesv {
+    label "cutesv"
+    cpus { minCpus(2) }
+    memory { minRAM(5) } 
+    input:
+        tuple val(meta),
+            path("ref.fasta"),
+            path("mapped_to_ref.bam"),
+            path("mapped_to_ref.bam.bai")
+    output:
+        tuple val(meta),
+            path("sv.filtered.vcf")
+    {
+    """
+    mkdir work_sv
+
+    cuteSV mapped_to_ref.bam ref.fasta sv.vcf work_sv \\
+        --genotype \\
+        --min_support ${params.cutesv_min_support} \\
+        --min_size ${params.cutesv_min_sv_len}
+
+    # only keep precise variants with sufficiently high allele fraction
+    bcftools view \\
+        -f PASS \\
+        -i 'INFO/PRECISE=1 && INFO/AF>=${params.cutesv_min_variant_allele_fraction}' \\
+        sv.vcf -o filtered.vcf
+
+    # only keep variants supported by bcftools consensus
+    bcftools view -i '(ALT !~ "<.*>") || (ALT == "<DEL>")' filtered.vcf -o sv.filtered.vcf
+    """
+}
+
+
+process structural_variant_consensus {
+    label "cutesv"
+    input:
+        tuple val(meta),
+            path("ref.fasta")
+            path("sv.filtered.vcf")
+    output:
+        tuple val(meta),
+            path("sv_consensus.fasta")
+    """
+    if [[ \$(bcftools view -H sv.filtered.vcf | wc -l) -ne 0 ]]
     then
-      bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o filtered.vcf
-      bcftools sort filtered.vcf -Oz -o structural_variants.vcf.gz
+      bcftools sort sv.filtered.vcf -Oz -o structural_variants.vcf.gz
       tabix structural_variants.vcf.gz
       bcftools consensus \\
         --fasta-ref ref.fasta \\
         -o sv_consensus.fasta structural_variants.vcf.gz
     else
       cp ref.fasta sv_consensus.fasta
-      bgzip -c sv.vcf > structural_variants.vcf.gz
-      tabix -p vcf structural_variants.vcf.gz
-    fi    
+    fi
     """
 }
 
