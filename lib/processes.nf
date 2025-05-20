@@ -871,7 +871,6 @@ process cutesv {
     output:
         tuple val(meta),
             path("sv.filtered.vcf")
-    {
     """
     mkdir work_sv
 
@@ -896,7 +895,7 @@ process structural_variant_consensus {
     label "cutesv"
     input:
         tuple val(meta),
-            path("ref.fasta")
+            path("ref.fasta"),
             path("sv.filtered.vcf")
     output:
         tuple val(meta),
