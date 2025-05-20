@@ -373,34 +373,21 @@
       "fa_icon": "fas fa-database",
       "description": "Advanced settings for mapping and consensus creation.",
       "properties": {
-        "sniffles_do_call_structural_variants": {
+        "sv_do_call_structural_variants": {
           "type": "boolean",
-          "title": "Call structual variants with sniffles",
+          "title": "Call structural variants",
           "default": true,
-          "description": "Before consensus is created update the references with structural variants called with sniffles",
-          "help_text": "If true structural variants are called with sniffles and used for consensus creation",
+          "description": "Before consensus is created update the references with structural variants",
+          "help_text": "If true structural variants are called and used for consensus creation",
           "fa_icon": "fas fa-dot-circle"
         },
-        "consensus_method": {
+        "sv_method": {
           "type": "string",
-          "default": "auto",
-          "description": "Consensus method to use. Choose from auto (recommended), simple, medaka and medaka_variant.",
-          "help_text": "Method used for consensus generation.",
-          "fa_icon": "fas fa-signal"
-        },
-        "map_to_target_minimap_window_size": {
-          "type": "integer",
-          "default": 5,
-          "description": "Minimap2 window size",
-          "help_text": "Minimap2 window size used during target mapping.",
-          "fa_icon": "far fa-window-maximize"
-        },
-        "map_to_target_minimap_kmer_size": {
-          "type": "integer",
-          "default": 11,
-          "description": "Minimap2 k-mer size",
-          "help_text": "K-mer size used by Minimap2 for seed generation.",
-          "fa_icon": "fas fa-arrows-alt-h"
+          "title": "Method for structural variant calling",
+          "default": "cutesv",
+          "description": "Use this structural variant caller. Choices are sniffles and cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
         },
         "sniffles_min_support": {
           "type": "integer",
@@ -422,6 +409,48 @@
           "description": "Minimum allele fraction for structural variants.",
           "help_text": "",
           "fa_icon": "fas fa-align-right"
+        },
+        "cutesv_min_support": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum support for structural variants by variant caller cutesv.",
+          "help_text": "Minimum support for structural variants by variant caller cutesv.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_sv_len": {
+          "type": "integer",
+          "default": 30,
+          "description": "Minimum length of structural variants in cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_variant_allele_fraction": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele fraction for structural variants.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
+        "consensus_method": {
+          "type": "string",
+          "default": "auto",
+          "description": "Consensus method to use. Choose from auto (recommended), simple, medaka and medaka_variant.",
+          "help_text": "Method used for consensus generation.",
+          "fa_icon": "fas fa-signal"
+        },
+        "map_to_target_minimap_window_size": {
+          "type": "integer",
+          "default": 5,
+          "description": "Minimap2 window size",
+          "help_text": "Minimap2 window size used during target mapping.",
+          "fa_icon": "far fa-window-maximize"
+        },
+        "map_to_target_minimap_kmer_size": {
+          "type": "integer",
+          "default": 11,
+          "description": "Minimap2 k-mer size",
+          "help_text": "K-mer size used by Minimap2 for seed generation.",
+          "fa_icon": "fas fa-arrows-alt-h"
         },
         "medaka_consensus_model": {
           "type": "string",
