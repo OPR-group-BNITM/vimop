@@ -834,7 +834,7 @@ process simplify_reference_fasta {
 process sniffles {
     label "medaka"
     cpus { minCpus(2) }
-    memory { minRAM(5) } 
+    memory { minRAM(10) } 
     input:
         tuple val(meta),
             path("ref.fasta"),
