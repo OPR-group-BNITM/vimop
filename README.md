@@ -116,7 +116,7 @@ They are listed in the following:
 | Mammarenavirus choriomeningitidis  | LCMV         | 305230    |
 | Mammarenavirus juninense           | JUNV         | 2169991   |
 | Orthoebolavirus                    | EBOV         | 3044781   |
-| Orthomarburgvirus                  | EBOV         | 3044783   |
+| Orthomarburgvirus                  | MARV         | 3044783   |
 | Orthoflavivirus denguei            | DENV         | 3052464   |
 | Orthoflavivirus zikaense           | ZIKA         | 3048459   |
 | Emesvirus zinderi                  | MS2          | 329852    |

@@ -375,7 +375,7 @@
       "properties": {
         "sv_do_call_structural_variants": {
           "type": "boolean",
-          "title": "Call structual variants with sniffles",
+          "title": "Call structural variants",
           "default": true,
           "description": "Before consensus is created update the references with structural variants",
           "help_text": "If true structural variants are called and used for consensus creation",
