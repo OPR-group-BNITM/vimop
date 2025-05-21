@@ -4,8 +4,7 @@
   "title": "OPR-group-BNITM/vimop",
   "workflow_title": "ViMOP: Virus metagenomics outbreak preparedness workflow",
   "description": "Reference-based virus assembly with automatic reference selection from ONT reads.",
-  "demo_url": "https://my-bucket.s3.amazonaws.com/nanoflow/nanoflow-demo.tar.gz",
-  "aws_demo_url": "https://my-bucket.s3.amazonaws.com/nanoflow/aws.nextflow.config",
+  "demo_url": "https://opr.bnitm.de/example_data/vimop-demo.tar.gz",
   "url": "https://github.com/OPR-group-BNITM/nanoflow",
   "type": "object",
   "resources": {
