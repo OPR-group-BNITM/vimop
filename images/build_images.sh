@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-images=(canu centrifuge general ingress medaka report)
+images=(canu centrifuge general ingress medaka report cutesv)
 
 for img in "${images[@]}";
 do
