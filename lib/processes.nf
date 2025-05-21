@@ -872,21 +872,35 @@ process cutesv {
         tuple val(meta),
             path("sv.filtered.vcf")
     """
-    mkdir work_sv
+    if [[ \$(samtools view mapped_to_ref.bam | wc -l) -ne 0 ]]
+    then
+        mkdir work_sv
 
-    cuteSV mapped_to_ref.bam ref.fasta sv.vcf work_sv \\
-        --genotype \\
-        --min_support ${params.cutesv_min_support} \\
-        --min_size ${params.cutesv_min_sv_len}
+        cuteSV mapped_to_ref.bam ref.fasta sv.vcf work_sv \\
+            --genotype \\
+            --min_support ${params.cutesv_min_support} \\
+            --min_size ${params.cutesv_min_sv_len}
 
-    # only keep precise variants with sufficiently high allele fraction
-    bcftools view \\
-        -f PASS \\
-        -i 'INFO/PRECISE=1 && INFO/AF>=${params.cutesv_min_variant_allele_fraction}' \\
-        sv.vcf -o filtered.vcf
+        # only keep precise variants with sufficiently high allele fraction
+        bcftools view \\
+            -f PASS \\
+            -i 'INFO/PRECISE=1 && INFO/AF>=${params.cutesv_min_variant_allele_fraction}' \\
+            sv.vcf -o filtered.vcf
 
-    # only keep variants supported by bcftools consensus
-    bcftools view -i '(ALT !~ "<.*>") || (ALT == "<DEL>")' filtered.vcf -o sv.filtered.vcf
+        # only keep variants supported by bcftools consensus
+        bcftools view -i '(ALT !~ "<.*>") || (ALT == "<DEL>")' filtered.vcf -o sv.filtered.vcf
+    else
+        # create an empty vcf file
+        refid=\$(head -n 1 ref.fasta | sed 's/^>//' | awk '{print \$1}')
+        reflen=\$(grep -v '^>' ref.fasta | tr -d '\\n' | wc -c)
+
+        # Create the minimal VCF
+        {
+            echo "##fileformat=VCFv4.2"
+            echo "##contig=<ID=\$refid,length=\$reflen>"
+            echo -e "#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO"
+        } > sv.filtered.vcf
+    fi
     """
 }
 
