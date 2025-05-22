@@ -110,19 +110,20 @@ This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg vir
 In our default data base there are filters for individual virus species and for virus families.
 They are listed in the following:
 
-| Virus                              | Abbreviation | TaxId     |
-| ---------------------------------- | ------------ | --------- |
-| Mammarenavirus lassense            | LASV         | 3052310   |
-| Mammarenavirus choriomeningitidis  | LCMV         | 305230    |
-| Mammarenavirus juninense           | JUNV         | 2169991   |
-| Orthoebolavirus                    | EBOV         | 3044781   |
-| Orthomarburgvirus                  | MARV         | 3044783   |
-| Orthoflavivirus denguei            | DENV         | 3052464   |
-| Orthoflavivirus zikaense           | ZIKA         | 3048459   |
-| Emesvirus zinderi                  | MS2          | 329852    |
-| Yellow fever virus                 | YFV          | 3046277   |
-| West nile virus                    | WNV          | 3048448   |
-| Orthonairovirus hazaraense         | HAZV         | 3052519   |
+| Virus                                           | Abbreviation | TaxId     |
+| ----------------------------------------------- | ------------ | --------- |
+| Emesvirus zinderi                               | MS2          | 329852    |
+| Mammarenavirus lassense                         | LASV         | 3052310   |
+| Mammarenavirus choriomeningitidis               | LCMV         | 305230    |
+| Mammarenavirus juninense                        | JUNV         | 2169991   |
+| Orthoebolavirus                                 | EBOV         | 3044781   |
+| Orthoflavivirus denguei                         | DENV         | 3052464   |
+| Orthoflavivirus zikaense                        | ZIKA         | 3048459   |
+| Orthomarburgvirus                               | MARV         | 3044783   |
+| Orthonairovirus hazaraense                      | HAZV         | 3052519   |
+| Severe acute respiratory syndrome coronavirus 2 | COVID        | 2697049   |
+| West nile virus                                 | WNV          | 3048448   |
+| Yellow fever virus                              | YFV          | 3046277   |
 
 | Virus family            | Abbreviation | TaxId     |
 | ----------------------- | ------------ | --------- |
