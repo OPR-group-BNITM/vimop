@@ -384,7 +384,7 @@ workflow pipeline {
             mapped_to_ref | map { meta, ref, bam, bai -> [ref, "$meta.alias/consensus", "${meta.consensus_target}.reference.fasta"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bam, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam"] },
             mapped_to_ref | map { meta, ref, bam, bai -> [bai, "$meta.alias/consensus", "${meta.consensus_target}.reads.bam.bai"] },
-            structural_variants | map { meta, variants -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf.gz"] },
+            structural_variants | map { meta, variants -> [variants, "$meta.alias/consensus", "${meta.consensus_target}.structural_variants.vcf"] },
             consensi | map { meta, consensus -> [consensus, "$meta.alias/consensus", "${meta.consensus_target}.consensus.fasta"] },
             coverage | map { meta, coverage -> [coverage, "$meta.alias/consensus", "${meta.consensus_target}.depth.txt"] },
             // selected consensi
