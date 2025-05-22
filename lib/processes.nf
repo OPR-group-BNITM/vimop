@@ -768,7 +768,7 @@ process map_to_sv_consensus {
     input:
         tuple val(meta),
             path("trimmed.fastq"),
-            path("structural_variants.vcf.gz"),
+            path("structural_variants.vcf"),
             path("sv_consensus.fasta"),
             path("mapped_to_ref.bam"),
             path("mapped_to_ref.bam.bai")
@@ -779,7 +779,7 @@ process map_to_sv_consensus {
             path("mapped_to_sv_consensus.bam.bai")
     """
     set +e
-    variant_count=\$(gunzip -c structural_variants.vcf.gz | grep -c -v '^#')
+    variant_count=\$(grep -c -v '^#' structural_variants.vcf)
     set -e
 
     if [[ "\$variant_count" -eq 0 ]]
@@ -844,17 +844,31 @@ process sniffles {
         tuple val(meta),
             path("sv.filtered.vcf")
     """
-    set +e
-    sniffles \\
-        -t ${task.cpus} \\
-        --input mapped_to_ref.bam \\
-        --reference ref.fasta \\
-        --vcf sv.vcf \\
-        --minsupport ${params.sniffles_min_support} \\
-        --minsvlen ${params.sniffles_min_sv_len}
-    set -e
+    if [[ \$(samtools view mapped_to_ref.bam | wc -l) -ne 0 ]]
+    then
+        set +e
+        sniffles \\
+            -t ${task.cpus} \\
+            --input mapped_to_ref.bam \\
+            --reference ref.fasta \\
+            --vcf sv.vcf \\
+            --minsupport ${params.sniffles_min_support} \\
+            --minsvlen ${params.sniffles_min_sv_len}
+        set -e
 
-    bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o sv.filtered.vcf
+        bcftools view -i 'INFO/AF>=${params.sniffles_min_variant_allele_fraction}' sv.vcf -Ov -o sv.filtered.vcf
+    else
+        # create an empty vcf file
+        refid=\$(head -n 1 ref.fasta | sed 's/^>//' | awk '{print \$1}')
+        reflen=\$(grep -v '^>' ref.fasta | tr -d '\\n' | wc -c)
+
+        # Create the minimal VCF
+        {
+            echo "##fileformat=VCFv4.2"
+            echo "##contig=<ID=\$refid,length=\$reflen>"
+            echo -e "#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO"
+        } > sv.filtered.vcf
+    fi
     """
 }
 
