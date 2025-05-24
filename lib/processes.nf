@@ -295,19 +295,34 @@ process filter_contaminants {
 process filter_virus_target {
     label "general"
     cpus { minCpus(4) }
-    memory { minRAM(10) }
+    memory { minRAM(20) }
     input:
         tuple val(meta), path('seqs.fastq'), path(target)
     output:
         tuple val(meta), path('filtered.fastq')
     """
-    minimap2 \
-        -x map-ont \
-        -a ${target} \
-        -t ${task.cpus} \
-        seqs.fastq \
-    | samtools fastq \
+    ref_size=\$(stat -Lc%s "${target}")
+
+    if [[ "\$ref_size" -gt ${params.target_filter_minimap_index_split_thresh * 1024 * 1024} ]]
+    then
+        echo "Large reference — using split index"
+        minimap2 -I 2G -d map_index.mmi --split-prefix map_index "${target}"
+        ref=map_index.mmi
+    else
+        echo "Small reference - no need to split the index"
+        ref="${target}"
+    fi
+    minimap2 \\
+        -ax map-ont \\
+        --split-prefix map_index \\
+        --secondary=no \\
+        "\$ref" \\
+        -t ${task.cpus} \\
+        seqs.fastq \\
+    | samtools fastq \\
         -F 4 > filtered.fastq
+
+    rm -f map_index.mmi
     """
 }
 
