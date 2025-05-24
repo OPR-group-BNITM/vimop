@@ -126,7 +126,7 @@
         },
         "contamination_filters": {
           "type": "string",
-          "default": "reagent,human_dna,human_rna",
+          "default": "human_dna,human_rna,reagent",
           "description": "Filters for contamination removal",
           "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
           "fa_icon": "fas fa-sort-amount-down"
@@ -397,7 +397,7 @@
         },
         "sniffles_min_sv_len": {
           "type": "integer",
-          "default": 30,
+          "default": 20,
           "description": "Minimum length of structural variants in sniffles.",
           "help_text": "",
           "fa_icon": "fas fa-align-left"
@@ -418,7 +418,7 @@
         },
         "cutesv_min_sv_len": {
           "type": "integer",
-          "default": 30,
+          "default": 20,
           "description": "Minimum length of structural variants in cutesv.",
           "help_text": "",
           "fa_icon": "fas fa-align-left"
