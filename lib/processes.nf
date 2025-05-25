@@ -908,6 +908,8 @@ process cutesv {
         cuteSV mapped_to_ref.bam ref.fasta sv.vcf work_sv \\
             --genotype \\
             --min_support ${params.cutesv_min_support} \\
+            --min_mapq ${params.cutesv_min_mapq} \\
+            --min_read_len ${params.cutesv_min_read_len} \\
             --min_size ${params.cutesv_min_sv_len}
 
         # only keep precise variants with sufficiently high allele fraction

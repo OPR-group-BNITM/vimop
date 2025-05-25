@@ -430,6 +430,20 @@
           "help_text": "",
           "fa_icon": "fas fa-align-right"
         },
+        "cutesv_min_read_len": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum length of reads to be taken into account by cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_mapq": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum map quality of reads to be taken into account by cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
         "consensus_method": {
           "type": "string",
           "default": "auto",

@@ -267,7 +267,7 @@ workflow pipeline {
             if(params.sv_method == "cutesv"){
                 structural_variants = mapped_to_ref
                 | cutesv
-            } else if (params.sv_method == "siffles") {
+            } else if (params.sv_method == "sniffles") {
                 structural_variants = mapped_to_ref
                 | sniffles
             } else {
