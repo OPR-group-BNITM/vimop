@@ -49,6 +49,7 @@ include {
     map_to_ref;
     map_to_sv_consensus;
     calc_coverage;
+    subsample_alignments;
     sniffles;
     cutesv;
     structural_variant_consensus;
@@ -264,11 +265,15 @@ workflow pipeline {
         | calc_coverage
 
         if(params.sv_do_call_structural_variants) {
+
+            subsampled_mapped_to_ref = mapped_to_ref
+            | subsample_alignments
+
             if(params.sv_method == "cutesv"){
-                structural_variants = mapped_to_ref
+                structural_variants = subsampled_mapped_to_ref
                 | cutesv
             } else if (params.sv_method == "sniffles") {
-                structural_variants = mapped_to_ref
+                structural_variants = subsampled_mapped_to_ref
                 | sniffles
             } else {
                 error "${params.sv_method} is not a valid choice for params.sv_method"

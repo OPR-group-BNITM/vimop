@@ -846,6 +846,32 @@ process simplify_reference_fasta {
 }
 
 
+process subsample_alignments {
+    label "general"
+    cpus 1
+    input:
+        tuple val(meta), path("ref.fasta"), path("in.bam"), path("in.bam.bai")
+    output:
+        tuple val(meta), path("ref.fasta"), path("out.bam"), path("out.bam.bai")
+    """
+    target_coverage=${params.sv_cap_coverage}
+    if [[ \$target_coverage -gt 0 ]]
+    then
+        samtools dict ref.fasta -o ref.dict
+
+        jvarkit sortsamrefname in.bam | samtools view -b > refname_sorted.bam
+        jvarkit biostar154220 -R ref.fasta -n \$target_coverage refname_sorted.bam -o capped.bam
+
+        samtools sort capped.bam -o out.bam
+        samtools index out.bam
+    else
+        mv in.bam out.bam
+        mv in.bam.bai out.bam.bai
+    fi
+    """
+}
+
+
 process sniffles {
     label "medaka"
     cpus { minCpus(2) }
