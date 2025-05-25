@@ -15,14 +15,14 @@ For information on data bases read further down.
 If you need assistance for setting up a reference data set, please contact us.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
-To build a consensus, [cuteSV](https://github.com/tjiangHIT/cuteSV) (alternative [Sniffles](https://github.com/fritzsedlazeck/Sniffles)) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
+To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) (alternative [cuteSV](https://github.com/tjiangHIT/cuteSV)) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
 This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
 However, for large DNA viruses with repetetive regions, such as mpox, this approach may not correctly generate complete genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
 
 ## Prerequisites
 
-This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs.
+This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your data set, the pipeline may also work on lower ressources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some ressources. 
 
 You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
 If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software. Else you need to install nextflow and [docker](https://www.docker.com/).
@@ -95,9 +95,18 @@ But beware that centrifuge is limited in it's accuracy and you may also remove s
 ### Host and contaminant removal
 
 Host and contaminant reads are removed by mapping them against reference sequences and extracting those that map.
-In our reference data base human DNA and RNA, a mouse genome, a mastomy genome and a set of common lab reagent sequences are included.
 The data base config file (contamination.yaml) defines the reference sets and the key values assigned to them.
 Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is humand reads).
+The following filters are included in our data base
+
+| Filter        | File Name                                               |
+|---------------|---------------------------------------------------------|
+| reagent       | reagent-db.fasta.gz                                     |
+| human_rna     | GCF_000001405.39_GRCh38.p13_rna.fna.gz                  |
+| human_dna     | GCF_000001405.39_GRCh38.p13_genomic.fna.gz              |
+| mouse         | GCA_000001635.8_GRCm38.p6_genomic.fna.gz                |
+| mastomys      | GCF_008632895.1_UCSF_Mcou_1_genomic.fna.gz              |
+| aedes_aegypti | GCF_002204515.2_AaegL5.0_genomic.fna.gz                 |
 
 ### Virus read enrichment
 
