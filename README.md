@@ -136,6 +136,7 @@ They are listed in the following:
 
 | Virus family            | Abbreviation | TaxId     |
 | ----------------------- | ------------ | --------- |
+| All                     | ALL          | 10239     |
 | Arenaviridae            | ARENA        | 11617     |
 | Filoviridae             | FILO         | 11266     |
 | Hantaviridae            | HANTA        | 1980413   |
