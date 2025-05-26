@@ -383,10 +383,17 @@
         "sv_method": {
           "type": "string",
           "title": "Method for structural variant calling",
-          "default": "cutesv",
+          "default": "sniffles",
           "description": "Use this structural variant caller. Choices are sniffles and cutesv.",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
+        },
+        "sv_cap_coverage": {
+          "type": "integer",
+          "default": 500,
+          "description": "Subsammple this number of reads per genome position before structural variant calling. Set to 0 to not subsample.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
         },
         "sniffles_min_support": {
           "type": "integer",
