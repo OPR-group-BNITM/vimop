@@ -873,7 +873,7 @@ process subsample_alignments {
 
 
 process sniffles {
-    label "medaka"
+    label "structural_variants"
     cpus { minCpus(2) }
     memory { minRAM(10) } 
     input:
@@ -915,7 +915,7 @@ process sniffles {
 
 
 process cutesv {
-    label "cutesv"
+    label "structural_variants"
     cpus { minCpus(2) }
     memory { minRAM(5) } 
     input:
