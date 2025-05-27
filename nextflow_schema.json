@@ -391,7 +391,7 @@
         "sv_cap_coverage": {
           "type": "integer",
           "default": 500,
-          "description": "Subsammple this number of reads per genome position before structural variant calling. Set to 0 to not subsample.",
+          "description": "Cut reads to achieve this coverage before structural variant calling. Set to 0 to use all reads.",
           "help_text": "",
           "fa_icon": "fas fa-align-left"
         },
