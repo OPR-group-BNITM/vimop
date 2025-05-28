@@ -10,8 +10,8 @@ If you have questions, suggestions, want to contribute or have a specific requir
 ## Purpose and limitions
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
-We have created a reference data base with our favourite viruses. However, you can also create your own.
-For information on data bases read further down.
+We have created a reference database with our favourite viruses. However, you can also create your own.
+For information on databases read further down.
 If you need assistance for setting up a reference data set, please contact us.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
@@ -29,10 +29,10 @@ If you are using EPI2ME desktop, nextflow and docker are included in the setup o
 
 ## Installation and operation
 
-You can install this pipeline by cloning this repository, running nextflow or using the EPI2ME desktop.
-In any case, you need a reference data base installed.
+You can install this pipeline by cloning this repository, running nextflow or using EPI2ME desktop.
+In any case, you need a reference database installed.
 The pipeline will automatically install all dependencies during the first run using docker, given that you computer is connected to the internet.
-After the set up of the reference data base and the dependencies, the pipeline does not require an internet connection. 
+After the set up of the reference database and the dependencies, the pipeline does not require an internet connection. 
 
 ### Using the command line
 
@@ -40,26 +40,26 @@ To run the pipeline from the command line, make sure to have nextflow and docker
 If you cloned this repository, change into its root directory and run `nextflow main.nf` with the additional options.
 Without manually cloning the repository you can simply run `nextflow run OPR-group-BNITM/vimop` plus options.
 We will stick to the latter now.
-Type `nextflow run OPR-group-BNITM/vimop --download_db_all` to install our latest data base release.
+Type `nextflow run OPR-group-BNITM/vimop --download_db_all` to install our latest database release.
 There is a lot to download, so please be patient.
 If the pipeline fails during the process (which may happen due to instable network access), use the `-resume` option to
-continue your download.
+continue your download without having to restart again.
 You can also separate the download of the reference data into three parts by running the pipeline three times using the options `--download_db_virus`, `--download_db_contamination` and `--download_db_centrifuge` in separate runs. We would recommend this.
-If you want to replace an existing data base with our latest version, add the option `--download_db_update_existing`.
+If you want to replace an existing database with our latest version, add the option `--download_db_update_existing`.
 
 To finally run an analysis type `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
-You can get some demo data here: TODO!
+You can get some demo data here: [ViMOP-demo](https://opr.bnitm.de/example_data/vimop-demo.tar.gz). Once you downloaded and unzipped this folder, use the path to the "lasv_simulated" directory as fastq input of the command above.
 
 ### Using EPI2ME desktop
 
 Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
 Once you added the workflow, launch it and go to the `Setup` options section.
-You can chose to either download all three parts of the data base or donwload contaminants, virus references and centrifuge index separately by ticking the respective boxes.
-Launching the process will download and install the data base into your home directory.
+You can chose to either download all three parts of the database or donwload contaminants, virus references and centrifuge index separately by ticking the respective boxes.
+Launching the process will download and install the database into your home directory.
 This will probably take a while.
 
-If you want to update your existing data base to our latest version, check the respective box to overwrite your existing files.
-This will only be done, if something in the respective data base has changed.
+If you want to update your existing database to our latest version, check the respective box to overwrite your existing files.
+This will only be done, if something in the respective database has changed.
 
 Afterwards you can launch the pipeline to analyse data.
 You can also click "run demo analysis".
@@ -83,7 +83,7 @@ At the beginning the pipeline trims the ends of the reads to remove adapter sequ
 
 Centrifuge is used to classify the reads.
 This helps to get an overview of how your metagenomics sample is composed.
-Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match anything in the reference data base or only partially. 
+Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match anything in the reference database or only partially. 
 Use `--centrifuge_do_classify false` to deactivate all centrifuge classifications and save time.
 
 Additionally, you can use the centrifuge classifications to remove reads (not contigs) that are non-viral to a given degree of confidence.
@@ -95,9 +95,9 @@ But beware that centrifuge is limited in it's accuracy and you may also remove s
 ### Host and contaminant removal
 
 Host and contaminant reads are removed by mapping them against reference sequences and extracting those that map.
-The data base config file (contamination.yaml) defines the reference sets and the key values assigned to them.
+The database config file (contamination.yaml) defines the reference sets and the key values assigned to them.
 Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is humand reads).
-The following filters are included in our data base
+The following filters are included in our database
 
 | Filter        | File Name                                               |
 |---------------|---------------------------------------------------------|
@@ -113,10 +113,10 @@ The following filters are included in our data base
 One can also filter for specific species or groups of viruses.
 Only reads that map to the given targets are then used in the following assembly step.
 An arbitrary number of filters can be used.
-The filters themselves are part of the reference data base and the respective names defined in the data base configs.
+The filters themselves are part of the reference database and the respective names defined in the database configs.
 This command `--targets "MARV,EBOV,FILO"` would activate filters for Marburg virus, Ebola and the Filo-virus family.
 
-In our default data base there are filters for individual virus species and for virus families.
+In our default database there are filters for individual virus species and for virus families.
 They are listed in the following:
 
 | Virus                                           | Abbreviation | TaxId     |
@@ -162,7 +162,7 @@ A number of parameters for the canu assembler can be set, that determine how man
 
 ### Target search
 
-Each contig is used to for a BLAST search in the virus reference data base.
+Each contig is used to for a BLAST search in the virus reference database.
 The highest scoring hit is then used as a reference genome.
 
 ### Consensus creation
@@ -235,7 +235,7 @@ Contigs can be found in the fasta files in the assembly directory.
 
 ## Database
 
-ViMOP relies on a reference data base structure.
+ViMOP relies on a reference database structure.
 It is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
 
@@ -248,9 +248,9 @@ ViMOP_DB/
 
 The three subdirectories contain files for centrifuge classification, contaminants/host read removal and the virus reference sequences.
 Each directory contains a file with a yaml file with the same name prefix (e.g. centrifuge.yaml, contaminants.yaml, virus.yaml).
-The configs hold the relefant information about the data base parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
+The configs hold the relefant information about the database parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
 
-The three data base parts are briefly described in the following.
+The three database parts are briefly described in the following.
 
 ### centrifuge
 
@@ -295,8 +295,8 @@ The keys are used to choose the filters using the command `--contamination_filte
 
 ### virus
 
-The virus data base contains virus reference sequences.
-It consists of a config file, a set of sequence files and a blast data base.
+The virus database contains virus reference sequences.
+It consists of a config file, a set of sequence files and a blast database.
 Let's have a look at a small example.
 Our directory content could look like this
 
@@ -364,8 +364,8 @@ params.cdhit_threshold: 0.98
 ALL.fasta contains all sequences.
 EBOV.fasta contains ebola virus sequences, LASV Lassa virus and FILO filo virus seqeunces.
 These are the files that are used as mapping filters.
-The file ALL.fasta is also used to create the blast data base.
-Our blast data base is build with the blast version used in the pipeline (see `images/general/general.yaml` in this repository).
+The file ALL.fasta is also used to create the blast database.
+Our blast database is build with the blast version used in the pipeline (see `images/general/general.yaml` in this repository).
 The curated viruses will be shown in their own sections in the report and have segment wise one fasta file, where the consensus sequence with the highest recovery is chosen.
 All other virus targets are added in ALL and 
 
@@ -381,7 +381,7 @@ Separated with a "|" we have
 - description
 - family
 - species name
-- orientation of the sequence with respect to the original data base entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unkown".
+- orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unkown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
 
 ## Acknowledgements
