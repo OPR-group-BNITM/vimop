@@ -381,7 +381,7 @@ Separated with a "|" we have
 - description
 - family
 - species name
-- orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unkown".
+- orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
 
 ## Acknowledgements
