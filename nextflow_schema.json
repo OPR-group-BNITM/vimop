@@ -499,6 +499,13 @@
           "help_text": "Fraction of reads supporting a base required for it to be called.",
           "fa_icon": "fas fa-align-right"
         },
+        "consensus_medaka_min_qual": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum quality for medaka variant calls",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
         "consensus_max_variant_calling_iterations": {
           "type": "integer",
           "hidden": true,

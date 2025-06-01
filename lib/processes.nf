@@ -1168,38 +1168,20 @@ def medakaVariantConsensus(String alias) {
     return """
     \$medaka_cmd
 
-    medaka vcf consensus.hdf ref.fasta variants.vcf
+    medaka vcf consensus.hdf ref.fasta variants.vcf --gvcf
 
     bcftools sort variants.vcf -o sorted.vcf
+
     medaka tools annotate sorted.vcf ref.fasta sorted.bam annotated.vcf
 
-    bcftools filter -e "ALT='.'" annotated.vcf \\
-    | bcftools filter -o filtered.vcf -O v -e "INFO/DP<${params.consensus_min_depth}" -
-
-    refid=\$(head -n 1 ref.fasta | awk '{print substr(\$1, 2)}')
-
-    samtools depth -aa -J sorted.bam > depth.txt
-    awk -v ref="\$refid" -v thresh=${params.consensus_min_depth} '{if (\$3<thresh) print \$1"\\t"\$2}' depth.txt  > mask.regions
-
-    bgzip filtered.vcf
-    tabix filtered.vcf.gz
-
-    bcftools consensus \\
-        --mask mask.regions \\
-        --fasta-ref ref.fasta \\
-        -o consensus_draft.fasta filtered.vcf.gz
-
-    echo ">consensus method=medaka reference=\$refid sample=${alias} medaka_model=\$model_choice" > consensus.fasta
-
-    # write a consensus of Ns in case there was nothing mapped at all.
-    if [ ! -s consensus_draft.fasta ]
-    then
-        seq_length=\$(readlength.sh ref.fasta | grep -w '#Bases:' | awk '{print \$2}')
-        sequence=\$(printf "%.0sN" \$(seq 1 "\$seq_length") | fold -w 80)
-        echo "\$sequence" >> consensus.fasta
-    else
-        seqkit seq -w 80 consensus_draft.fasta | tail -n +2 >> consensus.fasta
-    fi
+    consensus_from_medaka_gvcf.py \\
+        --ref ref.fasta \\
+        --gvcf annotated.vcf \\
+        --min_depth ${params.consensus_min_depth} \\
+        --min_qual ${params.consensus_medaka_min_qual} \\
+        --model \$model_choice \\
+        --sample ${alias} \\
+        --out consensus.fasta
     """
 }
 
@@ -1228,9 +1210,7 @@ process medaka_variant_consensus {
 
     ${medakaVariantConsensus(meta.alias)}
 
-    mv depth.txt depth.${meta.consensus_target}.txt
     mv consensus.fasta consensus.${meta.consensus_target}.fasta
-    mv filtered.vcf.gz variants.${meta.consensus_target}.vcf.gz
     """
 }
 
