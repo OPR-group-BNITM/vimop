@@ -460,7 +460,7 @@
         "consensus_method": {
           "type": "string",
           "default": "auto",
-          "description": "Consensus method to use. Choose from auto (recommended), simple, medaka and medaka_variant.",
+          "description": "Consensus method to use. Choose from auto (recommended), simple and medaka.",
           "help_text": "Method used for consensus generation.",
           "fa_icon": "fas fa-signal"
         },
@@ -505,30 +505,6 @@
           "description": "Minimum quality for medaka variant calls",
           "help_text": "",
           "fa_icon": "fas fa-align-left"
-        },
-        "consensus_max_variant_calling_iterations": {
-          "type": "integer",
-          "hidden": true,
-          "default": 3,
-          "description": "Maximum iterations in iterative variant calling.",
-          "help_text": "",
-          "fa_icon": "fas fa-align-right"
-        },
-        "consensus_homopolymer_masking_max_del": {
-          "type": "integer",
-          "hidden": true,
-          "default": 2,
-          "description": "Maximum length of a homopolymeric deletion to be removed from iterative variant calling.",
-          "help_text": "",
-          "fa_icon": "fas fa-align-right"
-        },
-        "consensus_homopolymer_masking_min_length": {
-          "type": "integer",
-          "hidden": true,
-          "default": 5,
-          "description": "Minimum length for a homopolymer region to be considered to be homopolymeric in interative variant calling.",
-          "help_text": "",
-          "fa_icon": "fas fa-align-right"
         },
         "target_filter_minimap_index_split_thresh": {
           "type": "integer",

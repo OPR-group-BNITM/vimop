@@ -54,8 +54,6 @@ include {
     cutesv;
     structural_variant_consensus;
     medaka_variant_consensus;
-    medaka_consensus;
-    iterative_medaka_variant_consensus;
     simple_consensus;
     auto_consensus;
     compute_mapping_stats;
@@ -292,18 +290,12 @@ workflow pipeline {
             mapped_to_sv_consensus = mapped_to_ref
         }
 
-        if (params.consensus_method == 'medaka_variant') {
+        if (params.consensus_method == 'medaka') {
             consensi = mapped_to_sv_consensus
             | map { meta, ref, bam, bai -> [
                 meta, ref, bam, bai,
                 meta.trimmed_reads] }
             | medaka_variant_consensus
-        } else if (params.consensus_method == 'iterative_medaka') {
-            consensi = mapped_to_sv_consensus
-            | map { meta, ref, bam, bai -> [
-                meta, ref, bam, bai,
-                meta.trimmed_reads] }
-            | iterative_medaka_variant_consensus
         } else if (params.consensus_method == 'simple') {
             consensi = mapped_to_sv_consensus
             | simple_consensus
@@ -313,12 +305,6 @@ workflow pipeline {
                 meta, ref, bam, bai,
                 meta.trimmed_reads] }
             | auto_consensus
-        } else if (params.consensus_method == 'medaka') {
-            consensi = mapped_to_sv_consensus
-            | map { meta, ref, bam, bai -> [
-                meta, ref, bam, bai,
-                meta.trimmed_reads] }
-            | medaka_consensus
         }
 
         reference_info = empty_fasta
