@@ -15,7 +15,7 @@ For information on databases read further down.
 If you need assistance for setting up a reference data set, please contact us.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
-To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) (alternative [cuteSV](https://github.com/tjiangHIT/cuteSV)) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
+To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
 This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
 However, for large DNA viruses with repetetive regions, such as mpox, this approach may not correctly generate complete genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
@@ -174,7 +174,7 @@ The default option is to choose automatically from samtools consensus and medaka
 If medaka finds a model for you data, medaka is used, else samtools.
 Samtools consensus takes the most abundant base and masks all positions with too little coverage or unclear signals below the given threshold.
 Medaka 
-You can also directly choose medaka (medaka_variant) or samtools (simple).
+You can also directly choose medaka (medaka) or samtools (simple).
 
 For medaka you can pass a model name for the option `medaka_consensus_model`.
 Chosing auto will let medaka chose the model, which is the default.
