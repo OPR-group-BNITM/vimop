@@ -426,7 +426,7 @@ workflow db_update {
         | map { yaml -> parseYamlToMap(yaml) }
 
         db_virus = update_virus(config_dict, 'virus', doUpdateVirus)
-        db_centrifuge = update_centrifuge(config_dict, 'centrifuge', doUpdateCentrifuge)
+        db_centrifuge = update_centrifuge(config_dict, 'classification', doUpdateCentrifuge)
         db_contaminants = update_contaminants(config_dict, 'contaminants', doUpdateContaminants)
 
         Channel.empty()
