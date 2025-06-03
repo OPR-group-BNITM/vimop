@@ -98,7 +98,7 @@
         "download_db_config_url": {
           "title": "URL",
           "type": "string",
-          "default": "https://www.bnitm.de/owncloud/s/LNRAcTPi9eNygsK/download",
+          "default": "https://opr.bnitm.de/vimop_db/latest.yaml",
           "description": "Url to config file with data base versions.",
           "help_text": "",
           "fa_icon": "fas fa-bullseye"
