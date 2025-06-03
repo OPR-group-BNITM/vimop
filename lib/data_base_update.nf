@@ -8,6 +8,8 @@ nextflow.enable.dsl = 2
 
 process db_update_get_config {
     label "general"
+    errorStrategy "retry"
+    maxRetries 3
     cpus 1
     output:
         path("db.yaml")
@@ -53,6 +55,8 @@ process check_download_necessary {
 process download_parts {
     maxParallel = 1
     label "download"
+    errorStrategy "retry"
+    maxRetries 3
     cpus 1
     input:
         val(file_config)
