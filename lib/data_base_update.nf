@@ -8,6 +8,8 @@ nextflow.enable.dsl = 2
 
 process db_update_get_config {
     label "general"
+    errorStrategy "retry"
+    maxRetries 3
     cpus 1
     output:
         path("db.yaml")
@@ -53,6 +55,8 @@ process check_download_necessary {
 process download_parts {
     maxParallel = 1
     label "download"
+    errorStrategy "retry"
+    maxRetries 3
     cpus 1
     input:
         val(file_config)
@@ -125,7 +129,7 @@ workflow update_data_base {
         | map { config -> config.sub_databases[database_name] }
 
         db_parts = db_config
-        | map { db_config -> [do_update, db_config.checksum_directory, "${params.database_defaults.base}/${params.database_defaults[database_name]}"] }
+        | map { db_config -> [do_update, db_config.checksum_directory, "${params.database_defaults.base}/${database_name}"] }
         | check_download_necessary
         | combine(db_config)
         | map { dummy, db_config -> db_config.files }
