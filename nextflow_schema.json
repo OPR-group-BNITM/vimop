@@ -42,7 +42,9 @@
         },
         "custom_ref_fasta": {
           "type": "string",
-          "description": "Custom reference FASTA",
+          "title": "Custom reference FASTA",
+          "format": "file-path",
+          "description": "Optional custom FASTA file for consensus generation",
           "help_text": "Optional: Provide a custom FASTA file that contains sequences for the consensus generation. These sequences will be used for consensus generation with each sample besides the sequences that are found using the draft assembly. The file can contain multiple sequences. The Entry-ID of each sequence will be used as the file name of for the consensus generation.",
           "fa_icon": "fas fa-file-alt"
         }
@@ -55,11 +57,19 @@
       "description": "Options for data base installation and update",
       "default": "",
       "properties": {
+        "download_db_update_existing": {
+          "type": "boolean",
+          "title": "Overwrite existing data bases when updating.",
+          "default": false,
+          "description": "Update the data bases if a newer version exists. This will overwrite your existing files.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
         "download_db_all": {
           "type": "boolean",
           "title": "Download all databases",
           "default": false,
-          "description": "Update all three data bases (contamination, centrifuge and virus)",
+          "description": "Download all three data bases (contamination, centrifuge and virus)",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
         },
@@ -67,7 +77,7 @@
           "type": "boolean",
           "title": "Download centrifuge classification indices",
           "default": false,
-          "description": "Update the centrifuge indices used for read and contig classification and non-viral read removal.",
+          "description": "Download the centrifuge indices used for read and contig classification and non-viral read removal.",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
         },
@@ -75,7 +85,7 @@
           "type": "boolean",
           "title": "Download host and contaminants data base",
           "default": false,
-          "description": "Update genomes and sequences for removal of host reads and other contaminants.",
+          "description": "Download genomes and sequences for removal of host reads and other contaminants.",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
         },
@@ -84,14 +94,6 @@
           "title": "Download virus reference genome data base",
           "default": false,
           "description": "Download the virus reference genomes.",
-          "help_text": "",
-          "fa_icon": "fas fa-dot-circle"
-        },
-        "download_db_update_existing": {
-          "type": "boolean",
-          "title": "Overwrite existing data bases when updating.",
-          "default": false,
-          "description": "Update the data bases if a newer version exists. This will overwrite your existing files.",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
         },
