@@ -1,0 +1,7 @@
+.nextflow.log*
+.DS_Store
+.nextflow/
+work/
+__pycache__/
+bin/workflow_glue/__pycache__/*
+output/*

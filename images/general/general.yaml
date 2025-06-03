@@ -1,0 +1,20 @@
+name: general
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas=2.2.0
+  - bbmap=38.79
+  - fastqc=0.11.9
+  - seqtk=1.4
+  - bcftools=1.10.2
+  - samtools=1.19.2
+  - minimap2=2.26
+  - seqkit=2.7.0
+  - blast=2.15.0
+  - biopython=1.84
+  - pysam=0.22
+  - pysamstats=1.1
+  - jvarkit=2024.08.25

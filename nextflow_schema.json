@@ -1,0 +1,622 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/OPR-group-BNITM/nanoflow/nextflow_schema.json",
+  "title": "OPR-group-BNITM/vimop",
+  "workflow_title": "ViMOP: Virus metagenomics outbreak preparedness workflow",
+  "description": "Reference-based virus assembly with automatic reference selection from ONT reads.",
+  "demo_url": "https://opr.bnitm.de/example_data/vimop-demo.tar.gz",
+  "url": "https://github.com/OPR-group-BNITM/nanoflow",
+  "type": "object",
+  "resources": {
+    "recommended": {
+      "cpus": 32,
+      "memory": "30 GB"
+    },
+    "minimum": {
+      "cpus": 16,
+      "memory": "30 GB"
+    },
+    "run_time": "30 to 150 minutes",
+    "arm_support": false
+  },
+  "definitions": {
+    "input": {
+      "title": "Input Options",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "fastq": {
+          "type": "string",
+          "description": "Path to input FASTQ files directory, can be RUN directories with barcode subdirectories or single barcode directories",
+          "format": "path",
+          "help_text": "Directory containing FASTQ files, e.g., 'HAM-2025-RUN001/barcode01'",
+          "fa_icon": "far fa-folder"
+        },
+        "sample_sheet": {
+          "type": "string",
+          "title": "Sample sheet",
+          "format": "file-path",
+          "description": "A CSV file used to map barcodes to sample aliases. The sample sheet can be provided when the input data is a directory containing sub-directories with FASTQ files.",
+          "help_text": "The sample sheet is a CSV file with, minimally, columns named `barcode` and `alias`. Extra columns are allowed. A `type` column is required for certain workflows and should have the following values; `test_sample`, `positive_control`, `negative_control`, `no_template_control`."
+        },
+        "custom_ref_fasta": {
+          "type": "string",
+          "title": "Custom reference FASTA",
+          "format": "file-path",
+          "description": "Optional custom FASTA file for consensus generation",
+          "help_text": "Optional: Provide a custom FASTA file that contains sequences for the consensus generation. These sequences will be used for consensus generation with each sample besides the sequences that are found using the draft assembly. The file can contain multiple sequences. The Entry-ID of each sequence will be used as the file name of for the consensus generation.",
+          "fa_icon": "fas fa-file-alt"
+        }
+      },
+      "fa_icon": "fas fa-folder-open"
+    },
+    "setup": {
+      "title": "Setup",
+      "type": "object",
+      "description": "Options for data base installation and update",
+      "default": "",
+      "properties": {
+        "download_db_update_existing": {
+          "type": "boolean",
+          "title": "Overwrite existing data bases when updating.",
+          "default": false,
+          "description": "Update the data bases if a newer version exists. This will overwrite your existing files.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_all": {
+          "type": "boolean",
+          "title": "Download all databases",
+          "default": false,
+          "description": "Download all three data bases (contamination, centrifuge and virus)",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_centrifuge": {
+          "type": "boolean",
+          "title": "Download centrifuge classification indices",
+          "default": false,
+          "description": "Download the centrifuge indices used for read and contig classification and non-viral read removal.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_contamination": {
+          "type": "boolean",
+          "title": "Download host and contaminants data base",
+          "default": false,
+          "description": "Download genomes and sequences for removal of host reads and other contaminants.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_virus": {
+          "type": "boolean",
+          "title": "Download virus reference genome data base",
+          "default": false,
+          "description": "Download the virus reference genomes.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "download_db_config_url": {
+          "title": "URL",
+          "type": "string",
+          "default": "https://opr.bnitm.de/vimop_db/latest.yaml",
+          "description": "Url to config file with data base versions.",
+          "help_text": "",
+          "fa_icon": "fas fa-bullseye"
+        }
+      }
+    },
+    "filters_and_trimming": {
+      "title": "Filters and trimming",
+      "type": "object",
+      "fa_icon": "fas fa-arrow-left",
+      "description": "Parameters for filtering the reads.",
+      "properties": {
+        "targets": {
+          "type": "string",
+          "description": "Comma-separated list of target viruses",
+          "help_text": "Comma-separated list of viruses to prioritize, e.g., 'LCMV,MS2,LASV'. Leave empty for no prioritization.",
+          "fa_icon": "fas fa-bullseye"
+        },
+        "assemble_notarget": {
+          "type": "boolean",
+          "default": true,
+          "help_text": "Whether to also assemble reads that were not assigned to any specific target.",
+          "description": "Assemble non-target reads",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "contamination_filters": {
+          "type": "string",
+          "default": "human_dna,human_rna,reagent",
+          "description": "Filters for contamination removal",
+          "help_text": "Comma-separated list of contaminant types to filter, e.g., 'reagent,human_dna,human_rna'.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "centrifuge_do_classify": {
+          "type": "boolean",
+          "title": "Run centrifuge classification",
+          "default": true,
+          "description": "Turn centrifuge classification on or off.",
+          "help_text": "Turn off to not classify reads and contigs.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_plot_min_frac": {
+          "type": "number",
+          "title": "Minimum fraction for display.",
+          "default": 0.0005,
+          "description": "Minimum classification fraction for display in report sunburst plot.",
+          "help_text": "Only relevant for visualization in the report. 0.0001 for example means that at least 1 in 10,000 reads are needed for a group to be shown in the sunburst plot in the report.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_do_filter": {
+          "type": "boolean",
+          "title": "Use centrifuge filter",
+          "default": true,
+          "description": "Filter based on centrifuge classifications.",
+          "help_text": "Whether to filter non-viral reads based on the centrifuge classifications. Use to remove bacterial reads.",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "centrifuge_filter_min_score": {
+          "type": "integer",
+          "default": 100,
+          "description": "Minimum classification score",
+          "help_text": "Reads that are classified as non-viral with a score higher than or equal to this are removed.",
+          "fa_icon": "fas fa-sort-amount-down-alt"
+        },
+        "trim_length": {
+          "type": "integer",
+          "default": 30,
+          "help_text": "Number of bases that get removed from both sides of each read.",
+          "description": "Trim length for reads",
+          "fa_icon": "fas fa-cut"
+        }
+      }
+    },
+    "output": {
+      "title": "Output Options",
+      "type": "object",
+      "fa_icon": "fas fa-arrow-left",
+      "description": "Parameters for saving and naming outputs",
+      "properties": {
+      "out_dir": {
+          "title": "Output directory",
+          "type": "string",
+          "default": "output",
+          "format": "path",
+          "description": "Output directory, should be the RUN directory where the subdirectory with the output for each sample is created",
+          "help_text": "Directory where the final results and reports will be saved. Can be absolute or relative path.",
+          "fa_icon": "fas fa-folder"
+        },
+        "output_cleaned_reads": {
+          "type": "boolean",
+          "description": "Output cleaned reads",
+          "help_text": "If enabled, cleaned reads after contamination removal will be written to output directory.",
+          "fa_icon": "fas fa-folder-plus"
+        },
+        "output_krona_plot": {
+          "type": "boolean",
+          "description": "Output Krona plot",
+          "help_text": "If enabled, a separate read classification Krona plot will be written into a HTML file in the output directory. This file can be opened in the browser.",
+          "fa_icon": "fas fa-folder-plus"
+        }
+      }
+    },
+    "database_options": {
+      "title": "Advanced: Data Base",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "description": "Advanced settings for reference data base customization.",
+      "properties": {
+        "base_db": {
+          "type": "string",
+          "description": "Path to general database directory",
+          "format": "directory-path",
+          "help_text": "Path to base directory that contains the virus, contaminants and classification data base",
+          "fa_icon": "fas fa-database"
+        },
+        "virus_db": {
+          "type": "string",
+          "description": "Path to virus database directory",
+          "format": "directory-path",
+          "help_text": "Path to virus database that contains all virus sequences for BLAST search and consensus creation",
+          "fa_icon": "fas fa-server"
+        },
+        "virus_db_config": {
+          "type": "string",
+          "description": "Configuration file for the virus database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for the virus database.",
+          "fa_icon": "far fa-file-alt"
+        },
+        "contaminants_db": {
+          "type": "string",
+          "description": "Path to contaminants database directory",
+          "format": "directory-path",
+          "help_text": "Path to contaminants database (e.g., human DNA/RNA, prokaryotic contaminants).",
+          "fa_icon": "fas fa-server"
+        },
+        "contaminants_db_config": {
+          "type": "string",
+          "description": "Configuration file for the contaminants database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for contaminants database.",
+          "fa_icon": "far fa-file-alt"
+        },
+        "classification_db": {
+          "type": "string",
+          "description": "Path to classification database directory containing .cf files for centrifuge",
+          "format": "directory-path",
+          "help_text": "Path to a classification database used by centrifuge, should contain .cf files.",
+          "fa_icon": "fas fa-server"
+        },
+        "classification_db_config": {
+          "type": "string",
+          "description": "Configuration file for the classification database",
+          "format": "file-path",
+          "mimetype": "yaml",
+          "help_text": "YAML configuration file for classification database.",
+          "fa_icon": "far fa-file-alt"
+        }
+      }
+    },
+    "denovo_assembly_options": {
+      "title": "Advanced: De-novo assembly",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "description": "Advanced settings for mapping and consensus creation.",
+      "properties": {
+        "canu_min_read_length": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu minimum read length",
+          "help_text": "Reads shorter than this threshold are excluded from the assembly process.",
+          "fa_icon": "fas fa-sort-amount-down-alt"
+        },
+        "canu_min_overlap_length": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu minimum overlap length",
+          "help_text": "Overlaps shorter than this value are disregarded.",
+          "fa_icon": "fas fa-ruler-horizontal"
+        },
+        "canu_genome_size": {
+          "type": "integer",
+          "default": 30000,
+          "description": "Estimated total genome size for Canu",
+          "help_text": "An estimate of the genome size to be assembled.",
+          "fa_icon": "fas fa-arrows-alt-h"
+        },
+        "canu_read_sampling_bias": {
+          "type": "integer",
+          "default": 5,
+          "description": "Canu read sampling bias",
+          "help_text": "Bias towards selecting longer reads during downsampling.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "canu_max_input_coverage": {
+          "type": "integer",
+          "default": 200,
+          "description": "Canu maximum input coverage",
+          "help_text": "Maximum coverage to use for the assembly input.",
+          "fa_icon": "fas fa-sort-amount-down"
+        },
+        "canu_cor_out_coverage": {
+          "type": "integer",
+          "default": 10000,
+          "description": "Canu corrected output coverage",
+          "help_text": "Controls how many reads will be corrected in the correction phase.",
+          "fa_icon": "fas fa-times"
+        },
+        "canu_stop_on_low_coverage": {
+          "type": "integer",
+          "default": 0,
+          "description": "Canu stop on low coverage",
+          "help_text": "If coverage drops below this value, Canu will stop.",
+          "fa_icon": "far fa-hand-paper"
+        },
+        "canu_min_input_coverage": {
+          "type": "integer",
+          "default": 0,
+          "description": "Canu minimum input coverage",
+          "help_text": "Minimum required coverage before Canu starts assembling.",
+          "fa_icon": "far fa-hand-paper"
+        },
+        "nocontigs_enable_read_usage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable usage of reads even if no contigs are assembled.",
+          "fa_icon": "fas fa-seedling"
+        },
+        "nocontigs_max_reads_precluster": {
+          "type": "integer",
+          "default": 10000,
+          "description": "Max number of reads to use before clustering (no-contigs path).",
+          "fa_icon": "fas fa-sort-numeric-up"
+        },
+        "nocontigs_nreads": {
+          "type": "integer",
+          "default": 100,
+          "description": "Number of reads to sample for no-contigs scenario.",
+          "fa_icon": "fas fa-list-ol"
+        },
+        "nocontigs_cdhit_thresh": {
+          "type": "number",
+          "default": 0.9,
+          "description": "CD-HIT threshold for no-contigs mode.",
+          "fa_icon": "fas fa-filter"
+        },
+        "nocontigs_cdhit_wordlen": {
+          "type": "integer",
+          "default": 10,
+          "description": "CD-HIT word length for no-contigs mode.",
+          "fa_icon": "fas fa-font"
+        },
+        "reassemble_cdhit_thresh": {
+          "type": "number",
+          "default": 0.98,
+          "description": "CD-HIT threshold for reassembly step.",
+          "fa_icon": "fas fa-filter"
+        },
+        "reassemble_cdhit_wordlen": {
+          "type": "integer",
+          "default": 10,
+          "description": "CD-HIT word length for reassembly step.",
+          "fa_icon": "fas fa-font"
+        },
+        "reassemble_max_iter": {
+          "type": "integer",
+          "default": 2,
+          "description": "Maximum number of reassembly iterations.",
+          "fa_icon": "fas fa-redo"
+        }
+      }
+    },
+    "consensus_options": {
+      "title": "Advanced: Reference based assembly",
+      "type": "object",
+      "fa_icon": "fas fa-database",
+      "description": "Advanced settings for mapping and consensus creation.",
+      "properties": {
+        "sv_do_call_structural_variants": {
+          "type": "boolean",
+          "title": "Call structural variants",
+          "default": true,
+          "description": "Before consensus is created update the references with structural variants",
+          "help_text": "If true structural variants are called and used for consensus creation",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "sv_method": {
+          "type": "string",
+          "title": "Method for structural variant calling",
+          "default": "sniffles",
+          "description": "Use this structural variant caller. Choices are sniffles and cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "sv_cap_coverage": {
+          "type": "integer",
+          "default": 500,
+          "description": "Cut reads to achieve this coverage before structural variant calling. Set to 0 to use all reads.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_support": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum support for structural variants by variant caller sniffles.",
+          "help_text": "Minimum support for structural variants by variant caller sniffles.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_sv_len": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum length of structural variants in sniffles.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "sniffles_min_variant_allele_fraction": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele fraction for structural variants.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
+        "cutesv_min_support": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum support for structural variants by variant caller cutesv.",
+          "help_text": "Minimum support for structural variants by variant caller cutesv.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_sv_len": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum length of structural variants in cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_variant_allele_fraction": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele fraction for structural variants.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        },
+        "cutesv_min_read_len": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum length of reads to be taken into account by cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "cutesv_min_mapq": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum map quality of reads to be taken into account by cutesv.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "consensus_method": {
+          "type": "string",
+          "default": "auto",
+          "description": "Consensus method to use. Choose from auto (recommended), simple and medaka.",
+          "help_text": "Method used for consensus generation.",
+          "fa_icon": "fas fa-signal"
+        },
+        "map_to_target_minimap_window_size": {
+          "type": "integer",
+          "default": 5,
+          "description": "Minimap2 window size",
+          "help_text": "Minimap2 window size used during target mapping.",
+          "fa_icon": "far fa-window-maximize"
+        },
+        "map_to_target_minimap_kmer_size": {
+          "type": "integer",
+          "default": 11,
+          "description": "Minimap2 k-mer size",
+          "help_text": "K-mer size used by Minimap2 for seed generation.",
+          "fa_icon": "fas fa-arrows-alt-h"
+        },
+        "medaka_consensus_model": {
+          "type": "string",
+          "default": "auto",
+          "description": "The name of a Medaka model to use. By default the workflow will select an appropriate Medaka model from the basecaller configuration provided. Entering a name here will override the automated selection and use the Medaka model named here.",
+          "help_text": "The workflow will attempt to map the basecalling model used to a suitable Medaka consensus model. You can override this by providing a model with this option instead.",
+          "fa_icon": "far fa-chart-bar"
+        },
+        "consensus_min_depth": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum depth for consensus base",
+          "help_text": "Minimum coverage depth required at a position.",
+          "fa_icon": "fas fa-align-left"
+        },
+        "consensus_min_share": {
+          "type": "number",
+          "default": 0.7,
+          "description": "Minimum allele share for consensus base",
+          "help_text": "Fraction of reads supporting a base required for it to be called.",
+          "fa_icon": "fas fa-align-right"
+        },
+        "consensus_medaka_min_qual": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum quality for medaka variant calls",
+          "help_text": "",
+          "fa_icon": "fas fa-align-left"
+        },
+        "target_filter_minimap_index_split_thresh": {
+          "type": "integer",
+          "hidden": true,
+          "default": 500,
+          "description": "Size threshold of referene fasta to split minimap index when filtering target reads.",
+          "help_text": "",
+          "fa_icon": "fas fa-align-right"
+        }
+      }
+    },
+    "misc": {
+      "title": "Miscellaneous Options",
+      "type": "object",
+      "description": "Everything else.",
+      "default": "",
+      "properties": {
+        "cleanup": {
+          "type": "boolean",
+          "default": true,
+          "hidden": true
+        },
+        "min_ram_gb": {
+          "type": "number",
+          "default": 30,
+          "description": "Minimum RAM to run the workflow"
+        },
+        "min_cpus": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum number of CPUs for the workflow"
+        },
+        "min_disk_space_work_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space for the work directory of the workflow"
+        },
+        "min_disk_space_out_gb": {
+          "type": "number",
+          "default": 10,
+          "description": "Minimum disk space for the output directory of the workflow"
+        },
+        "download_db_min_ram_gb": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum RAM required during data base setup"
+        },
+        "download_db_min_cpus": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum number of CPUs required for data base setup"
+        },
+        "download_db_min_disk_space_work_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space for the work directory during data base setup to keep intermediate files"
+        },
+        "download_db_min_disk_space_home_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space available in the default data base directory for storing the data base"
+        },
+        "database_defaults": {
+          "type": "object",
+          "description": "Config files for the databases",
+          "hidden": true
+        },
+        "schema": {
+          "type": "string",
+          "default": "./nextflow_schema.json",
+          "hidden": true
+        },
+        "monochrome_logs": {
+          "type": "boolean",
+          "default": false,
+          "hidden": true
+        },
+        "validate_params": {
+          "type": "boolean",
+          "default": true,
+          "hidden": true
+        },
+        "version": {
+          "type": "boolean",
+          "default": false,
+          "hidden": true
+        },
+        "help": {
+          "type": "boolean",
+          "default": false,
+          "hidden": true
+        },
+        "aws_image_prefix": {
+          "type": "string",
+          "hidden": true
+        },
+        "aws_queue": {
+          "type": "string",
+          "hidden": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    { "$ref": "#/definitions/input" },
+    { "$ref": "#/definitions/filters_and_trimming" },
+    { "$ref": "#/definitions/output" },
+    { "$ref": "#/definitions/consensus_options" },
+    { "$ref": "#/definitions/denovo_assembly_options" },
+    { "$ref": "#/definitions/database_options" },
+    { "$ref": "#/definitions/misc" }
+  ]
+}
