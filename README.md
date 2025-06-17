@@ -7,7 +7,7 @@ It is used to analyse nanopore reads from untargeted sequencing of viruses such 
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
-## Purpose and limitions
+## Purpose and limitations
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
 We have created a reference database with our favourite viruses. However, you can also create your own.
