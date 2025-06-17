@@ -7,12 +7,12 @@ It is used to analyse nanopore reads from untargeted sequencing of viruses such 
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
-## Purpose and limitions
+## Purpose and limitations
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
 We have created a reference database with our favourite viruses. However, you can also create your own.
 For information on databases read further down.
-If you need assistance for setting up a reference data set, please contact us.
+If you need assistance for setting up a reference dataset, please contact us.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
 To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
@@ -22,10 +22,14 @@ In any case, we recommend carefully reviewing your output (e.g. the alignment .b
 
 ## Prerequisites
 
-This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your data set, the pipeline may also work on lower ressources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some ressources. 
+This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your dataset, the pipeline may also work on lower resources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
 
 You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
 If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software. Else you need to install nextflow and [docker](https://www.docker.com/).
+
+ViMOP should run on all operating systems and so far has been tested on the following operating systems:
+- MacOS 14.7 and 15.5 (Intel core i9)
+- Ubuntu 22.04.3 and 24.04.1
 
 ## Installation and operation
 
@@ -54,7 +58,7 @@ You can get some demo data here: [ViMOP-demo](https://opr.bnitm.de/example_data/
 
 Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
 Once you added the workflow, launch it and go to the `Setup` options section.
-You can chose to either download all three parts of the database or donwload contaminants, virus references and centrifuge index separately by ticking the respective boxes.
+You can choose to either download all three parts of the database or download contaminants, virus references and centrifuge index separately by ticking the respective boxes.
 Launching the process will download and install the database into your home directory.
 This will probably take a while.
 
@@ -79,18 +83,18 @@ In this case, the different barcodes are treated as different samples with separ
 At the beginning the pipeline trims the ends of the reads to remove adapter sequences and primers.
 `--trim_length` sets the number of bases trimmed from both ends.
 
-### Read classification and optional removal of non-viral reads
+### Taxonomic classification and removal of non-viral reads
 
 Centrifuge is used to classify the reads.
-This helps to get an overview of how your metagenomics sample is composed.
-Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match anything in the reference database or only partially. 
+This helps to get an overview of how your metagenomics sample is composed. A Kronaplot of the read classification will appear in the report and optionally you can choose to generate a separate HTML with the Krona plot with --output_krona_plot true.
+Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match any entry in the reference database or only partially. 
 Use `--centrifuge_do_classify false` to deactivate all centrifuge classifications and save time.
 
-Additionally, you can use the centrifuge classifications to remove reads (not contigs) that are non-viral to a given degree of confidence.
-Activate this with `--centrifuge_do_filter true` and use `--centrifuge_filter_min_score 150` to set the minimum level of confidence (e.g. 150 in our example).
+Additionally, the centrifuge classifications is used to remove reads (not contigs) that are non-viral to a given degree of confidence.
+Deactivate this with `--centrifuge_do_filter false` and use `--centrifuge_filter_min_score 150` to set the minimum level of confidence (e.g. 150 in our example).
 The pipeline will remove all reads that are classified to anything that is not viral with at least this score.
 Use this if you have a lot of different contaminations that you want to remove such as bacterial reads from a fecal sample.
-But beware that centrifuge is limited in it's accuracy and you may also remove some false positives.
+But beware that centrifuge is limited in its accuracy and you may also remove some false positives.
 
 ### Host and contaminant removal
 
@@ -108,7 +112,7 @@ The following filters are included in our database
 | mastomys      | GCF_008632895.1_UCSF_Mcou_1_genomic.fna.gz              |
 | aedes_aegypti | GCF_002204515.2_AaegL5.0_genomic.fna.gz                 |
 
-### Virus read enrichment
+### Target virus read enrichment
 
 One can also filter for specific species or groups of viruses.
 Only reads that map to the given targets are then used in the following assembly step.
@@ -142,7 +146,7 @@ They are listed in the following:
 | Hantaviridae            | HANTA        | 1980413   |
 | Nairoviridae            | NAIRO        | 1980415   |
 
-### Assembly
+### De novo assembly
 
 An assembly is run for each of the filtered read sets (explained in the previous section) and for the read set with no target filter.
 To disable running the no target filter set `--assemble_notarget false`.
@@ -160,12 +164,12 @@ Canu-corrected reads are used for this if available, else the raw reads.
 
 A number of parameters for the canu assembler can be set, that determine how many reads are used and corrected for assembly. See options.
 
-### Target search
+### Reference identification
 
 Each contig is used to for a BLAST search in the virus reference database.
 The highest scoring hit is then used as a reference genome.
 
-### Consensus creation
+### Reference-guided assembly
 
 Reads are mapped against the reference genome.
 The mapping parameters can be changed (see options).
@@ -173,12 +177,11 @@ There are multiple options to generate the consensus.
 The default option is to choose automatically from samtools consensus and medaka.
 If medaka finds a model for you data, medaka is used, else samtools.
 Samtools consensus takes the most abundant base and masks all positions with too little coverage or unclear signals below the given threshold.
-Medaka 
 You can also directly choose medaka (medaka) or samtools (simple).
 
 For medaka you can pass a model name for the option `medaka_consensus_model`.
-Chosing auto will let medaka chose the model, which is the default.
-However, if medaka does not find a model fitting your data, medaka (if explicitely chosen) will use the medaka default model, which may not be optiomal.
+Choosing auto will let medaka choose the model, which is the default.
+However, if medaka does not find a model fitting your data, medaka (if explicitly chosen) will use the medaka default model, which may not be optiomal.
 
 ## Options
 
@@ -227,7 +230,7 @@ output
 nf-report.html contains technical information about the run and ressource usage.
 For each sample there is a directory with results (here barcode01).
 The summary of the results is found in report_samplename.html.
-Tables contains the information from the htmml report in .tsv files.
+Tables contains the information from the html report in .tsv files.
 The classification directory contains all files for the centrifuge read classification.
 The directory consensus contains consensus genome sequences, alignment files and variants as well as the chosen reference.
 The chosen selected genomes for curated virus species are listed in selected_consensus with a separate file for each segment.
@@ -248,7 +251,7 @@ ViMOP_DB/
 
 The three subdirectories contain files for centrifuge classification, contaminants/host read removal and the virus reference sequences.
 Each directory contains a file with a yaml file with the same name prefix (e.g. centrifuge.yaml, contaminants.yaml, virus.yaml).
-The configs hold the relefant information about the database parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
+The configs hold the relevant information about the database parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
 
 The three database parts are briefly described in the following.
 
@@ -362,7 +365,7 @@ params.cdhit_threshold: 0.98
 ```
 
 ALL.fasta contains all sequences.
-EBOV.fasta contains ebola virus sequences, LASV Lassa virus and FILO filo virus seqeunces.
+EBOV.fasta contains ebola virus sequences, LASV Lassa virus and FILO filo virus sequences.
 These are the files that are used as mapping filters.
 The file ALL.fasta is also used to create the blast database.
 Our blast database is build with the blast version used in the pipeline (see `images/general/general.yaml` in this repository).
@@ -381,7 +384,7 @@ Separated with a "|" we have
 - description
 - family
 - species name
-- orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated data set have the same orientation. However, this can also simply be set to "Unknown".
+- orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated dataset have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
 
 ## Acknowledgements
