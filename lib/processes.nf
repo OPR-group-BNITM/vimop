@@ -839,9 +839,15 @@ process simplify_reference_fasta {
     """
     #!/usr/bin/env python
     from Bio import SeqIO
+
     ref = SeqIO.read('ref.fasta', 'fasta')
+    seq_out = ''.join([
+        base if base in 'ATCG' else 'N'
+        for base in str(ref.seq).upper()
+    ])
+
     with open('simple_ref.fasta', 'w') as f_out:
-        f_out.write(f">{ref.id}\\n{ref.seq}\\n") 
+        f_out.write(f">{ref.id}\\n{seq_out}\\n") 
     """
 }
 
