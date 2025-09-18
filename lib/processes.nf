@@ -969,7 +969,7 @@ process cutesv {
 
 
 process structural_variant_consensus {
-    label "cutesv"
+    label "structural_variants"
     input:
         tuple val(meta),
             path("ref.fasta"),
