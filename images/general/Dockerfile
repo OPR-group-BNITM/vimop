@@ -5,15 +5,12 @@ FROM continuumio/miniconda3
 WORKDIR /app
 
 # Copy the environment.yml file into the container
-COPY general.yaml .
+COPY env.yaml .
 
 # Create the Conda environment from the environment.yml file
-RUN conda env create -f general.yaml
+RUN conda env create -f env.yaml
 
 # Set the active environment
 SHELL ["/bin/bash", "-c"]
-RUN echo "source activate general" > ~/.bashrc
-ENV PATH /opt/conda/envs/general/bin:$PATH
-
-# Set the default command to run when the container starts
-CMD ["samtools", "--version"]
+RUN echo "source activate env" > ~/.bashrc
+ENV PATH /opt/conda/envs/env/bin:$PATH
