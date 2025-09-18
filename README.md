@@ -20,16 +20,38 @@ This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebo
 However, for large DNA viruses with repetetive regions, such as mpox, this approach may not correctly generate complete genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
 
-## Prerequisites
+## Hardware requirements
 
 This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your dataset, the pipeline may also work on lower resources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
 
+## Software dependencies
+
 You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
-If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software. Else you need to install nextflow and [docker](https://www.docker.com/).
+
+If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software.
+
+If you want to start the pipeline from the command line you need to install nextflow and [docker](https://www.docker.com/).
+If you do not want to use docker, you can also use a conda or singularity profile as described in the next section.
 
 ViMOP should run on all operating systems and so far has been tested on the following operating systems:
 - MacOS 14.7 and 15.5 (Intel core i9)
 - Ubuntu 22.04.3 and 24.04.1
+
+### Alternative profiles for command line usage: Conda and Singularity
+
+If you prefer to not use docker and you are using Linux, there are two alternative profiles implemented in ViMOP.
+
+The conda profile is activated using the option `-profile conda`.
+We recommend the installation of [mamba](), but pure conda should also work.
+This has been tested on
+- Ubuntu 24.04.1
+- conda 4.12.0
+- mamba 0.23.0
+
+The singularity profile is activated using `-profile singularity`.
+It has been tested on
+- Ubuntu 24.04.1
+- apptainer version 1.4.2
 
 ## Installation and operation
 
