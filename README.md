@@ -207,7 +207,7 @@ However, if medaka does not find a model fitting your data, medaka (if explicitl
 
 ## Options
 
-To get a list of all available options type `nextflow main.nf --help`.
+To get a list of all available options and their default parameters type `nextflow main.nf --help`.
 
 ## Output and report
 
