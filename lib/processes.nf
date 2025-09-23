@@ -337,12 +337,12 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
-    ${task.ext.conda_init}
-    ${task.ext.conda_activate}
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
 
-    ${task.ext.conda_deactivate}
+    ${task.ext.conda_deactivate ?: ''}
 
     outdir=.
     set +e
@@ -363,7 +363,7 @@ process assemble_canu {
         maxMemory=${task.memory.toGiga()}g
     set -e
 
-    ${task.ext.conda_activate}
+    ${task.ext.conda_activate ?: ''}
 
     touch asm.contigs.fasta
 
@@ -434,8 +434,8 @@ process reassemble_canu {
         tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
         tuple val(meta), path("reassembly.stats.tsv"), emit: stats
     """
-    ${task.ext.conda_init}
-    ${task.ext.conda_activate}
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     ${seqstatsHeader("reassembly.stats.tsv")}
     touch new.contigs.fasta
@@ -476,7 +476,7 @@ process reassemble_canu {
             break
         fi
 
-        ${task.ext.conda_deactivate}
+        ${task.ext.conda_deactivate ?: ''}
 
         outdir=canu_output_\$i
         set +e
@@ -497,7 +497,7 @@ process reassemble_canu {
             maxMemory=${task.memory.toGiga()}g
         set -e
 
-        ${task.ext.conda_activate}
+        ${task.ext.conda_activate ?: ''}
 
         if [[ ! -s \$outdir/asm.contigs.fasta ]]
         then
