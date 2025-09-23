@@ -337,13 +337,12 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
-    source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:\$PATH"
-    conda activate env
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
 
-    conda deactivate
+    ${task.ext.conda_deactivate ?: ''}
 
     outdir=.
     set +e
@@ -364,7 +363,7 @@ process assemble_canu {
         maxMemory=${task.memory.toGiga()}g
     set -e
 
-    conda activate env
+    ${task.ext.conda_activate ?: ''}
 
     touch asm.contigs.fasta
 
@@ -435,9 +434,8 @@ process reassemble_canu {
         tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
         tuple val(meta), path("reassembly.stats.tsv"), emit: stats
     """
-    source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:\$PATH"
-    conda activate env
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     ${seqstatsHeader("reassembly.stats.tsv")}
     touch new.contigs.fasta
@@ -478,7 +476,8 @@ process reassemble_canu {
             break
         fi
 
-        conda deactivate
+        ${task.ext.conda_deactivate ?: ''}
+
         outdir=canu_output_\$i
         set +e
         canu \\
@@ -498,7 +497,7 @@ process reassemble_canu {
             maxMemory=${task.memory.toGiga()}g
         set -e
 
-        conda activate env
+        ${task.ext.conda_activate ?: ''}
 
         if [[ ! -s \$outdir/asm.contigs.fasta ]]
         then
@@ -865,7 +864,7 @@ process subsample_alignments {
     then
         samtools dict ref.fasta -o ref.dict
 
-        jvarkit sortsamrefname in.bam | samtools view -b > refname_sorted.bam
+        jvarkit sortsamrefname in.bam -o refname_sorted.bam
         jvarkit biostar154220 -R ref.fasta -n \$target_coverage refname_sorted.bam -o capped.bam
 
         samtools sort capped.bam -o out.bam
