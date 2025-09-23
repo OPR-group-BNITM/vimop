@@ -864,7 +864,7 @@ process subsample_alignments {
     then
         samtools dict ref.fasta -o ref.dict
 
-        jvarkit sortsamrefname in.bam | samtools view -b > refname_sorted.bam
+        jvarkit sortsamrefname in.bam -o refname_sorted.bam
         jvarkit biostar154220 -R ref.fasta -n \$target_coverage refname_sorted.bam -o capped.bam
 
         samtools sort capped.bam -o out.bam
