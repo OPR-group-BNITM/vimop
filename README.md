@@ -42,8 +42,14 @@ ViMOP should run on all operating systems and so far has been tested on the foll
 If you prefer to not use docker and you are using Linux, there are two alternative profiles implemented in ViMOP.
 
 The conda profile is activated using the option `-profile conda`.
-We recommend the installation of [mamba](), but pure conda should also work.
 This has been tested on
+- 
+- conda 
+
+You can also use mamba [mamba]() typing `-profile conda,mamba`.
+However, some versions of mamba and nextflow may not work together.
+We succesfully ran 
+- Nextflow TODO
 - Ubuntu 24.04.1
 - conda 4.12.0
 - mamba 0.23.0
