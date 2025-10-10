@@ -46,7 +46,12 @@ process trim {
     output:
         tuple val(meta), path("trimmed.fastq")
     """
-    seqtk trimfq -b ${params.trim_length} -e ${params.trim_length} demultiplexed.fastq.gz > trimmed.fastq
+    if [[ ${params.trim_length} == 0 ]]
+    then
+        gunzip -c demultiplexed.fastq.gz > trimmed.fastq
+    else
+        seqtk trimfq -b ${params.trim_length} -e ${params.trim_length} demultiplexed.fastq.gz > trimmed.fastq
+    fi
     """
 }
 
