@@ -120,6 +120,38 @@
           "description": "Check this box to create a custom data base. Pass the relevant files as input.",
           "help_text": "",
           "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_outpath": {
+          "description": "Output directory for custom data base creation.",
+          "help_text": "",
+          "type": "string",
+          "format": "path",
+          "default": "custom_db",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_contaminants_version": {
+          "type": "string",
+          "title": "Data base version for the custom contaminants data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_contaminants_description": {
+          "type": "string",
+          "title": "Data base version for the custom contaminants data base.",
+          "default": "A custom host genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_contaminants_input_path": {
+          "description": "Input directory with contaminant/host genome/transcriptome files.",
+          "help_text": "Filenames will be used to name the filters. If you add a filter file human_genome.fasta.gz a filter called human_genome can be applied. .fasta and .fna are applicable - also in gzipped format.",
+          "type": "string",
+          "format": "path",
+          "default": "custom_db",
+          "fa_icon": "far fa-folder"
         }
       }
     },
