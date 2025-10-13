@@ -12,7 +12,7 @@ nextflow.enable.dsl = 2
 include { fastq_ingress } from './lib/ingress'
 
 include {
-    update_data_base;
+    custom_data_base;
 } from './lib/custom_db.nf'
 
 include {
@@ -506,7 +506,7 @@ workflow {
     if(doUpdate) {
         db_update()
     } else if (doBuildCustomDB) {
-        update_data_base()
+        custom_data_base()
     } else {
         samples = fastq_ingress([
             "input": params.fastq,

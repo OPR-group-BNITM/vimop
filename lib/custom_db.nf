@@ -60,27 +60,6 @@ process build_contaminants_db {
 }
 
 
-workflow update_data_base {
-    main:
-        if(params.custom_db_contaminants_input_path) {
-            contaminants_db = build_contaminants_db(params.custom_db_contaminants_input_path)
-        }
-
-        centrifuge_db = Channel.empty()
-        virus_db = Channel.empty()
-
-        Channel.empty()
-        | mix(
-            contaminants_db,
-            centrifuge_db,
-            virus_db
-        )
-        | toList
-        | flatMap
-        | custom_data_base_transfer
-}
-
-
 process custom_data_base_transfer {
     label "general"
     cpus 1
@@ -97,4 +76,27 @@ process custom_data_base_transfer {
         path(db)
     """
     """
+}
+
+
+workflow custom_data_base {
+    main:
+        if(params.custom_db_contaminants_input_path) {
+            contaminants_db = build_contaminants_db(params.custom_db_contaminants_input_path)
+        } else {
+            contaminants_db = Channel.empty()
+        }
+
+        centrifuge_db = Channel.empty()
+        virus_db = Channel.empty()
+
+        Channel.empty()
+        | mix(
+            contaminants_db,
+            centrifuge_db,
+            virus_db
+        )
+        | toList
+        | flatMap
+        | custom_data_base_transfer
 }
