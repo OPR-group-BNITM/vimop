@@ -77,11 +77,11 @@ process build_virus_db {
         --yaml virus_input_config.yaml \\
         --fasta virus/ALL.fasta \\
         --outdir virus/ \\
-        --description "${params.custom_db_contaminants_description}" \\
-        --custom_db_virus_version "${params.custom_db_virus_version}" \\
+        --description "${params.custom_db_virus_description}" \\
+        --version "${params.custom_db_virus_version}" \\
         --blast-db blast_db \\
         --blast-prefix ALL \\
-        --config-out virus \\
+        --config-out virus.yaml \\
         --strict
 
     makeblastdb \
