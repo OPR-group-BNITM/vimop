@@ -60,6 +60,40 @@ process build_contaminants_db {
 }
 
 
+process build_virus_db {
+    label "general"
+    cpus 1
+    input:
+        tuple path("virus_input_config.yaml"), path("ALL.fasta")
+    output:
+        path("virus")
+    """
+    set -euo pipefail
+
+    mkdir -p virus
+    cp ALL.fasta virus/ALL.fasta
+
+    split_virus_db_files.py \\
+        --yaml virus_input_config.yaml \\
+        --fasta virus/ALL.fasta \\
+        --outdir virus/ \\
+        --description "${params.custom_db_contaminants_description}" \\
+        --custom_db_virus_version "${params.custom_db_virus_version}" \\
+        --blast-db blast_db \\
+        --blast-prefix ALL \\
+        --config-out virus \\
+        --strict
+
+    makeblastdb \
+        -dbtype nucl \
+        -in virus/ALL.fasta \
+        -out virus/blast_db/ALL \
+        -parse_seqids \
+        -blastdb_version 5
+    """
+}
+
+
 process custom_data_base_transfer {
     label "general"
     cpus 1
@@ -87,8 +121,14 @@ workflow custom_data_base {
             contaminants_db = Channel.empty()
         }
 
+        if(params.custom_db_virus_yaml && params.custom_db_virus_fasta){
+            virus_db = Channel.of([params.custom_db_virus_yaml, params.custom_db_virus_fasta])
+            | build_virus_db
+        } else {
+            virus_db = Channel.empty()
+        }
+
         centrifuge_db = Channel.empty()
-        virus_db = Channel.empty()
 
         Channel.empty()
         | mix(

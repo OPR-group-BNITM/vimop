@@ -617,6 +617,26 @@
           "default": 100,
           "description": "Minimum disk space available in the default data base directory for storing the data base"
         },
+        "custom_db_min_ram_gb": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum RAM required during custom data base creation"
+        },
+        "custom_db_min_cpus": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum number of CPUs required for custom data base creation"
+        },
+        "custom_db_min_disk_space_work_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space for the work directory during custom data base creation to keep intermediate files"
+        },
+        "custom_db_min_disk_space_out_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space available in the custom data base directory for storing the data base"
+        },
         "database_defaults": {
           "type": "object",
           "description": "Config files for the databases",
