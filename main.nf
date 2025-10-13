@@ -481,6 +481,15 @@ if (doUpdate) {
         params.database_defaults.base,
         session.workDir.toString()
     )
+} else if (doBuildCustomDB) {
+        new SystemRequirements(true).checkSystemRequirements(
+        params.custom_db_min_disk_space_work_gb,
+        params.custom_db_min_disk_space_out_gb,
+        params.custom_db_min_ram_gb,
+        params.custom_db_min_cpus,
+        params.out_dir,
+        session.workDir.toString()
+    )
 } else {
     new SystemRequirements(true).checkSystemRequirements(
         params.min_disk_space_work_gb,

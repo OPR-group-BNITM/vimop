@@ -107,6 +107,22 @@
         }
       }
     },
+    "custom_db": {
+      "title": "Create Custom Data Base",
+      "type": "object",
+      "description": "Create your own ViMOP data base.",
+      "default": "",
+      "properties": {
+        "custom_db_do_build": {
+          "type": "boolean",
+          "title": "Build a custom data base.",
+          "default": false,
+          "description": "Check this box to create a custom data base. Pass the relevant files as input.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        }
+      }
+    },
     "filters_and_trimming": {
       "title": "Filters and trimming",
       "type": "object",
