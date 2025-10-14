@@ -108,7 +108,7 @@
       }
     },
     "custom_db": {
-      "title": "Create Custom Data Base",
+      "title": "Create custom data base",
       "type": "object",
       "description": "Create your own ViMOP data base.",
       "default": "",
@@ -150,7 +150,41 @@
           "help_text": "Filenames will be used to name the filters. If you add a filter file human_genome.fasta.gz a filter called human_genome can be applied. .fasta and .fna are applicable - also in gzipped format.",
           "type": "string",
           "format": "path",
-          "default": "custom_db",
+          "default": "",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_virus_version": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_virus_description": {
+          "title": "Data base version for the custom virus data base.",
+          "type": "string",
+          "default": "A custom virus reference genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_virus_fasta": {
+          "title": "Virus reference genomes",
+          "description": "Fasta file with virus reference genomes for reference guided assembly",
+          "help_text": "Fasta file with headers. The format needs to be SeqID |description|family|species|Segment|Orientation. For details check the github repository README.",
+          "type": "string",
+          "format": "file-path",
+          "default": "",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_virus_yaml": {
+          "title": "Virus reference genomes configuration",
+          "description": "Config yaml file for the virus references",
+          "help_text": "Yaml file description of curated virus sets. For details check the github repository README in https://github.com/OPR-group-BNITM/vimop.",
+          "type": "string",
+          "format": "file-path",
+          "default": "",
           "fa_icon": "far fa-folder"
         },
         "custom_db_centrifuge_version": {
@@ -171,11 +205,59 @@
         },
         "custom_db_centrifuge_fasta": {
           "description": "Fasta file with genomes.",
-          "help_text": "Fasta file with headers formatted to include families and species (see README.md in the ViMOP repository).",
+          "help_text": "Fasta file with headers formatted to include families and species (see README.md in the ViMOP repository at https://github.com/OPR-group-BNITM/vimop).",
           "type": "string",
           "format": "file-path",
           "default": "custom_db",
           "fa_icon": "far fa-folder"
+        },
+        "custom_db_centrifuge_taxonomy_url": {
+          "type": "string",
+          "title": "URL for taxonomy",
+          "default": "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz",
+          "description": "Taxonomy information (taxdump) will be donwloaded from here during a centrifuge index build.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_viruses": {
+          "title": "TaxID for Viruses",
+          "type": "integer",
+          "default": 10239,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_viroids": {
+          "title": "TaxID for Viroids",
+          "type": "integer",
+          "default": 185751,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_bacteria": {
+          "title": "TaxID for Bacteria",
+          "type": "integer",
+          "default": 2,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_archaea": {
+          "title": "TaxID for Archaea",
+          "type": "integer",
+          "default": 2157,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_eukaryota": {
+          "title": "TaxID for Eukaryota",
+          "type": "integer",
+          "default": 2759,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
         }
       }
     },
@@ -648,7 +730,7 @@
         },
         "custom_db_min_cpus": {
           "type": "number",
-          "default": 1,
+          "default": 8,
           "description": "Minimum number of CPUs required for custom data base creation"
         },
         "custom_db_min_disk_space_work_gb": {

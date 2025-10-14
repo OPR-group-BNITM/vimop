@@ -9,17 +9,17 @@ import argparse
 
 
 def read_taxid_table(fname_taxids):
-    with open(fname_taxids) as f_in:
-        return dict(zip(l.strip().split('\t') for l in f_in))
+    with open(fname_taxids) as f:
+        return dict(zip(l.strip().split('\t') for l in f if l.strip()))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--taxond-table', required=True, help="Family and species to each sequence ID.")
-    parser.add_argument('--kingdom-taxids', required=True, help="Table with kingdom to taxID.")
-    parser.add_argument('--species-taxids', required=True, help="Table with species to taxID.")
-    parser.add_argument('--family-taxids', required=True, help="Table with family to taxID.")
-    parser.add_argument('--seqid-to-taxid', required=True, help="Name of the output file.")
+    parser.add_argument('--taxon-table', required=True, help='Family and species to each sequence ID.')
+    parser.add_argument('--kingdom-taxids', required=True, help='Table with kingdom to taxID.')
+    parser.add_argument('--species-taxids', required=True, help='Table with species to taxID.')
+    parser.add_argument('--family-taxids', required=True, help='Table with family to taxID.')
+    parser.add_argument('--seqid-to-taxid', required=True, help='Name of the output file.')
     args = parser.parse_args()
 
     taxids_species = read_taxid_table(args.species_taxids)

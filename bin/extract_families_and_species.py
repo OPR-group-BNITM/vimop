@@ -17,10 +17,10 @@ def main():
     parser.add_argument('--species', required=True, help='')
     args = parser.parse_args()
 
-    first_seq = next(SeqIO.parse(args.input))
-    n_cols = len(str(first_seq.description).spit('|'))
+    first_seq = next(SeqIO.parse(args.input, 'fasta'))
+    n_cols = len(str(first_seq.description).split('|'))
 
-    if len(n_cols) < 3:
+    if n_cols < 3:
         raise RuntimeError(
             "Expecting at least four columns in fasta header separated by '|' "
             "(Sequence-ID, description, family, species). Empty columns are allowed"
@@ -29,14 +29,14 @@ def main():
     all_families = set()
     all_species = set()
     with open(args.taxon_table, 'w') as f_taxon_table:
-        for i, seq in enumerate(SeqIO.parse(args.input), 1):
+        for i, seq in enumerate(SeqIO.parse(args.input, 'fasta'), 1):
             cols = str(seq.description).split('|')
             if len(cols) != n_cols:
                 raise RuntimeError(f"Mismatch in number of columns for entry {i}")
             seqid, kingdom, family, species, *_ = cols
             f_taxon_table.write(f"{seqid}\t{kingdom}\t{family}\t{species}\n")
-            all_families.update(family)
-            all_species.update(species)
+            all_families.add(family)
+            all_species.add(species)
     with open(args.families, 'w') as f_fam:
         f_fam.write("\n".join(sorted(all_families)))
     with open(args.species, 'w') as f_species:

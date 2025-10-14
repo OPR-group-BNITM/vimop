@@ -6,6 +6,17 @@
 nextflow.enable.dsl = 2
 
 
+def minCpus(int requestedCpus) {
+    return Math.min(requestedCpus, params.custom_db_min_cpus as int)
+}
+
+
+def minRAM(int requestesRAM) {
+    ram = Math.min(requestesRAM, params.custom_db_min_ram_gb as int)
+    return "${ram} GB"
+}
+
+
 process build_contaminants_db {
     label "general"
     cpus 1
@@ -110,24 +121,25 @@ process download_taxdump {
 
 process seqid_to_taxid {
     label "general"
-    cpus 1
+    cpus { minCpus(4) }
     input:
         tuple path("sequences.fasta"), path("taxdump.tar.gz")
     output:
-        tuple path("virus_taxids.txt"), path("seqid2taxid.map")
+        tuple path("virus_taxids.txt"), path("seqid2taxid.map"), path("nodes.dmp"), path("names.dmp")
     """
     set -euo pipefail
 
-    mkdir -p ~/.taxonkit
-    cp taxdump.tar.gz ~/.taxonkit
+    workdir=\$(pwd)
+    taxonkit_datadir=\$workdir/taxonkit_data
 
-    workdir=$(pwd)
-    cd ~/.taxonkit
+    mkdir -p \$taxonkit_datadir
+    mv taxdump.tar.gz \$taxonkit_datadir/taxdump.tar.gz
+    cd \$taxonkit_datadir
     tar -xzf taxdump.tar.gz
     cd \$workdir
 
     # Get all virus taxids
-    taxonkit list --ids ${params.} | sed 's/.* //' > virus_taxids.txt
+    taxonkit list --data-dir \$taxonkit_datadir --ids ${params.custom_db_centrifuge_taxid_viruses} | sed 's/.* //' > virus_taxids.txt
 
     {
         echo "Bacteria\t${params.custom_db_centrifuge_taxid_bacteria}"
@@ -135,7 +147,7 @@ process seqid_to_taxid {
         echo "Eukaryota\t${params.custom_db_centrifuge_taxid_eukaryota}"
         echo "Viruses\t${params.custom_db_centrifuge_taxid_viruses}"
         echo "Viroids\t${params.custom_db_centrifuge_taxid_viroids}"
-    } > kindoms.taxids
+    } > kingdoms.taxids
 
     # Get the species and families from the fasta files
     extract_families_and_species.py \\
@@ -144,15 +156,59 @@ process seqid_to_taxid {
         --families families.txt \\
         --species species.txt
 
-    taxonkit name2taxid --threads 8 < species.txt > species.taxids
-    taxonkit name2taxid --threads 8 < families.txt > families.taxids
+    taxonkit name2taxid --data-dir \$taxonkit_datadir --threads ${task.cpus} < species.txt > species.taxids
+    taxonkit name2taxid --data-dir \$taxonkit_datadir --threads ${task.cpus} < families.txt > families.taxids
 
     seqids_to_taxids.py \\
         --taxon-table taxontable.tab \\
         --species-taxids species.taxids \\
         --family-taxids families.taxids \\
-        --kingdom-taxids kindoms.taxids \\
+        --kingdom-taxids kingdoms.taxids \\
         --seqid-to-taxid seqid2taxid.map
+    """
+}
+
+
+process build_centrifuge_index {
+    label "centrifuge"
+    cpus { minCpus(8) }
+    memory { minRAM(30) }
+    input:
+        tuple path("sequences.fasta"), path("virus_taxids.txt"), path("seqid2taxid.map"), path("names.dmp"), path("nodes.dmp")
+    output:
+        path("centrifuge")
+    """
+    set -euo pipefail
+
+    mkdir -p centrifuge_tmp
+    cd centrifuge_tmp
+
+    cp ../virus_taxids.txt virus_taxids.txt
+
+    ktUpdateTaxonomy.sh
+
+    centrifuge-build \\
+        -p ${task.cpus} \\
+        --conversion-table ../seqid2taxid.map \\
+        --taxonomy-tree ../nodes.dmp \\
+        --name-table ../names.dmp \\
+        sequences.fasta \\
+        all
+
+    {
+        echo "version: ${params.custom_db_centrifuge_version}"
+        echo "description: \\"${params.custom_db_centrifuge_description}\\""
+        echo "virus_taxid_file: virus_taxids.txt"
+        echo "index_name: all"
+        echo "files:"
+        for f in all.*.cf
+        do
+            echo "- \$f"
+        done
+    } > centrifuge.yaml
+
+    cd ..
+    mv centrifuge_tmp centrifuge
     """
 }
 
@@ -192,8 +248,11 @@ workflow custom_data_base {
         }
 
         if(params.custom_db_centrifuge_fasta) {
-            centrifuge_db = 
-            // TODO
+            centrifuge_db = download_taxdump
+            | map { taxdump -> [params.custom_db_centrifuge_fasta, taxdump]}
+            | seqid_to_taxid
+            | map { virus_taxids, seqid2taxid, nodes, names -> [params.custom_db_centrifuge_fasta, virus_taxids, seqid2taxid, nodes, names] }
+            | build_centrifuge_index
         } else {
             centrifuge_db = Channel.empty()
         }
