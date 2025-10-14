@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://raw.githubusercontent.com/OPR-group-BNITM/nanoflow/nextflow_schema.json",
   "title": "OPR-group-BNITM/vimop",
-  "workflow_title": "ViMOP: Virus metagenomics outbreak preparedness workflow",
+  "workflow_title": "ViMOP: Virus Metagenomics Outbreak Pipeline",
   "description": "Reference-based virus assembly with automatic reference selection from ONT reads.",
   "demo_url": "https://opr.bnitm.de/example_data/vimop-demo.tar.gz",
   "url": "https://github.com/OPR-group-BNITM/nanoflow",
@@ -150,6 +150,30 @@
           "help_text": "Filenames will be used to name the filters. If you add a filter file human_genome.fasta.gz a filter called human_genome can be applied. .fasta and .fna are applicable - also in gzipped format.",
           "type": "string",
           "format": "path",
+          "default": "custom_db",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_centrifuge_version": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_description": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "A custom virus reference genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_fasta": {
+          "description": "Fasta file with genomes.",
+          "help_text": "Fasta file with headers formatted to include families and species (see README.md in the ViMOP repository).",
+          "type": "string",
+          "format": "file-path",
           "default": "custom_db",
           "fa_icon": "far fa-folder"
         }

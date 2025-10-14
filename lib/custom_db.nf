@@ -84,12 +84,75 @@ process build_virus_db {
         --config-out virus.yaml \\
         --strict
 
-    makeblastdb \
-        -dbtype nucl \
-        -in virus/ALL.fasta \
-        -out virus/blast_db/ALL \
-        -parse_seqids \
+    makeblastdb \\
+        -dbtype nucl \\
+        -in virus/ALL.fasta \\
+        -out virus/blast_db/ALL \\
+        -parse_seqids \\
         -blastdb_version 5
+    """
+}
+
+
+process download_taxdump {
+    label "general"
+    cpus 1
+    errorStrategy "retry"
+    maxRetries 3
+    output:
+        path("taxdump.tar.gz") 
+    """
+    set -euo pipefail
+    wget ${params.custom_db_centrifuge_taxonomy_url}
+    """
+}
+
+
+process seqid_to_taxid {
+    label "general"
+    cpus 1
+    input:
+        tuple path("sequences.fasta"), path("taxdump.tar.gz")
+    output:
+        tuple path("virus_taxids.txt"), path("seqid2taxid.map")
+    """
+    set -euo pipefail
+
+    mkdir -p ~/.taxonkit
+    cp taxdump.tar.gz ~/.taxonkit
+
+    workdir=$(pwd)
+    cd ~/.taxonkit
+    tar -xzf taxdump.tar.gz
+    cd \$workdir
+
+    # Get all virus taxids
+    taxonkit list --ids ${params.} | sed 's/.* //' > virus_taxids.txt
+
+    {
+        echo "Bacteria\t${params.custom_db_centrifuge_taxid_bacteria}"
+        echo "Archaea\t${params.custom_db_centrifuge_taxid_archaea}"
+        echo "Eukaryota\t${params.custom_db_centrifuge_taxid_eukaryota}"
+        echo "Viruses\t${params.custom_db_centrifuge_taxid_viruses}"
+        echo "Viroids\t${params.custom_db_centrifuge_taxid_viroids}"
+    } > kindoms.taxids
+
+    # Get the species and families from the fasta files
+    extract_families_and_species.py \\
+        --input sequences.fasta \\
+        --taxon-table taxontable.tab \\
+        --families families.txt \\
+        --species species.txt
+
+    taxonkit name2taxid --threads 8 < species.txt > species.taxids
+    taxonkit name2taxid --threads 8 < families.txt > families.taxids
+
+    seqids_to_taxids.py \\
+        --taxon-table taxontable.tab \\
+        --species-taxids species.taxids \\
+        --family-taxids families.taxids \\
+        --kingdom-taxids kindoms.taxids \\
+        --seqid-to-taxid seqid2taxid.map
     """
 }
 
@@ -128,7 +191,12 @@ workflow custom_data_base {
             virus_db = Channel.empty()
         }
 
-        centrifuge_db = Channel.empty()
+        if(params.custom_db_centrifuge_fasta) {
+            centrifuge_db = 
+            // TODO
+        } else {
+            centrifuge_db = Channel.empty()
+        }
 
         Channel.empty()
         | mix(
