@@ -7,6 +7,35 @@ It is used to analyse nanopore reads from untargeted sequencing of viruses such 
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
+## Table of Contents
+- [ViMOP](#vimop)
+  - [Purpose and limitations](#purpose-and-limitations)
+  - [Hardware requirements](#hardware-requirements)
+  - [Software dependencies](#software-dependencies)
+    - [Alternative profiles for command line usage: Conda and Apptainer](#alternative-profiles-for-command-line-usage-conda-and-apptainer)
+  - [Installation and operation](#installation-and-operation)
+    - [Using the command line](#using-the-command-line)
+    - [Using EPI2ME desktop](#using-epi2me-desktop)
+  - [Workflow](#workflow)
+    - [Input](#input)
+    - [Read trimming](#read-trimming)
+    - [Taxonomic classification and removal of non-viral reads](#taxonomic-classification-and-removal-of-non-viral-reads)
+    - [Host and contaminant removal](#host-and-contaminant-removal)
+    - [Target virus read enrichment](#target-virus-read-enrichment)
+    - [De novo assembly](#de-novo-assembly)
+    - [Reference identification](#reference-identification)
+    - [Reference-guided assembly](#reference-guided-assembly)
+  - [Options](#options)
+  - [Output and report](#output-and-report)
+  - [Database](#database)
+    - [Data base structure](#data-base-structure)
+    - [Custom data base creation](#custom-data-base-creation)
+    - [centrifuge](#centrifuge)
+    - [contaminants](#contaminants)
+    - [virus](#virus)
+  - [Citation](#citation)
+  - [Acknowledgements](#acknowledgements)
+
 ## Purpose and limitations
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
@@ -43,13 +72,14 @@ If you prefer to not use docker and you are using Linux, there are two alternati
 
 The conda profile is activated using the option `-profile conda`.
 This has been tested on
-- 
-- conda 
+- Nextflow 24.10.0
+- Ubuntu 24.04.1
+- conda 4.12.0
 
-You can also use mamba [mamba]() typing `-profile conda,mamba`.
+You can also use mamba typing `-profile conda,mamba`.
 However, some versions of mamba and nextflow may not work together.
 We succesfully ran 
-- Nextflow TODO
+- Nextflow 24.10.0
 - Ubuntu 24.04.1
 - conda 4.12.0
 - mamba 0.23.0
@@ -267,7 +297,11 @@ Contigs can be found in the fasta files in the assembly directory.
 ## Database
 
 ViMOP relies on a reference database structure.
-It is usually placed in your home directory in a folder called `ViMOP_DB`.
+Installation and update procedures were described [above](#Installation-and-operation).
+
+### Data base structure
+
+The ViMOP data base is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
 
 ```
@@ -282,6 +316,21 @@ Each directory contains a file with a yaml file with the same name prefix (e.g. 
 The configs hold the relevant information about the database parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
 
 The three database parts are briefly described in the following.
+ViMOP also include a module to create your own custom data base.
+It is described after the general description of the pipeline parts.
+
+### Custom data base creation
+
+ViMOP provides a modele to create
+
+
+
+
+
+
+
+
+
 
 ### centrifuge
 
@@ -414,6 +463,11 @@ Separated with a "|" we have
 - species name
 - orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated dataset have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
+
+## Citation
+
+If you are using ViMOP please cite us.
+This repository is linked to [zenodo](https://doi.org/10.5281/zenodo.15592229), where you can find a DOI for the version you are using.
 
 ## Acknowledgements
 
