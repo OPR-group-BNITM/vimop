@@ -180,8 +180,8 @@ process build_centrifuge_index {
         tuple path("sequences.fasta"), 
             path("virus_taxids.txt"),
             path("seqid2taxid.map"),
-            path("names.dmp"),
-            path("nodes.dmp")
+            path("nodes.dmp"),
+            path("names.dmp")
     output:
         path("centrifuge")
     """
