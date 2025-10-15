@@ -165,6 +165,9 @@ process seqid_to_taxid {
         --family-taxids families.taxids \\
         --kingdom-taxids kingdoms.taxids \\
         --seqid-to-taxid seqid2taxid.map
+
+    mv \$taxonkit_datadir/names.dmp .
+    mv \$taxonkit_datadir/nodes.dmp .
     """
 }
 
@@ -174,7 +177,11 @@ process build_centrifuge_index {
     cpus { minCpus(8) }
     memory { minRAM(30) }
     input:
-        tuple path("sequences.fasta"), path("virus_taxids.txt"), path("seqid2taxid.map"), path("names.dmp"), path("nodes.dmp")
+        tuple path("sequences.fasta"), 
+            path("virus_taxids.txt"),
+            path("seqid2taxid.map"),
+            path("names.dmp"),
+            path("nodes.dmp")
     output:
         path("centrifuge")
     """
@@ -185,7 +192,7 @@ process build_centrifuge_index {
 
     cp ../virus_taxids.txt virus_taxids.txt
 
-    ktUpdateTaxonomy.sh
+    ktUpdateTaxonomy.sh .
 
     centrifuge-build \\
         -p ${task.cpus} \\

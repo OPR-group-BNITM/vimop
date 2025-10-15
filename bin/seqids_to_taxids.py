@@ -10,7 +10,7 @@ import argparse
 
 def read_taxid_table(fname_taxids):
     with open(fname_taxids) as f:
-        return dict(zip(l.strip().split('\t') for l in f if l.strip()))
+        return dict(l.strip().split('\t') for l in f if l.strip())
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     allowed_kingdom_str = ' '.join(taxids_kingdoms.keys())
 
     with open(args.taxon_table) as f_taxontable, open(args.seqid_to_taxid, 'w') as f_seqid_to_taxid:
-        for line in enumerate(f_taxontable, 1):
+        for line in f_taxontable:
             seqid, kingdom, family, species = line.strip().split('\t')
             if species in taxids_species:
                 taxid = taxids_species[species]
