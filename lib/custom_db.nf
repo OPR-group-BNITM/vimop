@@ -199,7 +199,7 @@ process build_centrifuge_index {
         --conversion-table ../seqid2taxid.map \\
         --taxonomy-tree ../nodes.dmp \\
         --name-table ../names.dmp \\
-        sequences.fasta \\
+        ../sequences.fasta \\
         all
 
     {
@@ -213,6 +213,10 @@ process build_centrifuge_index {
             echo "- \$f"
         done
     } > centrifuge.yaml
+
+    rm images.dmp
+    mkdir -p taxonomy
+    mv taxonomy.tab taxonomy/taxonomy.tab
 
     cd ..
     mv centrifuge_tmp centrifuge

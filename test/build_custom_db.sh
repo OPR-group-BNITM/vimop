@@ -22,7 +22,7 @@ nextflow main.nf \
     --custom_db_centrifuge_fasta "${datadir}/centrifuge/input.fasta" \
     --custom_db_virus_yaml "${datadir}/virus/testset.yaml" \
     --custom_db_virus_fasta "${datadir}/virus/ALL.fasta" \
-    --custom_db_centrifuge_version 1.0.0 \
-    --custom_db_centrifuge_description "This is a dummy virus reference data base to test the custom data base module." \
+    --custom_db_virus_version 1.0.0 \
+    --custom_db_virus_description "This is a dummy virus reference data base to test the custom data base module." \
     --custom_db_min_disk_space_work_gb 50 \
     --custom_db_min_disk_space_out_gb 50
