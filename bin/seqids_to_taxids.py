@@ -10,7 +10,11 @@ import argparse
 
 def read_taxid_table(fname_taxids):
     with open(fname_taxids) as f:
-        return dict(l.strip().split('\t') for l in f if l.strip())
+        return dict(
+            l.strip().split('\t')
+            for l in f
+            if len(l.strip().split('\t')) == 2
+        )
 
 
 def main():
@@ -29,7 +33,7 @@ def main():
 
     with open(args.taxon_table) as f_taxontable, open(args.seqid_to_taxid, 'w') as f_seqid_to_taxid:
         for line in f_taxontable:
-            seqid, kingdom, family, species = line.strip().split('\t')
+            seqid, kingdom, family, species = map(str.strip, line.split('\t'))
             if species in taxids_species:
                 taxid = taxids_species[species]
             elif family in taxids_families:
