@@ -12,6 +12,10 @@ nextflow.enable.dsl = 2
 include { fastq_ingress } from './lib/ingress'
 
 include {
+    custom_data_base;
+} from './lib/custom_db.nf'
+
+include {
     db_update_get_config;
     update_data_base as update_virus;
     update_data_base as update_centrifuge;
@@ -457,6 +461,16 @@ def doUpdate = (
     || params.download_db_centrifuge
 )
 
+def doBuildCustomDB = checkFlag(params.custom_db_do_build)
+
+if (!doBuildCustomDB && !doUpdate && !params.fastq) {
+    System.err.println("No fastqs provided! Exit.")
+    System.exit(1)
+} else if ([doUpdate, !!params.fastq, doBuildCustomDB].count { it } > 1) {
+    System.err.println("Either download data base, build custom data base or analyse.")
+    System.exit(1)
+}
+
 // check the system requirements before starting the workflow
 if (doUpdate) {
     new SystemRequirements(true).checkSystemRequirements(
@@ -465,6 +479,15 @@ if (doUpdate) {
         params.download_db_min_ram_gb,
         params.download_db_min_cpus,
         params.database_defaults.base,
+        session.workDir.toString()
+    )
+} else if (doBuildCustomDB) {
+        new SystemRequirements(true).checkSystemRequirements(
+        params.custom_db_min_disk_space_work_gb,
+        params.custom_db_min_disk_space_out_gb,
+        params.custom_db_min_ram_gb,
+        params.custom_db_min_cpus,
+        params.out_dir,
         session.workDir.toString()
     )
 } else {
@@ -478,18 +501,12 @@ if (doUpdate) {
     )
 }
 
-if (!doUpdate && !params.fastq) {
-    System.err.println("No fastqs provided! Exit.")
-    System.exit(1)
-} else if (doUpdate && params.fastq) {
-    System.err.println("Either donwload or analyse.")
-    System.exit(1)
-}
-
 
 workflow {
     if(doUpdate) {
         db_update()
+    } else if (doBuildCustomDB) {
+        custom_data_base()
     } else {
         samples = fastq_ingress([
             "input": params.fastq,

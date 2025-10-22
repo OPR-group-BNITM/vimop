@@ -3,7 +3,12 @@
 images=(canu centrifuge general ingress medaka report structural_variants)
 docker_user=oprgroup
 
-for img in "${images[@]}";
+if [[ $# -gt 0 ]]
+then
+  images=("$@")
+fi
+
+for img in "${images[@]}"
 do
     version=$(cat $img/version.txt)
     echo $img:$version

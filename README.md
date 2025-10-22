@@ -7,6 +7,40 @@ It is used to analyse nanopore reads from untargeted sequencing of viruses such 
 
 If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
 
+## Table of Contents
+
+- [ViMOP](#vimop)
+  - [Purpose and limitations](#purpose-and-limitations)
+  - [Hardware requirements](#hardware-requirements)
+  - [Software dependencies](#software-dependencies)
+    - [Alternative profiles for command line usage: Conda and Apptainer](#alternative-profiles-for-command-line-usage-conda-and-apptainer)
+  - [Installation and operation](#installation-and-operation)
+    - [Using the command line](#using-the-command-line)
+    - [Using EPI2ME desktop](#using-epi2me-desktop)
+  - [Workflow](#workflow)
+    - [Input](#input)
+    - [Read trimming](#read-trimming)
+    - [Taxonomic classification and removal of non-viral reads](#taxonomic-classification-and-removal-of-non-viral-reads)
+    - [Host and contaminant removal](#host-and-contaminant-removal)
+    - [Target virus read enrichment](#target-virus-read-enrichment)
+    - [De novo assembly](#de-novo-assembly)
+    - [Reference identification](#reference-identification)
+    - [Reference-guided assembly](#reference-guided-assembly)
+  - [Options](#options)
+  - [Output and report](#output-and-report)
+  - [Database](#database)
+    - [Data base structure](#data-base-structure)
+    - [centrifuge](#centrifuge)
+    - [contaminants](#contaminants)
+    - [virus](#virus)
+    - [Custom data base creation](#custom-data-base-creation)
+      - [Build contaminants/host data base](#build-contaminantshost-data-base)
+      - [Build virus data base](#build-virus-data-base)
+      - [Build centrifuge index](#build-centrifuge-index)
+  - [Citation](#citation)
+  - [Acknowledgements](#acknowledgements)
+
+
 ## Purpose and limitations
 
 The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
@@ -43,13 +77,14 @@ If you prefer to not use docker and you are using Linux, there are two alternati
 
 The conda profile is activated using the option `-profile conda`.
 This has been tested on
-- 
-- conda 
+- Nextflow 24.10.0
+- Ubuntu 24.04.1
+- conda 4.12.0
 
-You can also use mamba [mamba]() typing `-profile conda,mamba`.
+You can also use mamba typing `-profile conda,mamba`.
 However, some versions of mamba and nextflow may not work together.
 We succesfully ran 
-- Nextflow TODO
+- Nextflow 24.10.0
 - Ubuntu 24.04.1
 - conda 4.12.0
 - mamba 0.23.0
@@ -267,7 +302,13 @@ Contigs can be found in the fasta files in the assembly directory.
 ## Database
 
 ViMOP relies on a reference database structure.
-It is usually placed in your home directory in a folder called `ViMOP_DB`.
+Installation and update procedures were described [above](#Installation-and-operation).
+In the following, the structure of the data base is described.
+To use ViMOP to create your own custom data base see further [below](#Custom-data-base-creation).
+
+### Data base structure
+
+The ViMOP data base is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
 
 ```
@@ -282,8 +323,10 @@ Each directory contains a file with a yaml file with the same name prefix (e.g. 
 The configs hold the relevant information about the database parts as well as an entry 'version' with a version number and an entry description with a brief 'description'.
 
 The three database parts are briefly described in the following.
+ViMOP also include a module to create your own custom data base.
+It is described after the general description of the pipeline parts.
 
-### centrifuge
+#### centrifuge
 
 The centrifuge config looks like this
 
@@ -306,7 +349,7 @@ This information is important for the centrifuge based filtering.
 In addition to unclassified reads, reads classified to these Tax-IDs will be kept since they are considered to be virus reads.
 Version and description are for display in the report.
 
-### contaminants
+#### contaminants
 
 This directory holds files with sequences of host or reagents.
 The respective config file looks like this
@@ -324,7 +367,7 @@ description: "Human (GRCh38), mouse (8_GRCm38), mastomys and contaminant filter 
 
 The keys are used to choose the filters using the command `--contamination_filters`.
 
-### virus
+#### virus
 
 The virus database contains virus reference sequences.
 It consists of a config file, a set of sequence files and a blast database.
@@ -414,6 +457,101 @@ Separated with a "|" we have
 - species name
 - orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated dataset have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
+
+### Custom data base creation
+
+ViMOP provides a module to create your own custom data base.
+You can create a whole data base or only parts of it (`virus`, `contaminants` and/or `centrifuge`).
+To run the module in EPI2ME desktop, select the section `Create custom data base` and tick the box `Build a custom data base`.
+Then choose paths to you input files as described below.
+To run the data base setup from the command line use the option `--custom_db_do_build`.
+Use the option `--custom_db_outpath` to define the directory where the data base will be written to.
+In the following, the command line arguments are listed but not the EPI2ME fields, as these are self-explanatory.
+
+You can also find an example command on how to create a custom data base in `test/build_custom_db.sh` and example input files in `test/data/custom_db_test`.
+
+#### Build contaminants/host data base
+
+Building a host data base takes a directory with fasta files.
+A filter will be created for each fasta file.
+The contaminant/host filters will have the names in the files (e.g. `human_dna` if a file `humand_dna.fasta.gz` exists in the directory). Fasta files can be compressed (`fasta.gz`) or not (`.fasta`).
+Pass this directory via `--custom_db_contaminants_input_path`.
+Use `--custom_db_contaminants_version` and `--custom_db_contaminants_description` to add version and description.
+
+#### Build virus data base
+
+To create the virus data base pass a fasta file with genomes (`--custom_db_virus_fasta`) and a yaml file with additional configuration information (`--custom_db_virus_yaml`).
+
+The format of the fasta headers needs to be `>SEQID |DESCRIPTION|FAMILY|SPECIES|ORIENTATION|SEGMENT`.
+Orientation can be forward, reverse or unknown and is with respect to the data base entry (e.g. if the orentation was swapped for a genbank entry you can add reverse).
+It is also ok to always set this column to unknown.
+Segment should be Unsegmented or the segment name or Unknown.
+Unknown should only be used for non-curated species, whereas highlighted species should always have segment information.
+Species must match those used in the config (see below).
+
+An example of a genome entry: `>KU174142.1 |Mutant Zaire ebolavirus isolate Ebola virus/H.sapiens-rec/COD/1976/Yambuku-Mayinga-eGFP-SUDV_GP, complete genome|Filoviridae|Orthoebolavirus zairense|forward|Unsegmented`
+
+The yaml file looks like this
+
+```yaml
+curated:
+  LASV:
+    name: Mammarenavirus lassense
+    organisms:
+    - Mammarenavirus lassaense
+  EBOV:
+    name: Orthoebolavirus
+    organisms:
+    - Orthoebolavirus zairense
+    - Orthoebolavirus taiense
+    - Orthoebolavirus sudanense
+    - Orthoebolavirus restonense
+    - Orthoebolavirus bundibugyoense
+    - Orthoebolavirus bombaliense
+    - Orthoebolavirus
+    - Bombali virus
+  MARV:
+    name: Orthomarburgvirus
+    organisms:
+    - Orthomarburgvirus marburgense
+    - Orthomarburgvirus
+filters:
+  FILO:
+    organisms:
+    - Orthomarburgvirus marburgense
+    - Orthoebolavirus zairense
+    - Orthoebolavirus taiense
+    - Orthoebolavirus sudanense
+    - Orthoebolavirus restonense
+    - Orthoebolavirus bundibugyoense
+    - Orthoebolavirus bombaliense
+    - Orthomarburgvirus
+    - Orthoebolavirus
+```
+
+The first part determines the curated virus sets.
+Here, each species name is only allowed once.
+The species names must match those in the headers of the fasta file.
+Results for curated sets will get their own dedicated section in the report and sorted by segment.
+Additional filters (e.g. to filter for virus families) can be created using again the species names.
+Here, species names can appear in arbitrarily many filters.
+
+Use `--custom_db_virus_version` and `--custom_db_virus_description` to add version and description.
+
+#### Build centrifuge index
+
+To build a centrifuge index pass a single fasta file.
+The header must be formatted as `>SEQID |KINGDOM|FAMILY|SPECIES|`.
+`KINGDOM` must be one of Eukaryota, Archaea, Bacteria or Viruses.
+
+An example: `>KU174142.1  |Viruses|Filoviridae|Orthoebolavirus zairense`
+
+Use `--custom_db_centrifuge_version` and `--custom_db_centrifuge_description` to add version and description.
+
+## Citation
+
+If you are using ViMOP please cite us.
+This repository is linked to [zenodo](https://doi.org/10.5281/zenodo.15592229), where you can find a DOI for the version you are using.
 
 ## Acknowledgements
 
