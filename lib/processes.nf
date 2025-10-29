@@ -521,11 +521,12 @@ process reassemble_canu {
             --output contigs.\$i.fasta
 
         cat contigs.\$i.fasta >> new.contigs.fasta
-        mv contigs.\$i.fasta last.contigs.fasta
 
         ${seqstatsLine("raw_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
         ${seqstatsLine("corrected_reassembly\$i", "\$outdir/asm.correctedReads.fasta.gz", "reassembly.stats.tsv")}
         ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
+    
+        mv contigs.\$i.fasta last.contigs.fasta
     done
 
     mv new.contigs.fasta reassembly.contigs.fasta
