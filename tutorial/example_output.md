@@ -16,5 +16,10 @@ This section reports the main output of the pipeline. Here the virus species and
 ![image.png](example_output_files/image.png)
 
 ## Contigs
-In the next section you will see the assembly results provided by canu. You can also see the Blast hit of each contig that was used to create the consensus sequence. Additionally, in this report you can see the centrifuge classification of each contig. You can check if there is any discrepancies between the BLAST and centrifuge classification, since the blast search only includes viruses you can check for false positives here.
-![image.png](example_output_files/image.png)
+In the next section you will see the assembly results provided by canu. You can also see the Blast hit of each contig that was used to create the consensus sequence. Additionally, in this report you can see the centrifuge classification of each contig. You can check if there is any discrepancies between the BLAST and centrifuge classification, since the blast search only includes viruses you can check for false positives here.  
+
+![image.png](example_output_files/image.png)  
+
+Additionally, we you can see how many reads were corrected and used for assembly by canu in the "Assembly statistics" tab.
+
+![image-2.png](example_output_files/image-2.png)
