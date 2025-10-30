@@ -23,7 +23,7 @@ After opening the application, you will be prompted to sign in. However, you can
 
 
 ## Nextflow installation
-If you installed EPI2ME you can install nextflow via the EPI2ME interface by going to Settings->Local->System setup->Nextflow->setup. This setup will also make sure you have the correct java version installed  
+In case you installed EPI2ME you can install nextflow via the EPI2ME interface by going to Settings->Local->System setup->Nextflow->setup. This setup will also make sure you have the correct java version installed  
 If you want to install nextflow via the command line there are two options:
 1. Follow the installation instructions from the [nextflow documentation](https://nextflow.io/docs/latest/install.html#install-page)
 2. Or, if you have conda installed and prefer to have your nextflow installation separate from the rest of your home environment, you can create a conda environment and install nextflow in there:
@@ -34,8 +34,6 @@ If you want to install nextflow via the command line there are two options:
 bash conda create -n nextflow nextflow
 conda activate nextflow
 ```
-
-# Installing and setting up ViMOP
 
 # Installation and setup of ViMOP
 If you have nextflow and docker installed in your system you are good to go to setup and then run ViMOP via the command line or EPI2ME! 
