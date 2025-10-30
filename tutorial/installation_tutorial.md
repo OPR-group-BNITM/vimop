@@ -84,8 +84,12 @@ If you want to run ViMOP with your own fastqs, you can select your input in the 
   
 ![image.png](installation_tutorial_files/image.png)
  
-2. Optionally, you can, modify the pipeline parameters in the menu on the left. For example under Nextflow configuration you can name your sequencing run.  
-  
+2. Optionally, you can, modify the pipeline parameters in the menu on the left. For example, if you want to prioritize one of the curated viruses from our list here you can specify the filters under "Filters and trimming"->"Targets"  
+
+![image-3.png](installation_tutorial_files/image-3.png)  
+
+Or, under Nextflow configuration you can name your sequencing run.  
+
 ![image-2.png](installation_tutorial_files/image-2.png)  
 
 3. Then click on Launch workflow.
