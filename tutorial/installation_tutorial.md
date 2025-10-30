@@ -18,7 +18,8 @@ To use ViMOP in the graphical user interface you need to install Oxford Nanopore
 Download the installer according to your operating system from the [EPI2ME website](https://epi2me.nanoporetech.com/downloads/). At the time of this tutorial the most recent version of EPI2ME Desktop is version 5.2.5. Follow the installation instructions after opening the downloaded file, for Ubuntu/Debian you need to open the file with the software center. EPI2ME also provides an [installation guide](https://epi2me.nanoporetech.com/epi2me-docs/installation/#installation-on-linux) for all operating systems.  
   
 After opening the application, you will be prompted to sign in. However, you can just continue as guest. Sometimes that option is hidden, but you can find it by clicking on the three dots at the bottom  
-![image.png](installation_tutorial_files/image.png)
+
+![continue_as_guest](installation_tutorial_files/continue_as_guest.png)
 
 
 
@@ -44,7 +45,7 @@ If you have nextflow and docker installed in your system you are good to go to s
 You can set up ViMOP fully via the EPI2ME interface
 1. Import ViMOP from GitHub  
   
-![image.png](installation_tutorial_files/image.png) 
+![import_GH](installation_tutorial_files/image.png) 
  
 2. Paste the URL to our GitHub repository into the interface ```https://github.com/OPR-group-BNITM/vimop``` and click Download  
   
@@ -72,25 +73,26 @@ You can set up ViMOP fully via the EPI2ME interface
  
 The download will now take a while depending on your network connection. Please be patient.
 
+
 ### Demo run
 To test the functionality of ViMOP you can select to run a demo run with a simulated Lassa virus here.  
   
-![image.png](installation_tutorial_files/image.png)
+![image-8.png](installation_tutorial_files/image-8.png)
 
 ### User defined input
 If you want to run ViMOP with your own fastqs, you can select your input in the first input menu of the interface. You can select either a fastq or fastq.gz file or a directory that contains subdirectories of the different barcodes that contain the fastq or fastq.gz files.  
 
 1. Select FASTQ  
   
-![image.png](installation_tutorial_files/image.png)
+![image-9.png](installation_tutorial_files/image-9.png)
  
 2. Optionally, you can, modify the pipeline parameters in the menu on the left. For example, if you want to prioritize one of the curated viruses from our list here you can specify the filters under "Filters and trimming"->"Targets"  
 
-![image-3.png](installation_tutorial_files/image-3.png)  
+![image-10.png](installation_tutorial_files/image-10.png)
 
 Or, under Nextflow configuration you can name your sequencing run.  
 
-![image-2.png](installation_tutorial_files/image-2.png)  
+![image-11.png](installation_tutorial_files/image-11.png)
 
 3. Then click on Launch workflow.
 
