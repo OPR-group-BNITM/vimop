@@ -19,13 +19,17 @@ However, for large DNA viruses with extensive repetitive regions (e.g., mpox), a
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
 
 We have created a reference database with our favourite viruses.
-However, you can also create your own.
+However, you can also easily create your own.
 For information on databases read further down.
 If you need assistance for setting up a reference dataset, please contact us.
 
 ## Hardware requirements
 
-This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your dataset, the pipeline may also work on lower resources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
+This pipeline runs best on a powerful laptop or PC.
+We recommend at least 30 GB RAM and 16 CPUs.
+Depending on your dataset, the pipeline may also work on lower resources.
+You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less.
+However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
 
 ## Software dependencies
 
@@ -118,7 +122,7 @@ At the beginning the pipeline trims the ends of the reads to remove adapter sequ
 ### Taxonomic classification and removal of non-viral reads
 
 Centrifuge is used to classify the reads.
-This helps to get an overview of how your metagenomics sample is composed. A Kronaplot of the read classification will appear in the report and optionally you can choose to generate a separate HTML with the Krona plot with --output_krona_plot true.
+This helps to get an overview of how your sample is composed. A Kronaplot of the read classification will appear in the report and optionally you can choose to generate a separate HTML with the Krona plot with --output_krona_plot true.
 Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match any entry in the reference database or only partially. 
 Use `--centrifuge_do_classify false` to deactivate all centrifuge classifications and save time.
 
