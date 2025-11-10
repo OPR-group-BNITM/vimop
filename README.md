@@ -1,62 +1,35 @@
 # ViMOP
+
 [<img align="left" src="ViMOP_logo.png" width="150"/>](ViMOP_logo.png)
-Analysis pipeline for virus metagenomics using nanopore sequencing.
 
-This pipeline is developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical Medicine.
-It is used to analyse nanopore reads from untargeted sequencing of viruses such as Lassa, Ebola or Dengue at various sites.
+ViMOP is a pipeline for detecting known virus species in untargeted Oxford Nanopore sequencing data and reconstructing their genomes.
 
-If you have questions, suggestions, want to contribute or have a specific requirement (e.g. for the license) please feel free to contact us.
+Developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/forschung/forschungsgruppen/pathogen/abt-virologie/laborgruppe-duraffour-pahlmann/team) at the Bernhard Nocht Institute for Tropical Medicine, ViMOP is used to analyze nanopore reads from field and laboratory samples of viruses such as Lassa, Ebola, or Dengue at various sequencing sites.
 
-## Table of Contents
-
-- [ViMOP](#vimop)
-  - [Purpose and limitations](#purpose-and-limitations)
-  - [Hardware requirements](#hardware-requirements)
-  - [Software dependencies](#software-dependencies)
-    - [Alternative profiles for command line usage: Conda and Apptainer](#alternative-profiles-for-command-line-usage-conda-and-apptainer)
-  - [Installation and operation](#installation-and-operation)
-    - [Using the command line](#using-the-command-line)
-    - [Using EPI2ME desktop](#using-epi2me-desktop)
-  - [Workflow](#workflow)
-    - [Input](#input)
-    - [Read trimming](#read-trimming)
-    - [Taxonomic classification and removal of non-viral reads](#taxonomic-classification-and-removal-of-non-viral-reads)
-    - [Host and contaminant removal](#host-and-contaminant-removal)
-    - [Target virus read enrichment](#target-virus-read-enrichment)
-    - [De novo assembly](#de-novo-assembly)
-    - [Reference identification](#reference-identification)
-    - [Reference-guided assembly](#reference-guided-assembly)
-  - [Options](#options)
-  - [Output and report](#output-and-report)
-  - [Database](#database)
-    - [Data base structure](#data-base-structure)
-    - [centrifuge](#centrifuge)
-    - [contaminants](#contaminants)
-    - [virus](#virus)
-    - [Custom data base creation](#custom-data-base-creation)
-      - [Build contaminants/host data base](#build-contaminantshost-data-base)
-      - [Build virus data base](#build-virus-data-base)
-      - [Build centrifuge index](#build-centrifuge-index)
-  - [Citation](#citation)
-  - [Acknowledgements](#acknowledgements)
-
+If you have questions, suggestions, or would like to contribute — or if you require a specific setup (e.g. for licensing) — please feel free to contact us.
 
 ## Purpose and limitations
 
-The main purpose of this pipeline is the assembly of virus genomes in metagenomics samples.
-We have created a reference database with our favourite viruses. However, you can also create your own.
-For information on databases read further down.
-If you need assistance for setting up a reference dataset, please contact us.
+The main purpose of this pipeline is the assembly of virus genomes from human clincical or animal samples.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
 To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
 This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
-However, for large DNA viruses with repetetive regions, such as mpox, this approach may not correctly generate complete genomes.
+However, for large DNA viruses with extensive repetitive regions (e.g., mpox), assemblies may contain inaccuracies and should be regarded as draft genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
+
+We have created a reference database with our favourite viruses.
+However, you can also easily create your own.
+For information on databases read further down.
+If you need assistance for setting up a reference dataset, please contact us.
 
 ## Hardware requirements
 
-This pipeline runs best on a powerful laptop or PC. We recommend at least 30 GB RAM and 16 CPUs. Depending on your dataset, the pipeline may also work on lower resources. You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less. However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
+This pipeline runs best on a powerful laptop or PC.
+We recommend at least 30 GB RAM and 16 CPUs.
+Depending on your dataset, the pipeline may also work on lower resources.
+You can change the parameters `--min_cpus`, `--min_ram`, `--min_disk_space_work_gb` and `--min_disk_space_out_gb` and the pipeline will run with less.
+However, this may or may not work, and it may take much longer, as some tools like Canu need quite some resources. 
 
 ## Software dependencies
 
@@ -149,7 +122,7 @@ At the beginning the pipeline trims the ends of the reads to remove adapter sequ
 ### Taxonomic classification and removal of non-viral reads
 
 Centrifuge is used to classify the reads.
-This helps to get an overview of how your metagenomics sample is composed. A Kronaplot of the read classification will appear in the report and optionally you can choose to generate a separate HTML with the Krona plot with --output_krona_plot true.
+This helps to get an overview of how your sample is composed. A Kronaplot of the read classification will appear in the report and optionally you can choose to generate a separate HTML with the Krona plot with --output_krona_plot true.
 Centrifuge also classifies the contigs (see later) to get a rough idea about contigs that do not match any entry in the reference database or only partially. 
 Use `--centrifuge_do_classify false` to deactivate all centrifuge classifications and save time.
 
@@ -163,7 +136,7 @@ But beware that centrifuge is limited in its accuracy and you may also remove so
 
 Host and contaminant reads are removed by mapping them against reference sequences and extracting those that map.
 The database config file (contamination.yaml) defines the reference sets and the key values assigned to them.
-Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is humand reads).
+Use the option `--contamination_filters "reagent,mouse"` for example to remove mouse and reagent reads (the default is human reads).
 The following filters are included in our database
 
 | Filter        | File Name                                               |
@@ -458,7 +431,7 @@ Separated with a "|" we have
 - orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated dataset have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
 
-### Custom data base creation
+### Custom database creation
 
 ViMOP provides a module to create your own custom data base.
 You can create a whole data base or only parts of it (`virus`, `contaminants` and/or `centrifuge`).
@@ -470,7 +443,7 @@ In the following, the command line arguments are listed but not the EPI2ME field
 
 You can also find an example command on how to create a custom data base in `test/build_custom_db.sh` and example input files in `test/data/custom_db_test`.
 
-#### Build contaminants/host data base
+#### Build contaminants/host database
 
 Building a host data base takes a directory with fasta files.
 A filter will be created for each fasta file.
@@ -478,7 +451,7 @@ The contaminant/host filters will have the names in the files (e.g. `human_dna` 
 Pass this directory via `--custom_db_contaminants_input_path`.
 Use `--custom_db_contaminants_version` and `--custom_db_contaminants_description` to add version and description.
 
-#### Build virus data base
+#### Build virus database
 
 To create the virus data base pass a fasta file with genomes (`--custom_db_virus_fasta`) and a yaml file with additional configuration information (`--custom_db_virus_yaml`).
 
