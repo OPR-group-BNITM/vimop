@@ -33,7 +33,7 @@ To use ViMOP in the graphical user interface you need to install Oxford Nanopore
 ### Start up EPI2ME
 After starting the application, you will be prompted to sign in. However, you can just continue as guest. Sometimes that option is hidden, but you can find it by clicking on the three dots at the bottom.  
 
-![continue_as_guest](installation_tutorial_files/continue_as_guest.png)
+![continue_as_guest](01a_installation_tutorial_epi2me_files/continue_as_guest.png)
 
 
 
