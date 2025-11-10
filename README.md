@@ -431,7 +431,7 @@ Separated with a "|" we have
 - orientation of the sequence with respect to the original database entry. We re-oriented sequences so that all sequences of a curated dataset have the same orientation. However, this can also simply be set to "Unknown".
 - the segment name. Set to "Unknown" for non-curated sequences. For curated sets (e.g. in our example LASV and EBOV) this needs to be assigned. If there is only one segment, use "Unsegmented". The segments also need to be listed in the config file.
 
-### Custom data base creation
+### Custom database creation
 
 ViMOP provides a module to create your own custom data base.
 You can create a whole data base or only parts of it (`virus`, `contaminants` and/or `centrifuge`).
@@ -443,7 +443,7 @@ In the following, the command line arguments are listed but not the EPI2ME field
 
 You can also find an example command on how to create a custom data base in `test/build_custom_db.sh` and example input files in `test/data/custom_db_test`.
 
-#### Build contaminants/host data base
+#### Build contaminants/host database
 
 Building a host data base takes a directory with fasta files.
 A filter will be created for each fasta file.
@@ -451,7 +451,7 @@ The contaminant/host filters will have the names in the files (e.g. `human_dna` 
 Pass this directory via `--custom_db_contaminants_input_path`.
 Use `--custom_db_contaminants_version` and `--custom_db_contaminants_description` to add version and description.
 
-#### Build virus data base
+#### Build virus database
 
 To create the virus data base pass a fasta file with genomes (`--custom_db_virus_fasta`) and a yaml file with additional configuration information (`--custom_db_virus_yaml`).
 
