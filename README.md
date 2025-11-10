@@ -12,6 +12,8 @@ If you have questions, suggestions, or would like to contribute — or if you re
 
 You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
 
+Here are tutorials for setup, running the pipeline and interpretation of the output:
+
 - [installation with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/01a_installation_tutorial_epi2me.md)
 - [run an analysis with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/02a_run_vimop_with_epi2me.md)
 - [installation from command line](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/01b_installation_tutorial_command_line.md)
