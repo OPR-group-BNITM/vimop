@@ -251,11 +251,10 @@ Contigs can be found in the fasta files in the assembly directory.
 ## Database
 
 ViMOP relies on a reference database structure.
-Installation and update procedures were described [above](#Installation-and-operation).
-In the following, the structure of the data base is described.
-To use ViMOP to create your own custom data base see further [below](#custom-database-creation).
+In the following, the structure of the database is described.
+To use ViMOP to create your own custom database see further [below](#custom-database-creation).
 
-### Data base structure
+### Database structure
 
 The ViMOP data base is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
