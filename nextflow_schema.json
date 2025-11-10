@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://raw.githubusercontent.com/OPR-group-BNITM/nanoflow/nextflow_schema.json",
   "title": "OPR-group-BNITM/vimop",
-  "workflow_title": "ViMOP: Virus metagenomics outbreak preparedness workflow",
+  "workflow_title": "ViMOP: Virus Metagenomics Outbreak Pipeline",
   "description": "Reference-based virus assembly with automatic reference selection from ONT reads.",
   "demo_url": "https://opr.bnitm.de/example_data/vimop-demo.tar.gz",
   "url": "https://github.com/OPR-group-BNITM/nanoflow",
@@ -104,6 +104,160 @@
           "description": "Url to config file with data base versions.",
           "help_text": "",
           "fa_icon": "fas fa-bullseye"
+        }
+      }
+    },
+    "custom_db": {
+      "title": "Create custom data base",
+      "type": "object",
+      "description": "Create your own ViMOP data base.",
+      "default": "",
+      "properties": {
+        "custom_db_do_build": {
+          "type": "boolean",
+          "title": "Build a custom data base.",
+          "default": false,
+          "description": "Check this box to create a custom data base. Pass the relevant files as input.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_outpath": {
+          "description": "Output directory for custom data base creation.",
+          "help_text": "",
+          "type": "string",
+          "format": "path",
+          "default": "custom_db",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_contaminants_version": {
+          "type": "string",
+          "title": "Data base version for the custom contaminants data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_contaminants_description": {
+          "type": "string",
+          "title": "Data base version for the custom contaminants data base.",
+          "default": "A custom host genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_contaminants_input_path": {
+          "description": "Input directory with contaminant/host genome/transcriptome files.",
+          "help_text": "Filenames will be used to name the filters. If you add a filter file human_genome.fasta.gz a filter called human_genome can be applied. .fasta and .fna are applicable - also in gzipped format.",
+          "type": "string",
+          "format": "path",
+          "default": "",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_virus_version": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_virus_description": {
+          "title": "Data base version for the custom virus data base.",
+          "type": "string",
+          "default": "A custom virus reference genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_virus_fasta": {
+          "title": "Virus reference genomes",
+          "description": "Fasta file with virus reference genomes for reference guided assembly",
+          "help_text": "Fasta file with headers. The format needs to be SeqID |description|family|species|Segment|Orientation. For details check the github repository README.",
+          "type": "string",
+          "format": "file-path",
+          "default": "",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_virus_yaml": {
+          "title": "Virus reference genomes configuration",
+          "description": "Config yaml file for the virus references",
+          "help_text": "Yaml file description of curated virus sets. For details check the github repository README in https://github.com/OPR-group-BNITM/vimop.",
+          "type": "string",
+          "format": "file-path",
+          "default": "",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_centrifuge_version": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "0.0.0",
+          "description": "Give your data base a version, to make your analysis reproducable.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_description": {
+          "type": "string",
+          "title": "Data base version for the custom virus data base.",
+          "default": "A custom virus reference genomes data base.",
+          "description": "Add a description to your data base.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_fasta": {
+          "description": "Fasta file with genomes.",
+          "help_text": "Fasta file with headers formatted to include families and species (see README.md in the ViMOP repository at https://github.com/OPR-group-BNITM/vimop).",
+          "type": "string",
+          "format": "file-path",
+          "default": "custom_db",
+          "fa_icon": "far fa-folder"
+        },
+        "custom_db_centrifuge_taxonomy_url": {
+          "type": "string",
+          "title": "URL for taxonomy",
+          "default": "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz",
+          "description": "Taxonomy information (taxdump) will be donwloaded from here during a centrifuge index build.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_viruses": {
+          "title": "TaxID for Viruses",
+          "type": "integer",
+          "default": 10239,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_viroids": {
+          "title": "TaxID for Viroids",
+          "type": "integer",
+          "default": 185751,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_bacteria": {
+          "title": "TaxID for Bacteria",
+          "type": "integer",
+          "default": 2,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_archaea": {
+          "title": "TaxID for Archaea",
+          "type": "integer",
+          "default": 2157,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
+        },
+        "custom_db_centrifuge_taxid_eukaryota": {
+          "title": "TaxID for Eukaryota",
+          "type": "integer",
+          "default": 2759,
+          "description": "Used for creation of custom centrifuge index.",
+          "help_text": "",
+          "fa_icon": "fas fa-dot-circle"
         }
       }
     },
@@ -568,6 +722,26 @@
           "type": "number",
           "default": 100,
           "description": "Minimum disk space available in the default data base directory for storing the data base"
+        },
+        "custom_db_min_ram_gb": {
+          "type": "number",
+          "default": 16,
+          "description": "Minimum RAM required during custom data base creation"
+        },
+        "custom_db_min_cpus": {
+          "type": "number",
+          "default": 8,
+          "description": "Minimum number of CPUs required for custom data base creation"
+        },
+        "custom_db_min_disk_space_work_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space for the work directory during custom data base creation to keep intermediate files"
+        },
+        "custom_db_min_disk_space_out_gb": {
+          "type": "number",
+          "default": 100,
+          "description": "Minimum disk space available in the custom data base directory for storing the data base"
         },
         "database_defaults": {
           "type": "object",

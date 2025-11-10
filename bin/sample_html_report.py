@@ -380,7 +380,7 @@ def html_report(
         fname_out 
 ):
     report = OprReport(
-        title=f"Virus metagenomics sequencing report for sample {samplename}",
+        title=f"ViMOP report for sample {samplename}",
         pipeline_version=pipeline_version
     )
     with report.add_section("Read Statistics", "Read Statistics"):
