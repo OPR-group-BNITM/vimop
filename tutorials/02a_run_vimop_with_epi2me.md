@@ -1,11 +1,5 @@
 # Start an analysis with ViMOP in EPI2ME
 
-This tutorial describes how to install Docker, Nextflow, EPI2ME and then ViMOP via the graphical user interface of EPI2ME.
-
-# Table of Contents
-  - [User defined input](#user-defined-input)
-  - [Accessing ViMOP via the command line](#accessing-vimop-via-the-command-line)
-
 
 ## User defined input
 If you want to run ViMOP with your own fastqs, you can select your input in the first input menu of the interface. You can select either a fastq or fastq.gz file or a directory that contains subdirectories of the different barcodes that contain the fastq or fastq.gz files.  
@@ -32,19 +26,23 @@ Or, under Nextflow configuration you can name your sequencing run.
 Please be aware that you cannot specify the output folder when using epi2me. Read more on that in accessing the output file section.
 
 3. If you have set everything as needed, you can start the analysis by clicking launch workflow.  
+You can monitor the progress in the interface.
 
-![image-12.png](attachment:image-12.png)
+![image.png](02a_run_vimop_with_epi2me_files/image.png)
+
+## Accessing the output files
+
+### Output files
+
+To access the raw outputfiles, you can find them in the files tab or you can open them in your explorer by going to Options->Open folder.
+
+![image-2.png](02a_run_vimop_with_epi2me_files/image-2.png)
+
+### ViMOP report
+
+ViMOP provides a sumaarizing report about your analysis.  
+Find out more about this report in the document 03_example_output_interpretation.
+
+![image8.png](02a_run_vimop_with_epi2me_files/image-8.png)
 
 
-
-# Accessing ViMOP via the command line
-
-After installing ViMOP with EPI2ME you can also execute it via the command line by accessing the source code directly.  
-You can find the code here:
-
-
-```python
-cd epi2melabs/workflows/OPR-group-BNITM/vimop
-```
-
-To run the tool from here via the command line please refer to our command line tutorial.
