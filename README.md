@@ -489,7 +489,7 @@ Use `--custom_db_virus_version` and `--custom_db_virus_description` to add versi
 #### Build centrifuge index
 
 To build a centrifuge index pass a single fasta file.
-The header must be formatted as `>SEQID |KINGDOM|FAMILY|SPECIES|`.
+The header must be formatted as `>SEQID |KINGDOM|FAMILY|SPECIES`.
 `KINGDOM` must be one of Eukaryota, Archaea, Bacteria or Viruses.
 
 An example: `>KU174142.1  |Viruses|Filoviridae|Orthoebolavirus zairense`
