@@ -8,15 +8,26 @@ Developed by the [Outbreak Preparedness and Response team](https://www.bnitm.de/
 
 If you have questions, suggestions, or would like to contribute — or if you require a specific setup (e.g. for licensing) — please feel free to contact us.
 
+## Quickstart
+
+You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
+
+- [installation with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/tutorials/01a_installation_tutorial_epi2me.md)
+- [run an analysis with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/tutorials/02a_run_vimop_with_epi2me.md)
+- [installation from command line](https://github.com/OPR-group-BNITM/nanoflow/tutorials/01b_installation_tutorial_command_line.md)
+- [run an analysis from the command line](https://github.com/OPR-group-BNITM/nanoflow/tutorials/02b_run_vimop_with_commandline.md)
+- [output interpretation](https://github.com/OPR-group-BNITM/nanoflow/tutorials/03_example_output_interpretation.md)
+
 ## Purpose and limitations
 
 The main purpose of this pipeline is the assembly of virus genomes from human clincical or animal samples.
 
 The pipeline automatically finds well fitting virus genomes and uses them as references to build reference based consensus genomes.
-To build a consensus, [Sniffles](https://github.com/fritzsedlazeck/Sniffles) and [samtools consensus](https://www.htslib.org/) or [medaka](https://github.com/nanoporetech/medaka) are used.
 This works well for small and medium size RNA viruses such as Lassa, Dengue, Ebola and many others.
 However, for large DNA viruses with extensive repetitive regions (e.g., mpox), assemblies may contain inaccuracies and should be regarded as draft genomes.
 In any case, we recommend carefully reviewing your output (e.g. the alignment .bam files).
+
+### Reference database
 
 We have created a reference database with our favourite viruses.
 However, you can also easily create your own.
@@ -33,18 +44,20 @@ However, this may or may not work, and it may take much longer, as some tools li
 
 ## Software dependencies
 
-You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
+ViMOP uses
+- [Nextflow](https://www.nextflow.io/)
+- [Docker](https://www.docker.com/)
+- [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) (optional)
 
-If you are using EPI2ME desktop, nextflow and docker are included in the setup of the software.
-
-If you want to start the pipeline from the command line you need to install nextflow and [docker](https://www.docker.com/).
+For installation and setup see our [command line]() or [EPI2ME desktop]() tutorials.
 If you do not want to use docker, you can also use a conda or apptainer profile as described in the next section.
 
-ViMOP should run on all operating systems and so far has been tested on the following operating systems:
+### Alternative profiles for command line usage: Conda and Apptainer
+
+By default ViMOP uses docker (for setup see the installation tutorials).
+This should run on all operating systems and so far has been tested on the following operating systems:
 - MacOS 14.7 and 15.5 (Intel core i9)
 - Ubuntu 22.04.3 and 24.04.1
-
-### Alternative profiles for command line usage: Conda and Apptainer
 
 If you prefer to not use docker and you are using Linux, there are two alternative profiles implemented in ViMOP.
 
