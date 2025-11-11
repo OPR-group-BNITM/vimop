@@ -36,7 +36,7 @@ To run ViMOP you need to install the application and set up the database.
 
 ## Quick start
 
-If you want to run the pipeline without cloning our git repository you can just run the following two commands. In the upcoming sec
+If you want to run the pipeline without cloning our git repository you can just run the following two commands.
 1. Setup database
 
 

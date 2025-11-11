@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
-images=(canu centrifuge general ingress medaka report structural_variants clair)
+set -euo pipefail
+
+images=(canu centrifuge general ingress medaka report structural_variants)
+
+if [[ $# -gt 0 ]]
+then
+  images=("$@")
+fi
 
 for img in "${images[@]}";
 do

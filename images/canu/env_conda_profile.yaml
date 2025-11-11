@@ -1,4 +1,4 @@
-# this is used in the docker image
+# this is used when the nextflow pipeline is running in conda mode. 
 name: env
 channels:
   - bioconda
@@ -12,3 +12,4 @@ dependencies:
   - cd-hit=4.8.1
   - samtools=1.21
   - seqtk=1.4
+  - canu=2.2

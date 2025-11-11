@@ -46,22 +46,26 @@ def main():
 
     # get reads to remove
     remove = set()
-    with open(args.centrifuge) as f_centrifuge: 
-        header = next(f_centrifuge).strip().split('\t')
-        i_readid = header.index('readID')
-        i_taxid = header.index('taxID')
-        i_score = header.index('score')
-        for line in f_centrifuge:
-            try:
-                cols = line.strip().split('\t')
-                score = float(cols[i_score])
-                taxid = int(cols[i_taxid])
-                if taxid not in taxids_virus and score >= args.min_score:
-                    remove.add(cols[i_readid])
-            except:
-                # sometimes columns are not properly formatted (e.g. taxids with a .1)
-                # so we skip and simply keep those reads
-                continue
+    with open(args.centrifuge) as f_centrifuge:
+        try:
+            header = next(f_centrifuge).strip().split('\t')
+        except StopIteration:
+            pass
+        else:
+            i_readid = header.index('readID')
+            i_taxid = header.index('taxID')
+            i_score = header.index('score')
+            for line in f_centrifuge:
+                try:
+                    cols = line.strip().split('\t')
+                    score = float(cols[i_score])
+                    taxid = int(cols[i_taxid])
+                    if taxid not in taxids_virus and score >= args.min_score:
+                        remove.add(cols[i_readid])
+                except:
+                    # sometimes columns are not properly formatted (e.g. taxids with a .1)
+                    # so we skip and simply keep those reads
+                    continue
 
     # filter the reads
     with open(args.out, 'w') as out_f:
