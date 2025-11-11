@@ -89,9 +89,15 @@ cd vimop
 nextflow run main.nf --download_db_all
 ```
 
+**Resume option**
 
+If the pipeline fails during the process (which may happen due to instable network access), use the ```-resume``` option to continue your download without having to restart again.  
 
-If the pipeline fails during the process (which may happen due to instable network access), use the ```-resume``` option to continue your download without having to restart again. You can also separate the download of the reference data into three parts by running the pipeline three times using the options ```--download_db_virus```, ```--download_db_contamination``` and ```--download_db_centrifuge``` in separate runs. We would recommend this especially with bad network connection. If you want to replace an existing database with our latest version, add the option ```--download_db_update_existing```.
+**modular database download**
+You can also separate the download of the reference data into three parts by running the pipeline three times using the options ```--download_db_virus```, ```--download_db_contamination``` and ```--download_db_centrifuge``` in separate runs. We would recommend this especially with bad network connection. 
+
+**Updata an exising database**
+If you want to replace an existing database with our latest version, add the option ```--download_db_update_existing```.
 
 
 ## Run ViMOP demo
