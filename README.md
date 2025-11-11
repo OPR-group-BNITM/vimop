@@ -12,6 +12,8 @@ If you have questions, suggestions, or would like to contribute — or if you re
 
 You can run and install the pipeline from the command line using [nextflow](https://www.nextflow.io/) or from the [EPI2ME desktop](https://nanoporetech.com/software/other/epi2me-desktop-application) application from ONT.
 
+Here are tutorials for setup, running the pipeline and interpretation of the output:
+
 - [installation with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/01a_installation_tutorial_epi2me.md)
 - [run an analysis with EPI2ME Desktop](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/02a_run_vimop_with_epi2me.md)
 - [installation from command line](https://github.com/OPR-group-BNITM/nanoflow/blob/main/tutorials/01b_installation_tutorial_command_line.md)
@@ -31,7 +33,7 @@ In any case, we recommend carefully reviewing your output (e.g. the alignment .b
 
 We have created a reference database with our favourite viruses.
 However, you can also easily create your own.
-For information on databases read further down.
+For information on databases read further [down](#database).
 If you need assistance for setting up a reference dataset, please contact us.
 
 ## Hardware requirements
@@ -79,43 +81,6 @@ The apptainer profile is activated using `-profile apptainer`.
 It has been tested on
 - Ubuntu 24.04.1
 - apptainer version 1.4.2
-
-## Installation and operation
-
-You can install this pipeline by cloning this repository, running nextflow or using EPI2ME desktop.
-In any case, you need a reference database installed.
-The pipeline will automatically install all dependencies during the first run using docker, given that you computer is connected to the internet.
-After the set up of the reference database and the dependencies, the pipeline does not require an internet connection. 
-
-### Using the command line
-
-To run the pipeline from the command line, make sure to have nextflow and docker installed.
-If you cloned this repository, change into its root directory and run `nextflow main.nf` with the additional options.
-Without manually cloning the repository you can simply run `nextflow run OPR-group-BNITM/vimop` plus options.
-We will stick to the latter now.
-Type `nextflow run OPR-group-BNITM/vimop --download_db_all` to install our latest database release.
-There is a lot to download, so please be patient.
-If the pipeline fails during the process (which may happen due to instable network access), use the `-resume` option to
-continue your download without having to restart again.
-You can also separate the download of the reference data into three parts by running the pipeline three times using the options `--download_db_virus`, `--download_db_contamination` and `--download_db_centrifuge` in separate runs. We would recommend this.
-If you want to replace an existing database with our latest version, add the option `--download_db_update_existing`.
-
-To finally run an analysis type `nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output`.
-You can get some demo data here: [ViMOP-demo](https://opr.bnitm.de/example_data/vimop-demo.tar.gz). Once you downloaded and unzipped this folder, use the path to the "lasv_simulated" directory as fastq input of the command above.
-
-### Using EPI2ME desktop
-
-Open the application and enter the github url of this repository under Launch -> Import workflow -> Import from Github.
-Once you added the workflow, launch it and go to the `Setup` options section.
-You can choose to either download all three parts of the database or download contaminants, virus references and centrifuge index separately by ticking the respective boxes.
-Launching the process will download and install the database into your home directory.
-This will probably take a while.
-
-If you want to update your existing database to our latest version, check the respective box to overwrite your existing files.
-This will only be done, if something in the respective database has changed.
-
-Afterwards you can launch the pipeline to analyse data.
-You can also click "run demo analysis".
 
 ## Workflow
 ![vimop flowchart](ViMOP_flowchart.png)
@@ -288,11 +253,10 @@ Contigs can be found in the fasta files in the assembly directory.
 ## Database
 
 ViMOP relies on a reference database structure.
-Installation and update procedures were described [above](#Installation-and-operation).
-In the following, the structure of the data base is described.
-To use ViMOP to create your own custom data base see further [below](#Custom-data-base-creation).
+In the following, the structure of the database is described.
+To use ViMOP to create your own custom database see further [below](#custom-database-creation).
 
-### Data base structure
+### Database structure
 
 The ViMOP data base is usually placed in your home directory in a folder called `ViMOP_DB`.
 I has the following structure:
@@ -527,7 +491,7 @@ Use `--custom_db_virus_version` and `--custom_db_virus_description` to add versi
 #### Build centrifuge index
 
 To build a centrifuge index pass a single fasta file.
-The header must be formatted as `>SEQID |KINGDOM|FAMILY|SPECIES|`.
+The header must be formatted as `>SEQID |KINGDOM|FAMILY|SPECIES`.
 `KINGDOM` must be one of Eukaryota, Archaea, Bacteria or Viruses.
 
 An example: `>KU174142.1  |Viruses|Filoviridae|Orthoebolavirus zairense`
