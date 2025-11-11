@@ -9,9 +9,7 @@
   - [Step by step installation, set up and execution](#step-by-step-installation-set-up-and-execution)
     - [Clone Git repository](#clone-git-repository)
     - [Set up the database](#set-up-the-database)
-  - [Run ViMOP](#run-vimop)
-    - [Demo run](#demo-run)
-    - [User input](#user-input)
+  - [Run ViMOP demo](#run-vimop)
 
 
 # Prerequisites
@@ -38,7 +36,7 @@ To run ViMOP you need to install the application and set up the database.
 
 ## Quick start
 
-If you want to run the pipeline without cloning our git repository you can just run the following steps
+If you want to run the pipeline without cloning our git repository you can just run the following two commands.
 1. Setup database
 
 
@@ -58,10 +56,12 @@ To test the pipeline you can get some demo data [here](https://opr.bnitm.de/exam
 nextflow run OPR-group-BNITM/vimop --fastq /path/to/fastqfiles --out_dir /path/for/your/output [optional: -c /path/to/nextflow.config]
 ```
 
+The next sections go more into detail about the installation steps. In these steps, if you do not wish to clone our GitHub-repository, just replace ```nextflow run main.nf``` with ```nextflow run OPR-group-BNITM/vimop```
+
 ## Step by step installation, set up and execution
 
 ### Clone Git repository
-To import the ViMOP workflow clone our GitHub repository.
+To import the ViMOP source code, clone our GitHub repository.
 
 1. Open the command line 
 2. Clone the repository
@@ -89,19 +89,20 @@ cd vimop
 nextflow run main.nf --download_db_all
 ```
 
+**Resume option**
+
+If the pipeline fails during the process (which may happen due to instable network access), use the ```-resume``` option to continue your download without having to restart again.  
+
+**modular database download**
+You can also separate the download of the reference data into three parts by running the pipeline three times using the options ```--download_db_virus```, ```--download_db_contamination``` and ```--download_db_centrifuge``` in separate runs. We would recommend this especially with bad network connection. 
+
+**Updata an exising database**
+If you want to replace an existing database with our latest version, add the option ```--download_db_update_existing```.
 
 
-If you want to replace an existing database with our latest version, add the option --download_db_update_existing  
+## Run ViMOP demo
 
-
-
-```python
-nextflow run main.nf --download_db_all --download_db_update_existing
-```
-
-## Run ViMOP
-
-### Demo run
+To test the functionality of ViMOP we provide a demo run.
 
 1. Download our demo test set
 
@@ -116,20 +117,4 @@ tar -xvzf vimop-demo.tar.gz
 
 ```python
 nextflow run main.nf --fastq vimop-demo/lasv_simulated -o vimop-demo/output
-```
-
-### User input
-
-In general, you can run ViMOP with the following command:
-
-
-```python
-nextflow run main.nf  --fastq "/path/to/fastqfiles" --out_dir "/path/for/your/output"
-```
-
-To show all available options run:
-
-
-```python
-nextflow main.nf --help
 ```

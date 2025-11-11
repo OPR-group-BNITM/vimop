@@ -13,7 +13,6 @@ This tutorial describes how to install Docker, Nextflow, EPI2ME and then ViMOP v
     - [Install workflow](#install-workflow)
     - [Set up the data base](#set-up-the-data-base)
     - [Demo run](#demo-run)
-    - [User defined input](#user-defined-input)
   - [Accessing ViMOP via the command line](#accessing-vimop-via-the-command-line)
 
 
@@ -73,6 +72,8 @@ Before running ViMOP you need to install the data base. For this follow these st
 6. Select to download all databases. If you want to update an already existing database you have downloaded from us, you need to select to overwrite the existing databases as well.  
   
 ![image-6.png](01a_installation_tutorial_epi2me_files/image-6.png)
+
+In this same menu you could also choose to only download or update each section of the database separately (i.e. centrifuge index, host and contaminant database and virus reference genome database). Which is especially recommended in settings with bad network connection.
  
 7. Launch the workflow.  
   
@@ -84,24 +85,9 @@ The download will now take a while depending on your network connection.
 ## Demo run
 To test the functionality of ViMOP you can select to run a demo run with a simulated Lassa virus here.  
   
-![image-8.png](01a_installation_tutorial_epi2me_files/image-8.png)
+![image-8.png](01a_installation_tutorial_epi2me_files/image-8.png)  
 
-## User defined input
-If you want to run ViMOP with your own fastqs, you can select your input in the first input menu of the interface. You can select either a fastq or fastq.gz file or a directory that contains subdirectories of the different barcodes that contain the fastq or fastq.gz files.  
-
-1. Select FASTQ  
-  
-![image-9.png](01a_installation_tutorial_epi2me_files/image-9.png)
- 
-2. Optionally, you can, modify the pipeline parameters in the menu on the left. For example, if you want to prioritize one of the curated viruses from our list here you can specify the filters under "Filters and trimming"->"Targets"  
-
-![image-10.png](01a_installation_tutorial_epi2me_files/image-10.png)
-
-Or, under Nextflow configuration you can name your sequencing run.  
-
-![image-11.png](01a_installation_tutorial_epi2me_files/image-11.png)
-
-3. Then click on Launch workflow.
+To run ViMOP with your own data checkout [02a_run_vimop_with_epi2me](https://github.com/OPR-group-BNITM/vimop/blob/ml_tutorials/tutorials/02a_run_vimop_with_epi2me.md).
 
 # Accessing the source code via the command line
 
@@ -113,4 +99,4 @@ You can find the code here:
 cd epi2melabs/workflows/OPR-group-BNITM/vimop
 ```
 
-To run the tool from here via the command line please refer to our command line tutorial.
+To run the tool from here via the command line please refer to our [command line tutorial](https://github.com/OPR-group-BNITM/vimop/blob/ml_tutorials/tutorials/02b_run_vimop_with_commandline.md).

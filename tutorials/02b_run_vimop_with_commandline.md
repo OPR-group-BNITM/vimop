@@ -1,4 +1,4 @@
-# Start analysis with ViMOP using the command line
+# Start an analysis with ViMOP using the command line
 
 ## Run ViMOP
 
