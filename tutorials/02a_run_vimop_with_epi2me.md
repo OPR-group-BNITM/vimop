@@ -43,6 +43,6 @@ To access the raw outputfiles, you can find them in the files tab or you can ope
 ViMOP provides a sumaarizing report about your analysis.  
 Find out more about this report in the document 03_example_output_interpretation.
 
-![image8.png](02a_run_vimop_with_epi2me_files/image-8.png)
+![image-8.png](02a_run_vimop_with_epi2me_files/image-8.png)
 
 
