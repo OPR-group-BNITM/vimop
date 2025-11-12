@@ -15,7 +15,6 @@ This tutorial describes how to install Docker, Nextflow, EPI2ME and then ViMOP v
     - [Demo run](#demo-run)
   - [Accessing ViMOP via the command line](#accessing-vimop-via-the-command-line)
 
-
 # Prerequisites
 
 ## Docker installation
