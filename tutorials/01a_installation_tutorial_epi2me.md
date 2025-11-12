@@ -28,18 +28,14 @@ For Linux we recommend the installation of the Docker engine. You can find a det
 ## EPI2ME installation
 To use ViMOP in the graphical user interface you need to install Oxford Nanopore's EPI2ME Desktop application. Download the installer according to your operating system from the [EPI2ME website](https://epi2me.nanoporetech.com/downloads/). At the time of this tutorial the most recent version of EPI2ME Desktop is version 5.2.5. Follow the installation instructions after opening the downloaded file, for Ubuntu/Debian you need to open the file with the software center. EPI2ME also provides an [installation guide](https://epi2me.nanoporetech.com/epi2me-docs/installation/) for all operating systems.  
 
-
 ### Start up EPI2ME
 After starting the application, you will be prompted to sign in. However, you can just continue as guest. Sometimes that option is hidden, but you can find it by clicking on the three dots at the bottom.  
 
 ![continue_as_guest](01a_installation_tutorial_epi2me_files/continue_as_guest.png)
 
-
-
 ## Nextflow installation via EPI2ME
 In case you installed EPI2ME you can install nextflow via the EPI2ME interface by going to Settings->Local->System setup->Nextflow->setup.  
 This setup will also make sure you have the correct java version installed  
-
 
 # Installation and setup of ViMOP
 As soon as you have EPI2ME, Nextflow and Docker installed in your system you are good to go to! Restart your computer, make sure Docker is running and open EPI2ME.
@@ -81,7 +77,6 @@ In this same menu you could also choose to only download or update each section 
  
 The download will now take a while depending on your network connection.
 
-
 ## Demo run
 To test the functionality of ViMOP you can select to run a demo run with a simulated Lassa virus here.  
   
@@ -95,8 +90,8 @@ After installing ViMOP with EPI2ME you can also execute it via the command line 
 You can find the code here:
 
 
-```python
+```bash
 cd epi2melabs/workflows/OPR-group-BNITM/vimop
 ```
 
-To run the tool from here via the command line please refer to our [command line tutorial](https://github.com/OPR-group-BNITM/vimop/blob/ml_tutorials/tutorials/02b_run_vimop_with_commandline.md).
+To run the tool from here via the command line please refer to our [command line tutorial](02b_run_vimop_with_commandline.md).
