@@ -66,7 +66,7 @@ To get an idea of how successful the consensus creation was, have a look at the 
 In the **Contigs section** you will see the assembly results provided by canu. You can also see the BLAST hit of each contig that was used to create the consensus sequence. Additionally, there is the centrifuge classification of each contig.  
 
 To review your contigs look at the following metrics:
-- **Reference Alignment coverage**
+- **Reference alignment coverage**
   - if this value is below 1 it means that the contig is only a partial match and does not fully cover the found BLAST hit.
   - a very low value means that canu probably only managed to assemble a fragment of the found genome
 - **Contig alignment coverage**
