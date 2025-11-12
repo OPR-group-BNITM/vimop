@@ -46,7 +46,12 @@ process trim {
     output:
         tuple val(meta), path("trimmed.fastq")
     """
-    seqtk trimfq -b ${params.trim_length} -e ${params.trim_length} demultiplexed.fastq.gz > trimmed.fastq
+    if [[ ${params.trim_length} == 0 ]]
+    then
+        gunzip -c demultiplexed.fastq.gz > trimmed.fastq
+    else
+        seqtk trimfq -b ${params.trim_length} -e ${params.trim_length} demultiplexed.fastq.gz > trimmed.fastq
+    fi
     """
 }
 
@@ -337,13 +342,12 @@ process assemble_canu {
         tuple val(meta), path("asm.contigs.fasta"), emit: contigs
         tuple val(meta), path("assembly_stats_${meta.mapping_target}.tsv"), emit: stats
     """
-    source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:\$PATH"
-    conda activate env
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     seqtk seq -L ${params.canu_min_read_length} seqs.fastq > filtered.minlen.fastq
 
-    conda deactivate
+    ${task.ext.conda_deactivate ?: ''}
 
     outdir=.
     set +e
@@ -364,7 +368,7 @@ process assemble_canu {
         maxMemory=${task.memory.toGiga()}g
     set -e
 
-    conda activate env
+    ${task.ext.conda_activate ?: ''}
 
     touch asm.contigs.fasta
 
@@ -435,9 +439,8 @@ process reassemble_canu {
         tuple val(meta), path("reassembly.contigs.fasta"), emit: contigs
         tuple val(meta), path("reassembly.stats.tsv"), emit: stats
     """
-    source /opt/conda/etc/profile.d/conda.sh
-    export PATH="/opt/conda/bin:\$PATH"
-    conda activate env
+    ${task.ext.conda_init ?: ''}
+    ${task.ext.conda_activate ?: ''}
 
     ${seqstatsHeader("reassembly.stats.tsv")}
     touch new.contigs.fasta
@@ -478,7 +481,8 @@ process reassemble_canu {
             break
         fi
 
-        conda deactivate
+        ${task.ext.conda_deactivate ?: ''}
+
         outdir=canu_output_\$i
         set +e
         canu \\
@@ -498,7 +502,7 @@ process reassemble_canu {
             maxMemory=${task.memory.toGiga()}g
         set -e
 
-        conda activate env
+        ${task.ext.conda_activate ?: ''}
 
         if [[ ! -s \$outdir/asm.contigs.fasta ]]
         then
@@ -517,11 +521,12 @@ process reassemble_canu {
             --output contigs.\$i.fasta
 
         cat contigs.\$i.fasta >> new.contigs.fasta
-        mv contigs.\$i.fasta last.contigs.fasta
 
         ${seqstatsLine("raw_reassembly\$i", "filtered.fastq", "reassembly.stats.tsv")}
         ${seqstatsLine("corrected_reassembly\$i", "\$outdir/asm.correctedReads.fasta.gz", "reassembly.stats.tsv")}
         ${seqstatsLine("contigs_reassembly\$i", "contigs.\$i.fasta", "reassembly.stats.tsv")}
+    
+        mv contigs.\$i.fasta last.contigs.fasta
     done
 
     mv new.contigs.fasta reassembly.contigs.fasta
@@ -865,7 +870,7 @@ process subsample_alignments {
     then
         samtools dict ref.fasta -o ref.dict
 
-        jvarkit sortsamrefname in.bam | samtools view -b > refname_sorted.bam
+        jvarkit sortsamrefname in.bam -o refname_sorted.bam
         jvarkit biostar154220 -R ref.fasta -n \$target_coverage refname_sorted.bam -o capped.bam
 
         samtools sort capped.bam -o out.bam
@@ -969,7 +974,7 @@ process cutesv {
 
 
 process structural_variant_consensus {
-    label "cutesv"
+    label "structural_variants"
     input:
         tuple val(meta),
             path("ref.fasta"),

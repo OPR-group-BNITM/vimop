@@ -1,0 +1,33 @@
+curated:
+  LASV:
+    name: Mammarenavirus lassense
+    organisms:
+    - Mammarenavirus lassaense
+  EBOV:
+    name: Orthoebolavirus
+    organisms:
+    - Orthoebolavirus zairense
+    - Orthoebolavirus taiense
+    - Orthoebolavirus sudanense
+    - Orthoebolavirus restonense
+    - Orthoebolavirus bundibugyoense
+    - Orthoebolavirus bombaliense
+    - Orthoebolavirus
+    - Bombali virus
+  MARV:
+    name: Orthomarburgvirus
+    organisms:
+    - Orthomarburgvirus marburgense
+    - Orthomarburgvirus
+filters:
+  FILO:
+    organisms:
+    - Orthomarburgvirus marburgense
+    - Orthoebolavirus zairense
+    - Orthoebolavirus taiense
+    - Orthoebolavirus sudanense
+    - Orthoebolavirus restonense
+    - Orthoebolavirus bundibugyoense
+    - Orthoebolavirus bombaliense
+    - Orthomarburgvirus
+    - Orthoebolavirus
