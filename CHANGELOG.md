@@ -1,5 +1,14 @@
 # Changelog
+## [1.0.5] - 2026-04-22
+### Added
+- paper citation
+  
+### Changed
 
+### Fixed
+- error when inversions denoted with <INV> are in the vcf-file before consensus calling with bcftools
+
+### Removed
 
 ## [1.0.4] - 2025-12-10
 ### Added
