@@ -1,4 +1,14 @@
 # Changelog
+## [1.0.6] - 2026-06-29
+### Added
+
+### Changed
+
+### Fixed
+- remove unsupported symbolic alleles when using bcftools consensus (currently supported: <DEL>, <*>, <NON_REF>)
+
+### Removed
+
 ## [1.0.5] - 2026-04-22
 ### Added
 - paper citation
