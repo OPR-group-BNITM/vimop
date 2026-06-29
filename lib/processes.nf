@@ -1001,7 +1001,7 @@ process structural_variant_consensus {
       tabix structural_variants.vcf.gz
       bcftools consensus \\
         --fasta-ref ref.fasta \\
-        -e 'ALT~"<INV>"' \\
+        -e 'ALT~"<" && ALT!~"<DEL>" && ALT!~"<NON_REF>" && ALT!~"<\\*>"' \\
         -o sv_consensus.fasta structural_variants.vcf.gz
     else
       cp ref.fasta sv_consensus.fasta
